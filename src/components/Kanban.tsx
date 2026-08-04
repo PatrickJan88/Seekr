@@ -66,13 +66,13 @@ export function Kanban({ applications, onEdit, onStatusChange }: KanbanProps) {
             onClick={() => setActiveTab('active')}
             className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${activeTab === 'active' ? 'bg-blue-100 text-blue-700' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}
           >
-            Active Pipeline
+            Active Progress
           </button>
           <button 
             onClick={() => setActiveTab('inactive')}
             className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${activeTab === 'inactive' ? 'bg-blue-100 text-blue-700' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}
           >
-            Closed (Rejected / Ghosted)
+            Closed
           </button>
         </div>
         

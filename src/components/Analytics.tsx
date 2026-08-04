@@ -68,7 +68,7 @@ export function Analytics({ applications }: AnalyticsProps) {
   return (
     <div className="grid grid-cols-12 gap-6">
       <div className="col-span-12 md:col-span-8 bg-white border-2 border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col">
-        <h3 className="text-sm font-bold text-slate-800 mb-4">Pipeline Funnel</h3>
+        <h3 className="text-sm font-bold text-slate-800 mb-4">Active Progress Summary</h3>
         <div className="h-72 flex-grow">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={funnelData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
