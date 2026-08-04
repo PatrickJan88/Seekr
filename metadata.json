@@ -1,0 +1,6 @@
+{
+  "name": "Seekr",
+  "description": "Track job applications, schedule interviews with Google Calendar, and analyze career progress.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
