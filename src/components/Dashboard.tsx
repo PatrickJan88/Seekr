@@ -342,7 +342,7 @@ export function Dashboard() {
         ]}
         legalLinks={[]}
         copyright={{
-          text: "© 2026 Seekr. All rights reserved.",
+          text: "Disclaimer: This is an AI-generated coding project created solely for research and demonstration purposes. It is not a commercial product, and is not affiliated with any existing companies or trademarks utilizing the \"Seekr\" name.",
         }}
       />
 
