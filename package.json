@@ -25,6 +25,7 @@
     "echarts-for-react": "^3.0.6",
     "express": "^4.21.2",
     "firebase": "^12.17.0",
+    "framer-motion": "^13.0.0",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "papaparse": "^5.5.4",

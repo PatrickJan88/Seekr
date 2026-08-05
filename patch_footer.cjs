@@ -1,4 +1,6 @@
-import React from 'react';
+const fs = require('fs');
+
+const footerContent = `import React from 'react';
 import BlobTextReveal from './BlobTextReveal';
 
 interface FooterProps {
@@ -30,7 +32,7 @@ export function Footer({
   copyright,
 }: FooterProps) {
   return (
-    <footer className="pt-4 pb-2 bg-slate-50 border-t border-slate-200 mt-auto flex flex-col">
+    <footer className="pt-6 pb-2 bg-slate-50 border-t border-slate-200 mt-auto flex flex-col">
       <div className="px-4 lg:px-8 max-w-[1600px] mx-auto w-full flex-1 flex flex-col justify-between">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between">
           <div className="flex flex-col">
@@ -46,7 +48,7 @@ export function Footer({
             </div>
           </div>
           
-          <ul className="flex list-none mt-4 md:mt-0 space-x-3">
+          <ul className="flex list-none mt-6 md:mt-0 space-x-3">
             {socialLinks.map((link, i) => (
               <li key={i}>
                 <a
@@ -63,7 +65,7 @@ export function Footer({
           </ul>
         </div>
         
-        <div className="mt-4 flex text-xs text-slate-400 mb-0">
+        <div className="mt-8 flex text-xs text-slate-400">
           <div>{copyright.text}</div>
           {copyright.license && <div className="ml-2">{copyright.license}</div>}
         </div>
@@ -71,3 +73,6 @@ export function Footer({
     </footer>
   );
 }
+`;
+
+fs.writeFileSync('src/components/Footer.tsx', footerContent);

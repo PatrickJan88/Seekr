@@ -114,7 +114,8 @@ export default function App() {
           brandName=""
           socialLinks={[
             { icon: <Github size={18} />, href: "https://github.com/PatrickJan88", label: "GitHub" },
-            { icon: <Linkedin size={18} />, href: "https://www.linkedin.com/in/pofei-r-79586395", label: "LinkedIn" }
+            { icon: <Linkedin size={18} />, href: "https://www.linkedin.com/in/pofei-r-79586395", label: "LinkedIn" },
+            { icon: <img src="/assets/logo%20pofei.svg" alt="Pofei Logo" className="w-[18px] h-[18px]" />, href: "https://pofeiportfolio.vercel.app/", label: "Portfolio" }
           ]}
           mainLinks={[
             { href: "https://pofeiportfolio.vercel.app/", label: "🖋 Made by Pofei" }
