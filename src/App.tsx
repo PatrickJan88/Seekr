@@ -4,10 +4,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { initAuth, googleSignIn, anonymousSignIn } from './lib/firebase';
 import { User } from 'firebase/auth';
 import { Dashboard } from './components/Dashboard';
 import { Footer } from './components/Footer';
+
 import { Github, Linkedin } from 'lucide-react';
 
 export default function App() {
@@ -47,11 +49,11 @@ export default function App() {
         // User closed the popup, silently ignore and let them try again
         console.log('Login popup closed by user');
       } else if (err.code === 'auth/unauthorized-domain') {
-        alert('Authentication failed: This domain is not authorized in Firebase. Please go to your Firebase Console -> Authentication -> Settings -> Authorized domains, and add the current URL domain to the list.');
+        toast.error('Authentication failed: This domain is not authorized in Firebase. Please go to your Firebase Console -> Authentication -> Settings -> Authorized domains, and add the current URL domain to the list.');
       } else if (err.message?.includes('Database is closing') || err.message?.includes('hidden')) {
-        alert('Authentication failed because third-party storage is blocked in this preview iframe. Please click "Open in new tab" (the arrow icon at the top right) to log in and use the app.');
+        toast.error('Authentication failed because third-party storage is blocked in this preview iframe. Please click "Open in new tab" (the arrow icon at the top right) to log in and use the app.');
       } else {
-        alert('Login failed: ' + (err.message || 'Unknown error'));
+        toast.error('Login failed: ' + (err.message || 'Unknown error'));
       }
     } finally {
       setIsLoggingIn(false);
@@ -70,9 +72,9 @@ export default function App() {
     } catch (err: any) {
       console.error('Anonymous login failed:', err);
       if (err.message?.includes('Database is closing') || err.message?.includes('hidden')) {
-        alert('Authentication failed because third-party storage is blocked in this preview iframe. Please click "Open in new tab" (the arrow icon at the top right) to log in and use the app.');
+        toast.error('Authentication failed because third-party storage is blocked in this preview iframe. Please click "Open in new tab" (the arrow icon at the top right) to log in and use the app.');
       } else {
-        alert('Anonymous login failed: ' + (err.message || 'Unknown error'));
+        toast.error('Anonymous login failed: ' + (err.message || 'Unknown error'));
       }
     } finally {
       setIsLoggingIn(false);
@@ -129,5 +131,10 @@ export default function App() {
     );
   }
 
-  return <Dashboard />;
+  return (
+    <>
+      
+      <Dashboard />
+    </>
+  );
 }

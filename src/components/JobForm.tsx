@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { JobApplication, JobStatus } from '../types';
 import { Wand2, Loader2, X } from 'lucide-react';
+import { FileUpload, UploadedFile } from './FileUpload';
 import { createCalendarEvent } from '../lib/calendar';
 
 const STATUSES: JobStatus[] = ['Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
@@ -21,7 +22,6 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   const handleExtract = async () => {
     if (!pasteText.trim()) return;
@@ -63,20 +63,49 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'resumeUrl' | 'coverLetterUrl') => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 1024 * 1024 * 2) {
-        alert('File size must be less than 2MB');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, [field]: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleAttachmentsChange = (files: UploadedFile[]) => {
+    const attachments = files.map(f => ({
+      name: f.fileName,
+      url: f.base64 || f.url || ''
+    })).filter(f => f.url !== '');
+
+    setFormData(prev => ({ ...prev, attachments }));
   };
+
+  const initialFiles = React.useMemo(() => {
+    const files: UploadedFile[] = [];
+    if (initialData?.attachments && initialData.attachments.length > 0) {
+      initialData.attachments.forEach((att, idx) => {
+        files.push({
+          id: `att-${idx}`,
+          fileName: att.name,
+          url: att.url,
+          progress: 100,
+          uploading: false,
+        });
+      });
+    } else {
+      if (initialData?.resumeUrl) {
+        files.push({
+          id: 'old-resume',
+          fileName: 'Attached_Resume',
+          url: initialData.resumeUrl,
+          progress: 100,
+          uploading: false,
+        });
+      }
+      if (initialData?.coverLetterUrl) {
+        files.push({
+          id: 'old-cover',
+          fileName: 'Attached_CoverLetter',
+          url: initialData.coverLetterUrl,
+          progress: 100,
+          uploading: false,
+        });
+      }
+    }
+    return files;
+  }, [initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,7 +147,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
           </h2>
           <button
             onClick={onCancel}
-            className="text-slate-400 hover:text-slate-600 transition-colors"
+            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 hover:bg-slate-100 hover:text-slate-900 h-9 w-9 p-0 text-slate-500"
           >
             <X size={24} />
           </button>
@@ -144,7 +173,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
                 type="button" 
                 onClick={handleExtract}
                 disabled={isExtracting || !pasteText.trim()}
-                className={`self-start flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold text-sm rounded-lg transition-colors ${(isExtracting || !pasteText.trim()) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`self-start gap-2 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2 ${(isExtracting || !pasteText.trim()) ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 {isExtracting ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
                 {isExtracting ? 'Extracting...' : 'Auto-fill fields'}
@@ -197,17 +226,16 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
             <textarea name="notes" value={formData.notes || ''} onChange={handleChange} rows={3} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm"></textarea>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Resume</label>
-              <input type="file" accept=".pdf,.doc,.docx" onChange={e => handleFileChange(e, 'resumeUrl')} className="w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer" />
-              {formData.resumeUrl && <span className="text-xs font-bold text-emerald-600 mt-2 block">✓ Resume attached</span>}
-            </div>
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Cover Letter</label>
-              <input type="file" accept=".pdf,.doc,.docx" onChange={e => handleFileChange(e, 'coverLetterUrl')} className="w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer" />
-              {formData.coverLetterUrl && <span className="text-xs font-bold text-emerald-600 mt-2 block">✓ Cover letter attached</span>}
-            </div>
+          <div className="grid grid-cols-1 gap-4 mt-2">
+            <FileUpload 
+              label="Attachments" 
+              accept=".pdf,.doc,.docx,.xls,.xlsx,image/*,.csv"
+              description="Accepted: .pdf,.doc,.docx,excel,image,CSV. Max: 5MB." 
+              maxSizeMB={5}
+              maxFiles={5}
+              initialFiles={initialFiles}
+              onFilesChange={handleAttachmentsChange} 
+            />
           </div>
 
           </form>
@@ -215,31 +243,16 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
         
         <div className="p-6 border-t border-slate-100 bg-slate-50 shrink-0 flex justify-between items-center">
           {initialData && onDelete ? (
-            showConfirmDelete ? (
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-red-500 uppercase">Are you sure?</span>
-                <button type="button" onClick={async () => {
-                  try {
-                    setSaveError(null);
-                    await onDelete(initialData.id);
-                  } catch (err: any) {
-                    setSaveError(err.message || 'Failed to delete application');
-                  }
-                }} className="text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded text-xs font-bold uppercase">Yes</button>
-                <button type="button" onClick={() => setShowConfirmDelete(false)} className="text-slate-500 hover:text-slate-700 px-3 py-1.5 rounded text-xs font-bold uppercase">No</button>
-              </div>
-            ) : (
-              <button type="button" onClick={() => setShowConfirmDelete(true)} className="text-red-500 hover:text-red-600 font-bold text-xs uppercase tracking-wider">
+              <button type="button" onClick={(e) => { e.preventDefault(); onDelete(initialData.id); }} className="text-red-500 hover:text-red-600 font-bold text-xs uppercase tracking-wider">
                 Delete
               </button>
-            )
           ) : <div></div>}
           
           <div className="flex gap-3">
-            <button type="button" onClick={onCancel} className="px-5 py-2 text-slate-600 font-bold text-sm hover:bg-slate-200 bg-slate-100 rounded-xl transition-colors">
+            <button type="button" onClick={onCancel} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2">
               Cancel
             </button>
-            <button type="submit" form="job-form" disabled={isSaving} className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl disabled:opacity-50 transition-colors">
+            <button type="submit" form="job-form" disabled={isSaving} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-slate-900 text-slate-50 shadow hover:bg-slate-900/90 h-9 px-4 py-2">
               {isSaving ? 'Saving...' : 'Save Application'}
             </button>
           </div>

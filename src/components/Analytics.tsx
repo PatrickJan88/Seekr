@@ -67,7 +67,7 @@ export function Analytics({ applications }: AnalyticsProps) {
 
   return (
     <div className="grid grid-cols-12 gap-6">
-      <div className="col-span-12 md:col-span-8 bg-white border-2 border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col">
+      <div className="col-span-12 md:col-span-8 bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col">
         <h3 className="text-sm font-bold text-slate-800 mb-4">Active Progress Summary</h3>
         <div className="h-72 flex-grow">
           <ResponsiveContainer width="100%" height="100%">
@@ -82,7 +82,7 @@ export function Analytics({ applications }: AnalyticsProps) {
         </div>
       </div>
 
-      <div className="col-span-12 md:col-span-4 bg-[#314158] border-2 border-[#314158] rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+      <div className="col-span-12 md:col-span-4 bg-[#314158] border border-[#314158] rounded-xl p-5 shadow-sm flex flex-col justify-between">
         <div>
           <h3 className="text-sm font-bold text-slate-100 mb-4">Current Status</h3>
           <div className="h-48 mb-4">
@@ -111,7 +111,7 @@ export function Analytics({ applications }: AnalyticsProps) {
         </div>
       </div>
 
-      <div className="col-span-12 bg-white border-2 border-slate-200 rounded-2xl p-5 shadow-sm">
+      <div className="col-span-12 bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
         <h3 className="text-sm font-bold text-slate-800 mb-4">LinkedIn Premium Insights</h3>
         {!savedInsights ? (
           <form onSubmit={handleSaveInsights} className="flex flex-col md:flex-row gap-4 items-end">
@@ -123,7 +123,7 @@ export function Analytics({ applications }: AnalyticsProps) {
               <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Search Appearances</label>
               <input type="number" value={linkedinSearches} onChange={e => setLinkedinSearches(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" placeholder="e.g. 450" />
             </div>
-            <button type="submit" className="w-full md:w-auto px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold h-[42px] transition-colors">
+            <button type="submit" className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-slate-900 text-slate-50 shadow hover:bg-slate-900/90 h-9 px-4 py-2 w-full md:w-auto">
               Save Insights
             </button>
           </form>
@@ -137,7 +137,7 @@ export function Analytics({ applications }: AnalyticsProps) {
               <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Search Appearances</div>
               <div className="text-3xl font-black text-slate-800">{savedInsights.searches}</div>
             </div>
-            <button onClick={() => setSavedInsights(null)} className="text-xs font-bold text-blue-600 hover:text-blue-700 mt-auto ml-auto px-4 py-2 border border-blue-200 rounded-lg bg-blue-50">
+            <button onClick={() => setSavedInsights(null)} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2 mt-auto ml-auto">
               Edit
             </button>
           </div>

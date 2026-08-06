@@ -10,6 +10,7 @@ import { Footer } from './Footer';
 import { Plus, Download, Upload, LayoutDashboard, BarChart3, LogOut, Loader2, Calendar, Trash2, Settings, X, Twitter, Github, Linkedin } from 'lucide-react';
 import { auth, logout, getAccessToken } from '../lib/firebase';
 import Papa from 'papaparse';
+import { toast } from 'sonner';
 
 export function Dashboard() {
   const [applications, setApplications] = useState<JobApplication[]>([]);
@@ -20,10 +21,11 @@ export function Dashboard() {
   const [editingApp, setEditingApp] = useState<JobApplication | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
-    if (isFormOpen || showClearConfirm || isSettingsOpen) {
+    if (isFormOpen || showClearConfirm || isSettingsOpen || !!deleteConfirmId) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'auto';
@@ -32,7 +34,7 @@ export function Dashboard() {
     return () => {
       document.body.style.overflow = 'auto';
     }
-  }, [isFormOpen, showClearConfirm, isSettingsOpen]);
+  }, [isFormOpen, showClearConfirm, isSettingsOpen, deleteConfirmId]);
 
   useEffect(() => {
     if (auth.currentUser) {
@@ -96,14 +98,22 @@ export function Dashboard() {
   };
 
   const handleDelete = async (id: string) => {
+    setDeleteConfirmId(id);
+  };
+
+  const confirmDeleteApp = async () => {
+    if (!deleteConfirmId) return;
     try {
-      await deleteApplication(id);
+      await deleteApplication(deleteConfirmId);
       setIsFormOpen(false);
       setEditingApp(null);
-      setApplications(apps => apps.filter(a => a.id !== id));
+      setApplications(apps => apps.filter(a => a.id !== deleteConfirmId));
+      toast.success('Application deleted successfully');
     } catch (err) {
       console.error('Error deleting', err);
-      throw err;
+      toast.error('Failed to delete application');
+    } finally {
+      setDeleteConfirmId(null);
     }
   };
 
@@ -121,7 +131,7 @@ export function Dashboard() {
       localStorage.clear();
     } catch (err) {
       console.error('Error clearing data', err);
-      alert('Failed to clear data');
+      toast.error('Failed to clear data');
     } finally {
       setIsSyncing(false);
     }
@@ -161,11 +171,11 @@ export function Dashboard() {
             await addApplicationsBatch(imports as any[]);
           }
           await loadData();
-          alert('Imported successfully');
+          toast.success('Imported successfully');
         } catch (err: any) {
           console.error('Import error', err);
           setSyncError(err.message || 'Failed to import data');
-          alert('Failed to import data');
+          toast.error('Failed to import data');
         } finally {
           setIsSyncing(false);
         }
@@ -196,7 +206,7 @@ export function Dashboard() {
           <div className="flex items-center gap-4 border-l border-slate-200 pl-6">
             <button 
               onClick={() => { setEditingApp(null); setIsFormOpen(true); }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
+              className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-slate-900 text-slate-50 shadow hover:bg-slate-900/90 h-9 px-4 py-2 gap-2"
             >
               <Plus size={16} />
               <span>New Application</span>
@@ -205,32 +215,32 @@ export function Dashboard() {
         </div>
         
         <div className="flex items-center gap-4">
-          <button onClick={() => setIsSettingsOpen(true)} title="Settings" className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors">
+          <button onClick={() => setIsSettingsOpen(true)} title="Settings" className="w-10 h-10 rounded-lg bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all">
             <Settings size={16} />
           </button>
         </div>
       </header>
 
-      <main className="p-6 max-w-[1400px] mx-auto w-full flex-grow flex flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-4 bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm">
+      <main className="p-6 w-full flex-grow flex flex-col gap-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
           <div className="flex gap-2">
             <button
               onClick={() => setView('sankey')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-colors ${view === 'sankey' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-all ${view === 'sankey' ? 'bg-slate-100 text-slate-800 border border-slate-200 shadow-sm' : 'text-slate-500 hover:bg-slate-50 border border-transparent'}`}
             >
               <LayoutDashboard size={16} />
               Flow Chart
             </button>
             <button
               onClick={() => setView('kanban')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-colors ${view === 'kanban' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-all ${view === 'kanban' ? 'bg-slate-100 text-slate-800 border border-slate-200 shadow-sm' : 'text-slate-500 hover:bg-slate-50 border border-transparent'}`}
             >
               <LayoutDashboard size={16} />
               Kanban
             </button>
             <button
               onClick={() => setView('analytics')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-colors ${view === 'analytics' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-all ${view === 'analytics' ? 'bg-slate-100 text-slate-800 border border-slate-200 shadow-sm' : 'text-slate-500 hover:bg-slate-50 border border-transparent'}`}
             >
               <BarChart3 size={16} />
               Analytics
@@ -239,12 +249,12 @@ export function Dashboard() {
 
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap gap-3">
-              <label className={`flex items-center gap-2 cursor-pointer border border-slate-200 hover:bg-slate-50 px-4 py-2 rounded-lg font-bold text-sm text-slate-600 transition-colors ${isSyncing ? 'opacity-50 cursor-not-allowed' : ''}`}>
+              <label className={`cursor-pointer gap-2 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2 ${isSyncing ? "opacity-50 cursor-not-allowed" : ""}`}>
                 {isSyncing ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
                 {isSyncing ? 'Importing...' : 'Import CSV'}
                 <input type="file" accept=".csv" className="hidden" onChange={handleCsvImport} onClick={(e) => { (e.target as HTMLInputElement).value = ''; }} disabled={isSyncing} />
               </label>
-              <label className={`flex items-center gap-2 cursor-pointer border border-slate-200 hover:bg-slate-50 px-4 py-2 rounded-lg font-bold text-sm text-slate-600 transition-colors ${isSyncing ? 'opacity-50 cursor-not-allowed' : ''}`}>
+              <label className={`cursor-pointer gap-2 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2 ${isSyncing ? "opacity-50 cursor-not-allowed" : ""}`}>
                 {isSyncing ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
                 {isSyncing ? 'Syncing...' : 'Sync PDF Data'}
                 <input type="file" accept=".pdf" className="hidden" onClick={(e) => { (e.target as HTMLInputElement).value = ''; }} onChange={async (e) => {
@@ -277,14 +287,14 @@ export function Dashboard() {
                       if (appsToImport.length > 0) {
                         await addApplicationsBatch(appsToImport);
                         await loadData();
-                        alert(`Successfully synced ${appsToImport.length} records from PDF!`);
+                        toast.success(`Successfully synced ${appsToImport.length} records from PDF!`);
                       } else {
-                        alert('No job applications found in PDF.');
+                        toast.info('No job applications found in PDF.');
                       }
                     } catch(err: any) {
                       console.error(err);
                       setSyncError(err.message || 'Failed to sync PDF');
-                      alert('Failed to sync PDF');
+                      toast.error('Failed to sync PDF');
                     } finally {
                       setIsSyncing(false);
                     }
@@ -295,7 +305,7 @@ export function Dashboard() {
               <button
                 onClick={() => exportCsv(applications)}
                 disabled={applications.length === 0 || isSyncing}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-colors ${applications.length === 0 || isSyncing ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-slate-800 hover:bg-slate-900 text-white'}`}
+                className={`gap-2 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-slate-900 text-slate-50 shadow hover:bg-slate-900/90 h-9 px-4 py-2 ${applications.length === 0 || isSyncing ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 <Download size={16} />
                 Export
@@ -306,15 +316,15 @@ export function Dashboard() {
         </div>
 
         {applications.length === 0 ? (
-          <div className="flex-grow flex flex-col items-center justify-center bg-white border-2 border-slate-200 rounded-2xl p-12 shadow-sm text-center">
-             <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-4">
+          <div className="flex-grow flex flex-col items-center justify-center bg-white border border-slate-200 rounded-xl p-12 shadow-sm text-center">
+             <div className="w-16 h-16 bg-slate-100 text-slate-500 rounded-xl flex items-center justify-center mb-4 border border-slate-200">
                <Plus size={32} />
              </div>
              <h3 className="text-xl font-bold text-slate-800 mb-2">No applications yet</h3>
              <p className="text-slate-500 max-w-md mb-6">You haven't tracked any job applications. Start by adding one manually or import from a CSV or PDF file.</p>
              <button
                onClick={() => { setEditingApp(null); setIsFormOpen(true); }}
-               className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center gap-2"
+               className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2 gap-2"
              >
                <Plus size={20} />
                <span>Add Your First Application</span>
@@ -323,7 +333,7 @@ export function Dashboard() {
         ) : view === 'sankey' ? (
           <SankeyChart applications={applications} />
         ) : view === 'kanban' ? (
-          <Kanban applications={applications} onEdit={(app) => { setEditingApp(app); setIsFormOpen(true); }} onStatusChange={handleStatusChange} />
+          <Kanban applications={applications} onEdit={(app) => { setEditingApp(app); setIsFormOpen(true); }} onStatusChange={handleStatusChange} onDelete={handleDelete} />
         ) : (
           <Analytics applications={applications} />
         )}
@@ -361,7 +371,7 @@ export function Dashboard() {
               <h2 className="text-xl font-bold text-slate-800">Settings</h2>
               <button
                 onClick={() => setIsSettingsOpen(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 hover:bg-slate-100 hover:text-slate-900 h-9 w-9 p-0 text-slate-500"
               >
                 <X size={24} />
               </button>
@@ -396,7 +406,7 @@ export function Dashboard() {
                   <span className="text-xs text-slate-500">Sign out of your account on this device.</span>
                   <button
                     onClick={() => { setIsSettingsOpen(false); logout(); }}
-                    className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                    className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2"
                   >
                     Log Out
                   </button>
@@ -415,7 +425,7 @@ export function Dashboard() {
                   <button
                     onClick={() => { setIsSettingsOpen(false); handleClearData(); }}
                     disabled={isSyncing}
-                    className="px-4 py-2 bg-red-600 border border-red-600 rounded-lg text-sm font-medium text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+                    className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-red-500 text-slate-50 shadow hover:bg-red-500/90 h-9 px-4 py-2"
                   >
                     Clear All Data
                   </button>
@@ -426,8 +436,39 @@ export function Dashboard() {
           </div>
         </div>
       )}
+      
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="p-6">
+              <h2 className="text-xl font-black text-slate-800 mb-2">Delete Application?</h2>
+              <p className="text-slate-500 mb-6 text-sm">
+                Are you sure you want to delete this job application? This action cannot be undone.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirmId(null)}
+                  className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDeleteApp}
+                  className="px-4 py-2 font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors flex items-center gap-2"
+                >
+                  <Trash2 size={16} />
+                  Yes, Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showClearConfirm && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
             <div className="p-6">
               <h2 className="text-xl font-black text-slate-800 mb-2">Clear All Data?</h2>
@@ -438,7 +479,7 @@ export function Dashboard() {
                 <button
                   type="button"
                   onClick={() => setShowClearConfirm(false)}
-                  className="px-4 py-2 font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+                  className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2"
                 >
                   Cancel
                 </button>

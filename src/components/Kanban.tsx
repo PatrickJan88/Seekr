@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { JobApplication, JobStatus } from '../types';
-import { Calendar, Building, MoreVertical } from 'lucide-react';
+import { Calendar, Building, MoreVertical, LayoutDashboard, List } from 'lucide-react';
+import { ListView } from './ListView';
 
 const STATUSES: JobStatus[] = ['Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
 
@@ -8,10 +9,12 @@ interface KanbanProps {
   applications: JobApplication[];
   onEdit: (app: JobApplication) => void;
   onStatusChange: (appId: string, status: JobStatus) => void;
+  onDelete: (appId: string) => void;
 }
 
-export function Kanban({ applications, onEdit, onStatusChange }: KanbanProps) {
+export function Kanban({ applications, onEdit, onStatusChange, onDelete }: KanbanProps) {
   const [activeTab, setActiveTab] = useState<'active' | 'inactive'>('active');
+  const [layoutMode, setLayoutMode] = useState<'kanban' | 'list'>('kanban');
   const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'weekly' | 'monthly' | 'yearly' | 'custom'>('all');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
@@ -64,18 +67,19 @@ export function Kanban({ applications, onEdit, onStatusChange }: KanbanProps) {
         <div className="flex gap-2">
           <button 
             onClick={() => setActiveTab('active')}
-            className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${activeTab === 'active' ? 'bg-blue-100 text-blue-700' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}
+            className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${activeTab === 'active' ? 'bg-slate-100 text-slate-800 shadow-sm border border-slate-200' : 'text-slate-500 hover:bg-slate-50 border border-transparent'}`}
           >
             Active Progress
           </button>
           <button 
             onClick={() => setActiveTab('inactive')}
-            className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${activeTab === 'inactive' ? 'bg-blue-100 text-blue-700' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}
+            className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${activeTab === 'inactive' ? 'bg-slate-100 text-slate-800 shadow-sm border border-slate-200' : 'text-slate-500 hover:bg-slate-50 border border-transparent'}`}
           >
             Closed
           </button>
         </div>
         
+        <div className="flex items-center gap-2">
         <div className="flex items-center gap-4 bg-white border border-slate-200 rounded-lg p-1.5 shadow-sm overflow-x-auto whitespace-nowrap scrollbar-thin">
           <div className="flex gap-1 items-center">
             <Calendar size={14} className="text-slate-500 ml-2 mr-1" />
@@ -84,7 +88,7 @@ export function Kanban({ applications, onEdit, onStatusChange }: KanbanProps) {
               <button
                 key={tf}
                 onClick={() => setTimeFilter(tf as any)}
-                className={`px-3 py-1.5 rounded-md font-bold text-xs transition-colors ${timeFilter === tf ? 'bg-blue-100 text-blue-700' : 'bg-transparent text-slate-600 hover:bg-slate-100'}`}
+                className={`px-3 py-1.5 rounded-md font-bold text-xs transition-colors ${timeFilter === tf ? 'bg-slate-100 text-slate-800 shadow-sm border border-slate-200' : 'text-slate-500 hover:bg-slate-50 border border-transparent'}`}
               >
                 {tf.charAt(0).toUpperCase() + tf.slice(1)}
               </button>
@@ -108,11 +112,30 @@ export function Kanban({ applications, onEdit, onStatusChange }: KanbanProps) {
               />
             </div>
           )}
+        
+        </div>
+          <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1.5 shadow-sm">
+            <button
+              onClick={() => setLayoutMode('kanban')}
+              className={`p-1.5 rounded-md transition-colors ${layoutMode === 'kanban' ? 'bg-slate-100 text-slate-800 shadow-sm border border-slate-200' : 'text-slate-500 hover:bg-slate-50 border border-transparent'}`}
+              title="Kanban View"
+            >
+              <LayoutDashboard size={16} />
+            </button>
+            <button
+              onClick={() => setLayoutMode('list')}
+              className={`p-1.5 rounded-md transition-colors ${layoutMode === 'list' ? 'bg-slate-100 text-slate-800 shadow-sm border border-slate-200' : 'text-slate-500 hover:bg-slate-50 border border-transparent'}`}
+              title="List View"
+            >
+              <List size={16} />
+            </button>
+          </div>
         </div>
       </div>
+      {layoutMode === 'kanban' ? (
       <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100vh-270px)] snap-x">
         {displayStatuses.map(status => (
-        <div key={status} className={`flex-shrink-0 w-[280px] lg:w-[calc(20%-13px)] xl:w-[calc(20%-13px)] lg:min-w-[150px] flex flex-col border-2 rounded-2xl p-5 shadow-sm snap-start ${status === 'Offer' ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-200'}`}
+        <div key={status} className={`flex-shrink-0 w-[280px] lg:w-[calc(20%-13px)] xl:w-[calc(20%-13px)] lg:min-w-[150px] flex flex-col border rounded-xl p-4 shadow-sm snap-start ${status === 'Offer' ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-200'}`}
           onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
           onDrop={(e) => {
             e.preventDefault();
@@ -145,7 +168,6 @@ export function Kanban({ applications, onEdit, onStatusChange }: KanbanProps) {
                   </button>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-slate-500 mb-3">
-                  <Building size={14} />
                   <span className="truncate">{app.company}</span>
                 </div>
                 {app.nextInterviewDate && (
@@ -159,7 +181,10 @@ export function Kanban({ applications, onEdit, onStatusChange }: KanbanProps) {
           </div>
         </div>
       ))}
-    </div>
+          </div>
+      ) : (
+        <ListView applications={filteredApplications.filter(app => displayStatuses.includes(app.status))} onEdit={onEdit} onStatusChange={onStatusChange} onDelete={onDelete} />
+      )}
     </div>
   );
 }

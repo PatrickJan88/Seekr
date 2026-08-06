@@ -1,98 +1,106 @@
 const fs = require('fs');
-let code = fs.readFileSync('src/components/Dashboard.tsx', 'utf-8');
 
-const importReplacement = `import { Plus, Download, Upload, LayoutDashboard, BarChart3, LogOut, Loader2, Calendar } from 'lucide-react';`;
-code = code.replace(/import \{ Plus, Download, Upload, LayoutDashboard, BarChart3, LogOut, Loader2 \} from 'lucide-react';/g, importReplacement);
+let content = fs.readFileSync('src/components/Dashboard.tsx', 'utf8');
 
-const stateInjection = `  const [view, setView] = useState<'sankey' | 'kanban' | 'analytics'>('sankey');
-  const [editingApp, setEditingApp] = useState<JobApplication | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'weekly' | 'monthly' | 'yearly' | 'custom'>('all');
-  const [customStartDate, setCustomStartDate] = useState('');
-  const [customEndDate, setCustomEndDate] = useState('');`;
-code = code.replace(/  const \[view, setView\] = useState\<'sankey' \| 'kanban' \| 'analytics'\>\('sankey'\);\n  const \[editingApp, setEditingApp\] = useState\<JobApplication \| null\>\(null\);\n  const \[isFormOpen, setIsFormOpen\] = useState\(false\);/g, stateInjection);
+// Import toast
+if (!content.includes('import { toast } from \'sonner\'')) {
+  content = content.replace(
+    'import Papa from \'papaparse\';',
+    'import Papa from \'papaparse\';\nimport { toast } from \'sonner\';'
+  );
+}
 
-const filterLogic = `
-  const filteredApplications = applications.filter(app => {
-    if (timeFilter === 'all') return true;
-    if (!app.appliedDate) return false;
-    
-    const appliedTime = new Date(app.appliedDate).getTime();
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    
-    if (timeFilter === 'today') {
-      return appliedTime >= today;
+// State for delete confirm
+if (!content.includes('const [deleteConfirmId, setDeleteConfirmId]')) {
+  content = content.replace(
+    'const [showClearConfirm, setShowClearConfirm] = useState(false);',
+    'const [showClearConfirm, setShowClearConfirm] = useState(false);\n  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);'
+  );
+}
+
+// Modify handleDelete
+content = content.replace(
+  /const handleDelete = async \(id: string\) => \{[\s\S]*?\};/,
+  `const handleDelete = (id: string) => {
+    setDeleteConfirmId(id);
+  };
+
+  const confirmDeleteApp = async () => {
+    if (!deleteConfirmId) return;
+    try {
+      await deleteApplication(deleteConfirmId);
+      setIsFormOpen(false);
+      setEditingApp(null);
+      setApplications(apps => apps.filter(a => a.id !== deleteConfirmId));
+      toast.success('Application deleted successfully');
+    } catch (err) {
+      console.error('Error deleting', err);
+      toast.error('Failed to delete application');
+    } finally {
+      setDeleteConfirmId(null);
     }
-    if (timeFilter === 'weekly') {
-      const lastWeek = new Date(today - 7 * 24 * 60 * 60 * 1000).getTime();
-      return appliedTime >= lastWeek;
-    }
-    if (timeFilter === 'monthly') {
-      const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()).getTime();
-      return appliedTime >= lastMonth;
-    }
-    if (timeFilter === 'yearly') {
-      const lastYear = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()).getTime();
-      return appliedTime >= lastYear;
-    }
-    if (timeFilter === 'custom') {
-      const start = customStartDate ? new Date(customStartDate).getTime() : 0;
-      const end = customEndDate ? new Date(customEndDate).getTime() + 24 * 60 * 60 * 1000 - 1 : Infinity;
-      return appliedTime >= start && appliedTime <= end;
-    }
-    return true;
-  });
+  };`
+);
 
-  return (`;
-
-code = code.replace(/  return \(/, filterLogic);
-
-const componentPropsReplacement = `        {view === 'sankey' && <SankeyChart applications={filteredApplications} />}
-        {view === 'kanban' && <Kanban applications={filteredApplications} onEdit={setEditingApp} onStatusChange={handleStatusChange} />}
-        {view === 'analytics' && <Analytics applications={filteredApplications} />}`;
-
-code = code.replace(/        \{view === 'sankey' && \<SankeyChart applications=\{applications\} \/\>\}\n        \{view === 'kanban' && \<Kanban applications=\{applications\} onEdit=\{setEditingApp\} onStatusChange=\{handleStatusChange\} \/\>\}\n        \{view === 'analytics' && \<Analytics applications=\{applications\} \/\>\}/g, componentPropsReplacement);
-
-const filterUIRender = `        <div className="flex flex-wrap items-center justify-between gap-4 bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm">`;
-
-const filterUIReplacement = `        <div className="flex items-center gap-4 bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm overflow-x-auto whitespace-nowrap scrollbar-thin">
-          <div className="flex gap-2 items-center">
-            <Calendar size={16} className="text-slate-500 mr-2" />
-            <span className="text-sm font-bold text-slate-700 mr-2">Time:</span>
-            {['all', 'today', 'weekly', 'monthly', 'yearly', 'custom'].map((tf) => (
-              <button
-                key={tf}
-                onClick={() => setTimeFilter(tf as any)}
-                className={\`px-3 py-1.5 rounded-lg font-bold text-xs transition-colors \${timeFilter === tf ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border-slate-200'} border\`}
-              >
-                {tf.charAt(0).toUpperCase() + tf.slice(1)}
-              </button>
-            ))}
-          </div>
-          
-          {timeFilter === 'custom' && (
-            <div className="flex items-center gap-2 border-l border-slate-200 pl-4 ml-2">
-              <input
-                type="date"
-                value={customStartDate}
-                onChange={(e) => setCustomStartDate(e.target.value)}
-                className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <span className="text-slate-400 text-xs">to</span>
-              <input
-                type="date"
-                value={customEndDate}
-                onChange={(e) => setCustomEndDate(e.target.value)}
-                className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+// Add the modal HTML
+const modalHtml = `
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="p-6">
+              <h2 className="text-xl font-black text-slate-800 mb-2">Delete Application?</h2>
+              <p className="text-slate-500 mb-6 text-sm">
+                Are you sure you want to delete this job application? This action cannot be undone.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirmId(null)}
+                  className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDeleteApp}
+                  className="px-4 py-2 font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors flex items-center gap-2"
+                >
+                  <Trash2 size={16} />
+                  Yes, Delete
+                </button>
+              </div>
             </div>
-          )}
+          </div>
         </div>
-        
-        <div className="flex flex-wrap items-center justify-between gap-4 bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm">`;
+      )}
+`;
 
-code = code.replace(filterUIRender, filterUIReplacement);
+content = content.replace(
+  '{showClearConfirm && (',
+  modalHtml + '\n      {showClearConfirm && ('
+);
 
-fs.writeFileSync('src/components/Dashboard.tsx', code);
-console.log("Patched Dashboard.tsx");
+// We should also use toast in other places where we show alerts or successful actions
+content = content.replace(
+  /alert\('Failed to import data'\);/g,
+  "toast.error('Failed to import data');"
+);
+
+content = content.replace(
+  /alert\('Failed to clear data'\);/g,
+  "toast.error('Failed to clear data');"
+);
+
+// Inside confirmClearData
+content = content.replace(
+  /setApplications\(\[\]\);\n\s*\}\s*catch/g,
+  "setApplications([]);\n      toast.success('All data cleared');\n    } catch"
+);
+
+// Add toast on saved app
+content = content.replace(
+  /setApplications\(prev => \[\.\.\.prev\.filter\(a => a\.id !== app\.id\), app\]\);\n\s*setIsFormOpen\(false\);\n\s*setEditingApp\(null\);/g,
+  "setApplications(prev => [...prev.filter(a => a.id !== app.id), app]);\n      setIsFormOpen(false);\n      setEditingApp(null);\n      toast.success('Application saved');"
+);
+
+fs.writeFileSync('src/components/Dashboard.tsx', content);

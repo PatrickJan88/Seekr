@@ -1,3 +1,8 @@
+export interface Attachment {
+  name: string;
+  url: string;
+}
+
 export type JobStatus = 'Applied' | 'Screening' | 'Technical' | 'Final' | 'Offer' | 'Rejected' | 'Ghosted';
 
 export interface JobApplication {
@@ -14,6 +19,7 @@ export interface JobApplication {
   salaryRange?: string;
   resumeUrl?: string; // base64 or link
   coverLetterUrl?: string; // base64 or link
+  attachments?: Attachment[];
   calendarEventId?: string; // Sync with Google Calendar
   createdAt: number;
   updatedAt: number;
