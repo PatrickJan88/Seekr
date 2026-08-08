@@ -1,15 +1,19 @@
 const fs = require('fs');
-let code = fs.readFileSync('src/lib/firebase.ts', 'utf-8');
+const path = require('path');
+const config = JSON.parse(fs.readFileSync('firebase-applet-config.json', 'utf8'));
 
-const targetImport = `import { getFirestore } from 'firebase/firestore';`;
-const newImport = `import { getFirestore, initializeFirestore } from 'firebase/firestore';`;
+let content = fs.readFileSync('src/lib/firebase.ts', 'utf8');
 
-code = code.replace(targetImport, newImport);
+const newConfig = `const firebaseConfig = {
+  apiKey: "${config.apiKey}",
+  authDomain: "${config.authDomain}",
+  projectId: "${config.projectId}",
+  storageBucket: "${config.storageBucket}",
+  messagingSenderId: "${config.messagingSenderId}",
+  appId: "${config.appId}"
+};`;
 
-const targetInit = `export const db = getFirestore(app);`;
-const newInit = `export const db = initializeFirestore(app, { experimentalForceLongPolling: true });`;
+content = content.replace(/const firebaseConfig = \{[\s\S]*?\};/, newConfig);
+content = content.replace("export const db = getFirestore(app);", `export const db = getFirestore(app, "${config.firestoreDatabaseId}");`);
 
-code = code.replace(targetInit, newInit);
-
-fs.writeFileSync('src/lib/firebase.ts', code);
-console.log("Patched firebase.ts for long polling");
+fs.writeFileSync('src/lib/firebase.ts', content);

@@ -149,7 +149,7 @@ export function FileUpload({ label, onFilesChange, accept = ".pdf,.doc,.docx", m
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-1">
-        <label className="block text-xs font-bold uppercase tracking-widest text-slate-400">{label}</label>
+        <label className="block text-xs font-bold text-slate-400">{label}</label>
         <span className="text-xs text-slate-400">{files.length} / {maxFiles}</span>
       </div>
 

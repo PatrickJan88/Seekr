@@ -1,9 +1,10 @@
 const fs = require('fs');
-let code = fs.readFileSync('src/lib/firebase.ts', 'utf-8');
+let content = fs.readFileSync('src/lib/firebase.ts', 'utf8');
 
-const targetInit = `export const db = initializeFirestore(app, { experimentalForceLongPolling: true });`;
-const newInit = `export const db = initializeFirestore(app, { experimentalForceLongPolling: true }, (firebaseConfig as any).firestoreDatabaseId);`;
+content = content.replace(
+  'googleProvider.addScope("https://www.googleapis.com/auth/calendar.events");',
+  `googleProvider.addScope("https://www.googleapis.com/auth/calendar.events");
+googleProvider.setCustomParameters({ prompt: 'consent' });`
+);
 
-code = code.replace(targetInit, newInit);
-fs.writeFileSync('src/lib/firebase.ts', code);
-console.log("Patched firebase.ts for databaseId");
+fs.writeFileSync('src/lib/firebase.ts', content);

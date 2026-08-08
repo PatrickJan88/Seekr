@@ -4,24 +4,26 @@ import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, query, whe
 import { getAnalytics } from 'firebase/analytics';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDn3miN-Urzh6pk5Wmyqxry7RmysdCHTaE",
-  authDomain: "seekr-37311.firebaseapp.com",
-  projectId: "seekr-37311",
-  storageBucket: "seekr-37311.firebasestorage.app",
-  messagingSenderId: "524936950392",
-  appId: "1:524936950392:web:9d31d164b838e4178ef38d",
-  measurementId: "G-2WKHY5F4B3"
+  apiKey: "AIzaSyAAdTHdsZwQv6qm91_ArnUpzafzZ52hA2g",
+  authDomain: "hazel-streamer-l1ttq.firebaseapp.com",
+  projectId: "hazel-streamer-l1ttq",
+  storageBucket: "hazel-streamer-l1ttq.firebasestorage.app",
+  messagingSenderId: "773789142381",
+  appId: "1:773789142381:web:a2d4e8a385863041d89e64"
 };
 
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const db = getFirestore(app, "ai-studio-careerdashboard-466a1dfe-d8a5-404b-9007-ad83a46a7434");
 
 export const googleProvider = new GoogleAuthProvider();
 
-export const googleSignIn = () => signInWithPopup(auth, googleProvider);
+
+export const googleSignIn = async () => {
+  return signInWithPopup(auth, googleProvider);
+};
 export const anonymousSignIn = () => signInAnonymously(auth);
 export const logout = () => signOut(auth);
 
@@ -37,10 +39,4 @@ export const initAuth = (onLogin: (user: User) => void, onLogout: () => void) =>
 
 export type { User };
 
-export const getAccessToken = async () => {
-  const user = auth.currentUser;
-  if (user) {
-    return user.getIdToken();
-  }
-  return null;
-};
+

@@ -31,7 +31,7 @@ export function Footer({
 }: FooterProps) {
   return (
     <footer className="pt-4 pb-2 bg-slate-50 border-t border-slate-200 mt-auto flex flex-col">
-      <div className="px-4 lg:px-8 max-w-[1600px] mx-auto w-full flex-1 flex flex-col justify-between">
+      <div className="px-6 w-full flex-1 flex flex-col justify-between">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between">
           <div className="flex flex-col">
             <a

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { JobApplication, JobStatus } from '../types';
 import { Wand2, Loader2, X } from 'lucide-react';
 import { FileUpload, UploadedFile } from './FileUpload';
-import { createCalendarEvent } from '../lib/calendar';
+import { auth } from '../lib/firebase';
+import { toast } from 'sonner';
 
 const STATUSES: JobStatus[] = ['Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
 
@@ -56,7 +57,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
     }
   };
 
-  const [syncCalendar, setSyncCalendar] = useState(false);
+  // syncCalendar removed
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -123,13 +124,21 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
     setIsSaving(true);
     setSaveError(null);
     try {
-      if (syncCalendar && formData.nextInterviewDate) {
-        const eventId = await createCalendarEvent(formData as JobApplication);
-        if (eventId) {
-          formData.calendarEventId = eventId;
+      if (formData.reminder && formData.reminder !== 'none' && formData.nextInterviewDate) {
+        if (auth.currentUser) {
+          const isCustom = formData.reminder === 'custom';
+          let reminderMsg = `Reminder set for ${formData.company} interview ${formData.reminder} before.`;
+          if (isCustom && formData.customReminderDate && formData.customReminderEndDate) {
+            reminderMsg = `Reminder set for ${formData.company} interview from ${formData.customReminderDate} to ${formData.customReminderEndDate}.`;
+          } else if (isCustom && formData.customReminderDate) {
+            reminderMsg = `Reminder set for ${formData.company} interview on ${formData.customReminderDate}.`;
+          } else if (isCustom) {
+            reminderMsg = `Reminder set for ${formData.company} interview.`;
+          }
+          toast.success(reminderMsg);
         }
       }
-      await onSave(formData);
+      await onSave({ ...formData, reminderSent: false });
     } catch (err: any) {
       console.error("Save Error Caught:", err);
       setSaveError(err.message || 'Failed to save application');
@@ -158,7 +167,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
           
           {!initialData && (
           <div className="mb-6 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
-            <label className="block text-xs font-bold uppercase tracking-widest text-blue-800 mb-2">Smart Paste</label>
+            <label className="block text-xs font-bold text-blue-800 mb-2">Smart Paste</label>
             <p className="text-xs text-blue-600 mb-3">Paste a job description here to automatically fill out the company, position, and notes.</p>
             <div className="flex flex-col gap-2">
               <textarea 
@@ -184,45 +193,58 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
         <form id="job-form" onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Company *</label>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Company *</label>
               <input type="text" name="company" value={formData.company || ''} onChange={handleChange} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm" />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Position *</label>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Position *</label>
               <input type="text" name="position" value={formData.position || ''} onChange={handleChange} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm" />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Status</label>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Status</label>
               <select name="status" value={formData.status || 'Applied'} onChange={handleChange} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm">
                 {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Applied Date</label>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Applied Date</label>
               <input type="date" name="appliedDate" value={formData.appliedDate?.split('T')[0] || ''} onChange={handleChange} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm" />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Next Interview</label>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Next Interview</label>
               <input type="datetime-local" name="nextInterviewDate" value={formData.nextInterviewDate?.slice(0, 16) || ''} onChange={handleChange} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm" />
             </div>
-            <div className="flex items-center mt-6">
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
-                <input type="checkbox" checked={syncCalendar} onChange={e => setSyncCalendar(e.target.checked)} className="rounded text-blue-600 focus:ring-blue-500 h-4 w-4" />
-                Add to Google Calendar
-              </label>
+            <div className="flex flex-col justify-end relative">
+              <label className="block text-xs font-bold text-slate-400 mb-1">Reminder</label>
+              <select name="reminder" value={formData.nextInterviewDate ? (formData.reminder || 'none') : 'none'} onChange={handleChange} disabled={!formData.nextInterviewDate} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                <option value="none">None</option>
+                <option value="15 mins">15 mins before</option>
+                <option value="1 hour">1 hour before</option>
+                <option value="2 hours">2 hours before</option>
+                <option value="1 day">1 day before</option>
+                <option value="2 days">2 days before</option>
+                <option value="custom">Custom</option>
+              </select>
+              {formData.reminder === 'custom' && (
+                <div className="mt-2 flex items-center gap-2">
+                  <input type="date" name="customReminderDate" value={formData.customReminderDate?.split('T')[0] || ''} onChange={handleChange} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm" placeholder="Start Date" />
+                  <span className="text-slate-400 text-sm">to</span>
+                  <input type="date" name="customReminderEndDate" value={formData.customReminderEndDate?.split('T')[0] || ''} onChange={handleChange} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm" placeholder="End Date" />
+                </div>
+              )}
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Contact Name</label>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Contact Name</label>
               <input type="text" name="contactName" value={formData.contactName || ''} onChange={handleChange} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm" />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Contact Email</label>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Contact Email</label>
               <input type="email" name="contactEmail" value={formData.contactEmail || ''} onChange={handleChange} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm" />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Notes</label>
+            <label className="block text-xs font-bold text-slate-400 mb-1">Notes</label>
             <textarea name="notes" value={formData.notes || ''} onChange={handleChange} rows={3} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm"></textarea>
           </div>
 
@@ -243,7 +265,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
         
         <div className="p-6 border-t border-slate-100 bg-slate-50 shrink-0 flex justify-between items-center">
           {initialData && onDelete ? (
-              <button type="button" onClick={(e) => { e.preventDefault(); onDelete(initialData.id); }} className="text-red-500 hover:text-red-600 font-bold text-xs uppercase tracking-wider">
+              <button type="button" onClick={(e) => { e.preventDefault(); onDelete(initialData.id); }} className="text-red-500 hover:text-red-600 font-bold text-xs">
                 Delete
               </button>
           ) : <div></div>}

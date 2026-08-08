@@ -20,7 +20,20 @@ export interface JobApplication {
   resumeUrl?: string; // base64 or link
   coverLetterUrl?: string; // base64 or link
   attachments?: Attachment[];
-  calendarEventId?: string; // Sync with Google Calendar
+  reminder?: string;
+  customReminderDate?: string;
+  customReminderEndDate?: string;
+  reminderSent?: boolean;
   createdAt: number;
   updatedAt: number;
+}
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  timestamp: number;
+  unread: boolean;
 }

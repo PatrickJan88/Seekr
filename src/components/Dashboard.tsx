@@ -1,26 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { JobApplication, JobStatus } from '../types';
 import { getApplications, addApplication, updateApplication, deleteApplication, addApplicationsBatch, deleteAllApplications } from '../db/applications';
 import { Kanban } from './Kanban';
 import { Analytics } from './Analytics';
 import { SankeyChart } from './SankeyChart';
 import { JobForm } from './JobForm';
+import { FileUpload } from './FileUpload';
+import * as XLSX from 'xlsx';
 import { exportCsv } from '../lib/csv';
 import { Footer } from './Footer';
+import { NotificationCenter } from './NotificationCenter';
 import { Plus, Download, Upload, LayoutDashboard, BarChart3, LogOut, Loader2, Calendar, Trash2, Settings, X, Twitter, Github, Linkedin } from 'lucide-react';
-import { auth, logout, getAccessToken } from '../lib/firebase';
+import { auth, logout } from '../lib/firebase';
 import Papa from 'papaparse';
+import { addNotification } from '../lib/notifications';
 import { toast } from 'sonner';
+
+import { NotificationsPage } from './NotificationsPage';
 
 export function Dashboard() {
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const syncLockRef = useRef(false);
   const [syncError, setSyncError] = useState<string | null>(null);
-  const [view, setView] = useState<'sankey' | 'kanban' | 'analytics'>('sankey');
+  const [view, setView] = useState<'sankey' | 'kanban' | 'analytics' | 'notifications'>('sankey');
   const [editingApp, setEditingApp] = useState<JobApplication | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -41,6 +49,107 @@ export function Dashboard() {
       loadData();
     }
   }, [auth.currentUser]);
+
+  useEffect(() => {
+    if (!applications.length || !auth.currentUser) return;
+    
+    let isChecking = false;
+    const checkReminders = async () => {
+      if (isChecking) return;
+      isChecking = true;
+      try {
+        const now = new Date();
+        let updated = false;
+        
+        for (const app of applications) {
+          if (!app.nextInterviewDate || app.reminder === 'none' || app.reminderSent || !app.reminder) {
+            continue;
+          }
+
+          const interviewTime = new Date(app.nextInterviewDate).getTime();
+          let reminderTime = interviewTime;
+
+          if (app.reminder === '15 mins') reminderTime -= 15 * 60 * 1000;
+          else if (app.reminder === '1 hour') reminderTime -= 60 * 60 * 1000;
+          else if (app.reminder === '2 hours') reminderTime -= 2 * 60 * 60 * 1000;
+          else if (app.reminder === '1 day') reminderTime -= 24 * 60 * 60 * 1000;
+          else if (app.reminder === '2 days') reminderTime -= 2 * 24 * 60 * 60 * 1000;
+          else if (app.reminder === 'custom') {
+            if (app.customReminderDate) {
+              // Custom start date (midnight local time)
+              const customStart = new Date(app.customReminderDate);
+              reminderTime = new Date(customStart.getFullYear(), customStart.getMonth(), customStart.getDate()).getTime();
+            }
+          }
+
+          // Trigger reminder if current time is past reminderTime and not yet past interviewTime
+          // For custom reminders with end date, we trigger if within the date range.
+          let shouldTrigger = false;
+          
+          if (app.reminder === 'custom') {
+             if (app.customReminderDate) {
+               // YYYY-MM-DD parsing in local time
+               const [startYear, startMonth, startDay] = app.customReminderDate.split('-').map(Number);
+               const start = new Date(startYear, startMonth - 1, startDay).getTime();
+               let end = interviewTime;
+               if (app.customReminderEndDate) {
+                 const [endYear, endMonth, endDay] = app.customReminderEndDate.split('-').map(Number);
+                 end = new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999).getTime();
+               } else {
+                 end = new Date(startYear, startMonth - 1, startDay, 23, 59, 59, 999).getTime();
+               }
+               
+               if (now.getTime() >= start && now.getTime() <= end) {
+                 shouldTrigger = true;
+               }
+             }
+          } else {
+            if (now.getTime() >= reminderTime && now.getTime() <= interviewTime) {
+              shouldTrigger = true;
+            } else if (now.getTime() > interviewTime) {
+              // If it's already past the interview, just mark it as sent so we don't keep checking
+              await updateApplication(app.id, { reminderSent: true });
+              continue;
+            }
+          }
+
+          if (shouldTrigger) {
+            let msg = `Upcoming interview with ${app.company} at ${new Date(app.nextInterviewDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+            if (now.getTime() > interviewTime) {
+               // Ignore if it's already past the interview
+               continue;
+            }
+            if (app.reminder !== 'custom') {
+               msg = `Next interview with ${app.company} will begin in ${app.reminder} today`;
+            } else {
+               msg = `Reminder: Interview with ${app.company} is scheduled on ${new Date(app.nextInterviewDate).toLocaleDateString()}`;
+            }
+            
+            toast(msg, {
+              icon: '⏰',
+            });
+            
+            await updateApplication(app.id, { reminderSent: true });
+            await addNotification(auth.currentUser.uid, 'reminder', `Interview Reminder: ${app.company}`, msg);
+            updated = true;
+          }
+        }
+        
+        if (updated) {
+           loadData();
+        }
+      } catch (err) {
+        console.error("Reminder check failed", err);
+      } finally {
+        isChecking = false;
+      }
+    };
+
+    const interval = setInterval(checkReminders, 60000); // Check every minute
+    checkReminders(); // Initial check
+
+    return () => clearInterval(interval);
+  }, [applications]);
 
   const loadData = async () => {
     if (!auth.currentUser) return;
@@ -129,71 +238,160 @@ export function Dashboard() {
       await deleteAllApplications(auth.currentUser.uid);
       setApplications([]);
       localStorage.clear();
+      toast.success('All data cleared');
     } catch (err) {
       console.error('Error clearing data', err);
       toast.error('Failed to clear data');
     } finally {
       setIsSyncing(false);
+      syncLockRef.current = false;
     }
   };
 
-  const handleCsvImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
+  const handleDataImport = async (file: File) => {
+    if (syncLockRef.current) return;
+    syncLockRef.current = true;
     setIsSyncing(true);
     setSyncError(null);
-    Papa.parse(file, {
-      header: true,
-      complete: async (results) => {
-        if (!auth.currentUser) {
-          setIsSyncing(false);
-          setSyncError("User not logged in");
-          return;
-        }
-        try {
-          const imports = results.data.filter((row: any) => row.Company || row.company).map((row: any) => {
-            let st = (row.Status || row.status || 'Applied').trim();
-            st = st.charAt(0).toUpperCase() + st.slice(1).toLowerCase();
-            if (!['Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'].includes(st)) {
-              st = 'Applied';
-            }
-            return {
-              company: row.Company || row.company || 'Unknown',
-              position: row.Position || row.position || 'Unknown',
-              status: st,
-              appliedDate: row.Applied_Date || row.appliedDate || new Date().toISOString(),
-              userId: auth.currentUser!.uid
-            };
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      
+      let grid: any[][] = [];
+      
+      if (ext === 'csv') {
+        grid = await new Promise<any[][]>((resolve, reject) => {
+          Papa.parse(file, {
+            header: false,
+            skipEmptyLines: true,
+            complete: (results) => resolve(results.data as any[][]),
+            error: reject
           });
-          
-          if (imports.length > 0) {
-            await addApplicationsBatch(imports as any[]);
-          }
-          await loadData();
-          toast.success('Imported successfully');
-        } catch (err: any) {
-          console.error('Import error', err);
-          setSyncError(err.message || 'Failed to import data');
-          toast.error('Failed to import data');
-        } finally {
-          setIsSyncing(false);
+        });
+      } else if (ext === 'xlsx' || ext === 'xls') {
+        const buffer = await file.arrayBuffer();
+        const workbook = XLSX.read(buffer);
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        grid = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" }) as any[][];
+      } else {
+        throw new Error('Unsupported file format');
+      }
+
+      if (!grid || grid.length === 0) {
+        throw new Error("File is empty");
+      }
+
+      // Remove completely empty rows
+      grid = grid.filter(row => row.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== ''));
+      if (grid.length === 0) throw new Error("File contains no data");
+
+
+      const isHeader = (str: any) => {
+        const s = String(str || '').toLowerCase().trim();
+        return ['company', 'employer', 'organization', 'position', 'title', 'role', 'job title', 'status', 'stage', 'state', 'applied date', 'date', 'contact', 'notes'].some(h => s.includes(h));
+      };
+
+      // Find the header row index
+      let headerRowIndex = 0;
+      let maxHeaders = 0;
+      
+      for (let i = 0; i < Math.min(10, grid.length); i++) {
+        const count = grid[i].filter(isHeader).length;
+        if (count > maxHeaders) {
+          maxHeaders = count;
+          headerRowIndex = i;
         }
       }
-    });
+
+      // If we couldn't find a clear header row, default to first row
+      if (maxHeaders === 0) {
+        headerRowIndex = 0;
+      }
+
+      let headers = (grid[headerRowIndex] || []).map(h => String(h || '').trim().toLowerCase());
+      
+      // If headers are completely missing or empty, generate fallback headers
+      if (headers.filter(h => h).length === 0) {
+        headers = ['company', 'position', 'status', 'applied date', 'notes', 'contact'];
+      }
+      
+      let dataRows = grid.slice(headerRowIndex + 1);
+
+      const imports = dataRows.map(row => {
+        const normalized: any = {};
+        headers.forEach((h, i) => {
+          if (h) normalized[h] = row[i];
+        });
+        
+        const company = normalized['company'] || normalized['company name'] || normalized['employer'] || normalized['organization'] || row[0] || 'Unknown';
+        const position = normalized['position'] || normalized['job title'] || normalized['role'] || normalized['title'] || row[1] || 'Unknown';
+        
+        let st = String(normalized['status'] || normalized['stage'] || normalized['state'] || 'Applied').trim();
+        st = st.charAt(0).toUpperCase() + st.slice(1).toLowerCase();
+        if (!['Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'].includes(st)) {
+          st = 'Applied';
+        }
+        
+        let appliedDate = normalized['applied date'] || normalized['applied_date'] || normalized['date applied'] || normalized['date'];
+        
+        if (typeof appliedDate === 'number') {
+           const date = new Date(Math.round((appliedDate - 25569) * 86400 * 1000));
+           appliedDate = date.toISOString();
+        } else if (!appliedDate) {
+           appliedDate = new Date().toISOString();
+        } else {
+           appliedDate = String(appliedDate);
+        }
+        
+        return {
+          company: String(company),
+          position: String(position),
+          status: st,
+          appliedDate: appliedDate,
+          userId: auth.currentUser!.uid
+        };
+      }).filter(item => item.company !== 'Unknown' || item.position !== 'Unknown');
+      console.log('Processed imports:', imports);
+
+      if (imports.length > 0) {
+        await addApplicationsBatch(imports as any[]);
+        await loadData();
+        toast.success(`Imported ${imports.length} records successfully`);
+        
+        await addNotification(
+          auth.currentUser!.uid,
+          'job',
+          'Import Successful',
+          `Successfully imported ${imports.length} applications from ${file.name}.`
+        );
+        
+        setShowImportModal(false);
+        syncLockRef.current = false;
+      } else {
+        toast.info("No valid data found in file.");
+      }
+    } catch (err: any) {
+      console.error('Import error', err);
+      setSyncError(err.message || 'Failed to import data');
+      toast.error('Failed to import data');
+    } finally {
+      setIsSyncing(false);
+      syncLockRef.current = false;
+    }
   };
 
-  if (loading) {
-  
 
-  return (
+  if (loading) {
+    return (
       <div className="min-h-screen flex items-center justify-center dark:bg-zinc-950">
         <Loader2 className="animate-spin text-blue-500" size={48} />
       </div>
     );
   }
 
-
+  if (view === 'notifications') {
+    return <NotificationsPage onBack={() => setView('sankey')} />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
@@ -214,7 +412,8 @@ export function Dashboard() {
           </div>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <NotificationCenter onViewAll={() => setView('notifications')} />
           <button onClick={() => setIsSettingsOpen(true)} title="Settings" className="w-10 h-10 rounded-lg bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all">
             <Settings size={16} />
           </button>
@@ -249,59 +448,14 @@ export function Dashboard() {
 
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap gap-3">
-              <label className={`cursor-pointer gap-2 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2 ${isSyncing ? "opacity-50 cursor-not-allowed" : ""}`}>
+                            <button
+                onClick={() => setShowImportModal(true)}
+                disabled={isSyncing}
+                className={`gap-2 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2 ${isSyncing ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
                 {isSyncing ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                {isSyncing ? 'Importing...' : 'Import CSV'}
-                <input type="file" accept=".csv" className="hidden" onChange={handleCsvImport} onClick={(e) => { (e.target as HTMLInputElement).value = ''; }} disabled={isSyncing} />
-              </label>
-              <label className={`cursor-pointer gap-2 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2 ${isSyncing ? "opacity-50 cursor-not-allowed" : ""}`}>
-                {isSyncing ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                {isSyncing ? 'Syncing...' : 'Sync PDF Data'}
-                <input type="file" accept=".pdf" className="hidden" onClick={(e) => { (e.target as HTMLInputElement).value = ''; }} onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file || !auth.currentUser || isSyncing) return;
-                  
-                  setIsSyncing(true);
-                  setSyncError(null);
-                  
-                  const reader = new FileReader();
-                  reader.onload = async (event) => {
-                    try {
-                      const base64Data = (event.target?.result as string).split(',')[1];
-                      const res = await fetch('/api/extract-pdf', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ pdfBase64: base64Data })
-                      });
-                      if (!res.ok) {
-                        const txt = await res.text();
-                        throw new Error(txt);
-                      }
-                      const data = await res.json();
-                      
-                      const appsToImport = data.applications.map((app: any) => ({
-                         ...app,
-                         appliedDate: new Date().toISOString(),
-                         userId: auth.currentUser!.uid,
-                      }));
-                      if (appsToImport.length > 0) {
-                        await addApplicationsBatch(appsToImport);
-                        await loadData();
-                        toast.success(`Successfully synced ${appsToImport.length} records from PDF!`);
-                      } else {
-                        toast.info('No job applications found in PDF.');
-                      }
-                    } catch(err: any) {
-                      console.error(err);
-                      setSyncError(err.message || 'Failed to sync PDF');
-                      toast.error('Failed to sync PDF');
-                    } finally {
-                      setIsSyncing(false);
-                    }
-                  };
-                  reader.readAsDataURL(file);
-                }} disabled={isSyncing} />
-              </label>
+                Import Data
+              </button>
               <button
                 onClick={() => exportCsv(applications)}
                 disabled={applications.length === 0 || isSyncing}
@@ -317,9 +471,6 @@ export function Dashboard() {
 
         {applications.length === 0 ? (
           <div className="flex-grow flex flex-col items-center justify-center bg-white border border-slate-200 rounded-xl p-12 shadow-sm text-center">
-             <div className="w-16 h-16 bg-slate-100 text-slate-500 rounded-xl flex items-center justify-center mb-4 border border-slate-200">
-               <Plus size={32} />
-             </div>
              <h3 className="text-xl font-bold text-slate-800 mb-2">No applications yet</h3>
              <p className="text-slate-500 max-w-md mb-6">You haven't tracked any job applications. Start by adding one manually or import from a CSV or PDF file.</p>
              <button
@@ -433,6 +584,40 @@ export function Dashboard() {
               </div>
 
             </div>
+          </div>
+        </div>
+      )}
+      
+            {showImportModal && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold">Import Data</h2>
+              <button onClick={() => { setShowImportModal(false); syncLockRef.current = false; }} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <FileUpload 
+              label="Upload CSV or Excel"
+              accept=".csv,.xlsx,.xls"
+              maxFiles={1}
+              onFilesChange={async (files) => {
+                if (files.length > 0 && files[0].file) {
+                  await handleDataImport(files[0].file);
+                }
+              }}
+            />
+            {isSyncing && (
+              <div className="mt-4 flex flex-col items-center justify-center gap-2">
+                <Loader2 className="animate-spin text-blue-500" size={24} />
+                <span className="text-sm text-slate-500">Processing data...</span>
+              </div>
+            )}
+            {syncError && (
+               <div className="mt-4 p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium text-center">
+                 {syncError}
+               </div>
+            )}
           </div>
         </div>
       )}

@@ -42,6 +42,7 @@ export default function App() {
       if (result) {
         setUser(result.user);
         setNeedsAuth(false);
+        toast.success('Welcome to Seekr!');
       }
     } catch (err: any) {
       console.error('Login failed:', err);
@@ -68,6 +69,7 @@ export default function App() {
       if (result) {
         setUser(result.user);
         setNeedsAuth(false);
+        toast.success('Welcome to Seekr!');
       }
     } catch (err: any) {
       console.error('Anonymous login failed:', err);
