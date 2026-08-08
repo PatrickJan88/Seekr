@@ -59,6 +59,11 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
 
   // syncCalendar removed
 
+  const isPastInterview = React.useMemo(() => {
+    if (!formData.nextInterviewDate) return false;
+    return new Date(formData.nextInterviewDate).getTime() < Date.now();
+  }, [formData.nextInterviewDate]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -118,6 +123,10 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
     }
     if (!formData.position?.trim()) {
       setSaveError("Position is required.");
+      return;
+    }
+    if (formData.reminder && formData.reminder !== 'none' && isPastInterview) {
+      setSaveError("Cannot set a reminder for an interview time that has already passed.");
       return;
     }
     
@@ -212,11 +221,12 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-400 mb-1">Next Interview</label>
-              <input type="datetime-local" name="nextInterviewDate" value={formData.nextInterviewDate?.slice(0, 16) || ''} onChange={handleChange} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm" />
+              <input type="datetime-local" name="nextInterviewDate" value={formData.nextInterviewDate?.slice(0, 16) || ''} onChange={handleChange} className={`w-full px-3 py-2 border rounded-xl bg-slate-50 focus:ring-2 outline-none transition-all text-sm ${isPastInterview ? 'border-amber-400 focus:border-amber-500 focus:ring-amber-200' : 'border-slate-200 focus:border-blue-500 focus:ring-blue-200'}`} />
+              {isPastInterview && <p className="text-[10px] text-amber-600 mt-1">This time is in the past. Reminders cannot be set.</p>}
             </div>
             <div className="flex flex-col justify-end relative">
               <label className="block text-xs font-bold text-slate-400 mb-1">Reminder</label>
-              <select name="reminder" value={formData.nextInterviewDate ? (formData.reminder || 'none') : 'none'} onChange={handleChange} disabled={!formData.nextInterviewDate} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+              <select name="reminder" value={(formData.nextInterviewDate && !isPastInterview) ? (formData.reminder || 'none') : 'none'} onChange={handleChange} disabled={!formData.nextInterviewDate || isPastInterview} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                 <option value="none">None</option>
                 <option value="15 mins">15 mins before</option>
                 <option value="1 hour">1 hour before</option>

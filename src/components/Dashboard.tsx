@@ -6,6 +6,7 @@ import { Analytics } from './Analytics';
 import { SankeyChart } from './SankeyChart';
 import { JobForm } from './JobForm';
 import { FileUpload } from './FileUpload';
+
 import * as XLSX from 'xlsx';
 import { exportCsv } from '../lib/csv';
 import { Footer } from './Footer';
@@ -17,6 +18,7 @@ import { addNotification } from '../lib/notifications';
 import { toast } from 'sonner';
 
 import { NotificationsPage } from './NotificationsPage';
+import { SettingsPage } from './SettingsPage';
 
 export function Dashboard() {
   const [applications, setApplications] = useState<JobApplication[]>([]);
@@ -24,16 +26,15 @@ export function Dashboard() {
   const [isSyncing, setIsSyncing] = useState(false);
   const syncLockRef = useRef(false);
   const [syncError, setSyncError] = useState<string | null>(null);
-  const [view, setView] = useState<'sankey' | 'kanban' | 'analytics' | 'notifications'>('sankey');
+  const [view, setView] = useState<'sankey' | 'kanban' | 'analytics' | 'notifications' | 'settings'>('sankey');
   const [editingApp, setEditingApp] = useState<JobApplication | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
-    if (isFormOpen || showClearConfirm || isSettingsOpen || !!deleteConfirmId) {
+    if (isFormOpen || showClearConfirm || !!deleteConfirmId) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'auto';
@@ -42,7 +43,7 @@ export function Dashboard() {
     return () => {
       document.body.style.overflow = 'auto';
     }
-  }, [isFormOpen, showClearConfirm, isSettingsOpen, deleteConfirmId]);
+  }, [isFormOpen, showClearConfirm, deleteConfirmId]);
 
   useEffect(() => {
     if (auth.currentUser) {
@@ -393,6 +394,10 @@ export function Dashboard() {
     return <NotificationsPage onBack={() => setView('sankey')} />;
   }
 
+  if (view === 'settings') {
+    return <SettingsPage onBack={() => setView('sankey')} onClearData={handleClearData} isSyncing={isSyncing} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
       <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 sticky top-0 z-10">
@@ -414,7 +419,7 @@ export function Dashboard() {
         
         <div className="flex items-center gap-3">
           <NotificationCenter onViewAll={() => setView('notifications')} />
-          <button onClick={() => setIsSettingsOpen(true)} title="Settings" className="w-10 h-10 rounded-lg bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all">
+          <button onClick={() => setView('settings')} title="Settings" className="w-10 h-10 rounded-lg bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all">
             <Settings size={16} />
           </button>
         </div>
@@ -515,78 +520,7 @@ export function Dashboard() {
           onDelete={handleDelete}
         />
       )}
-      {isSettingsOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between p-6 border-b border-slate-200 shrink-0">
-              <h2 className="text-xl font-bold text-slate-800">Settings</h2>
-              <button
-                onClick={() => setIsSettingsOpen(false)}
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 hover:bg-slate-100 hover:text-slate-900 h-9 w-9 p-0 text-slate-500"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            
-            <div className="p-6 overflow-y-auto flex-grow bg-slate-50 flex flex-col gap-8">
-              
-              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                <div className="p-6">
-                  <h3 className="text-base font-semibold text-slate-900 mb-1">Account Integration</h3>
-                  <p className="text-sm text-slate-500 mb-4">
-                    Manage your connected Google account and authentication settings.
-                  </p>
-                  
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
-                      <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                    </div>
-                    <div>
-                      {auth.currentUser?.isAnonymous ? (
-                        <p className="text-sm font-medium text-slate-800">
-                          Signed in as Guest <span className="text-slate-500 text-xs ml-1">#Guest{auth.currentUser?.uid.substring(0, 5).toUpperCase()}</span>
-                        </p>
-                      ) : (
-                        <p className="text-sm font-medium text-slate-800">Synced with {auth.currentUser?.email || 'Google'}</p>
-                      )}
-                      <p className="text-xs text-slate-500">Connected</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-slate-50/80 border-t border-slate-200 px-6 py-3 flex items-center justify-between">
-                  <span className="text-xs text-slate-500">Sign out of your account on this device.</span>
-                  <button
-                    onClick={() => { setIsSettingsOpen(false); logout(); }}
-                    className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2"
-                  >
-                    Log Out
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-white border border-red-200 rounded-xl overflow-hidden shadow-sm">
-                <div className="p-6">
-                  <h3 className="text-base font-semibold text-slate-900 mb-1">Delete Data</h3>
-                  <p className="text-sm text-slate-500">
-                    Permanently remove your job applications. This action is not reversible, so please continue with caution.
-                  </p>
-                </div>
-                <div className="bg-red-50/50 border-t border-red-100 px-6 py-3 flex items-center justify-between">
-                  <span className="text-xs text-red-600 font-medium">Proceed with caution.</span>
-                  <button
-                    onClick={() => { setIsSettingsOpen(false); handleClearData(); }}
-                    disabled={isSyncing}
-                    className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-red-500 text-slate-50 shadow hover:bg-red-500/90 h-9 px-4 py-2"
-                  >
-                    Clear All Data
-                  </button>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      )}
+      
       
             {showImportModal && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
