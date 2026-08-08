@@ -61,6 +61,8 @@ export default function App() {
     }
   };
 
+
+
   const handleAnonymousLogin = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     setIsLoggingIn(true);
@@ -106,7 +108,6 @@ export default function App() {
                 </svg>
                 {isLoggingIn ? 'Signing in...' : 'Sign in with Google'}
               </button>
-              
               <button onClick={handleAnonymousLogin} disabled={isLoggingIn} className="w-full flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-sm">
                 Continue as Guest
               </button>

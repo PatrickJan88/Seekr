@@ -1,12 +1,12 @@
 {
-  "projectId": "hazel-streamer-l1ttq",
-  "appId": "1:773789142381:web:a2d4e8a385863041d89e64",
-  "apiKey": "AIzaSyAAdTHdsZwQv6qm91_ArnUpzafzZ52hA2g",
-  "authDomain": "hazel-streamer-l1ttq.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-careerdashboard-466a1dfe-d8a5-404b-9007-ad83a46a7434",
-  "storageBucket": "hazel-streamer-l1ttq.firebasestorage.app",
-  "messagingSenderId": "773789142381",
-  "measurementId": "",
-  "oAuthClientId": "773789142381-e7fhvcpnke8dvj8fps18vrbeq5drp22o.apps.googleusercontent.com",
+  "projectId": "seekr-37311",
+  "appId": "1:524936950392:web:9d31d164b838e4178ef38d",
+  "apiKey": "AIzaSyDn3miN-Urzh6pk5Wmyqxry7RmysdCHTaE",
+  "authDomain": "seekr-37311.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "seekr-37311.firebasestorage.app",
+  "messagingSenderId": "524936950392",
+  "measurementId": "G-2WKHY5F4B3",
+  "oAuthClientId": "",
   "recaptchaSiteKey": ""
 }
