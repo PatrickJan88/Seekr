@@ -12,16 +12,46 @@ import { Footer } from './components/Footer';
 
 import { Github, Linkedin } from 'lucide-react';
 
-export default function App() {
-  const isDemo = typeof window !== 'undefined' && (
-    new URLSearchParams(window.location.search).get('demo') === 'true' ||
-    new URLSearchParams(window.location.search).get('mode') === 'demo'
-  );
+const checkIsDemo = () => {
+  if (typeof window === 'undefined') return false;
+  try {
+    const href = window.location.href.toLowerCase();
+    const pathname = window.location.pathname.toLowerCase();
+    const search = window.location.search.toLowerCase();
+    const hash = window.location.hash.toLowerCase();
 
-  const [needsAuth, setNeedsAuth] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+    return (
+      search.includes('demo=true') ||
+      search.includes('demo=1') ||
+      search.includes('mode=demo') ||
+      search.includes('demo') ||
+      hash.includes('demo') ||
+      pathname === '/demo' ||
+      pathname.startsWith('/demo/') ||
+      href.includes('demo=true') ||
+      href.includes('mode=demo')
+    );
+  } catch (e) {
+    return false;
+  }
+};
+
+export default function App() {
+  const isDemo = checkIsDemo();
+
+  const [needsAuth, setNeedsAuth] = useState(!isDemo);
+  const [user, setUser] = useState<User | null>(
+    isDemo
+      ? ({
+          uid: 'demo-user',
+          email: 'demo@seekr.app',
+          displayName: 'Portfolio Visitor',
+          isAnonymous: true,
+        } as User)
+      : null
+  );
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isDemo);
 
   useEffect(() => {
     if (isDemo) {
