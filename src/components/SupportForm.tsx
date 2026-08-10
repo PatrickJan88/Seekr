@@ -10,13 +10,9 @@ export function SupportForm() {
 
     const form = e.currentTarget;
     const formData = new FormData(form);
-    
-    // Add the access key manually just to be safe, or we can use a hidden input
-    // But since Web3Forms accepts FormData, let's just send it
-    formData.append("access_key", "6b48a208-1fca-4e42-ab22-3f11e5c3f398");
 
     try {
-      const response = await fetch("https://api.web3forms.com/submit", {
+      const response = await fetch("https://formspree.io/f/xdeneyyy", {
         method: "POST",
         body: formData,
         headers: {
@@ -24,13 +20,12 @@ export function SupportForm() {
         }
       });
 
-      const responseData = await response.json();
-
-      if (response.ok && responseData.success) {
+      if (response.ok) {
         toast.success("Success! Your message has been sent.");
         form.reset();
       } else {
-        toast.error("Error: " + (responseData.message || "Something went wrong"));
+        const responseData = await response.json().catch(() => null);
+        toast.error("Error: " + (responseData?.errors?.[0]?.message || responseData?.message || "Something went wrong"));
       }
     } catch (error) {
       toast.error("Something went wrong. Please try again.");
