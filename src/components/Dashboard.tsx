@@ -594,11 +594,11 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
              </button>
           </div>
         ) : view === 'sankey' ? (
-          <SankeyChart applications={applications} />
+          <SankeyChart applications={applications} isDemo={isDemo} />
         ) : view === 'kanban' ? (
           <Kanban applications={applications} onEdit={(app) => { setEditingApp(app); setIsFormOpen(true); }} onStatusChange={handleStatusChange} onDelete={handleDelete} />
         ) : (
-          <Analytics applications={applications} />
+          <Analytics applications={applications} isDemo={isDemo} />
         )}
       </main>
 

@@ -3,9 +3,11 @@ import * as echarts from 'echarts';
 import ReactECharts from 'echarts-for-react';
 import { JobApplication } from '../types';
 import { MapPin, Building2, Info, Loader2, Maximize2, Minimize2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ApplicationMapProps {
   applications: JobApplication[];
+  isDemo?: boolean;
 }
 
 export interface GeoLocationMatch {
@@ -419,7 +421,7 @@ const GEOJSON_URLS = [
   'https://raw.githubusercontent.com/apache/echarts/master/test/data/map/json/world.json'
 ];
 
-export function ApplicationMap({ applications }: ApplicationMapProps) {
+export function ApplicationMap({ applications, isDemo = false }: ApplicationMapProps) {
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -674,9 +676,15 @@ export function ApplicationMap({ applications }: ApplicationMapProps) {
               {applications.length} Total Applications
             </span>
             <button 
-              onClick={() => setIsFullscreen(!isFullscreen)}
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 w-9 p-0 text-slate-600 ml-1 cursor-pointer"
-              title={isFullscreen ? "Exit Full Screen" : "Full Screen"}
+              onClick={() => {
+                if (isDemo) {
+                  toast.info('Demo Mode: Full screen map view is disabled in this portfolio preview.');
+                  return;
+                }
+                setIsFullscreen(!isFullscreen);
+              }}
+              className={`inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 w-9 p-0 text-slate-600 ml-1 cursor-pointer ${isDemo ? 'opacity-60 cursor-not-allowed' : ''}`}
+              title={isDemo ? "Full screen disabled in Demo Mode" : isFullscreen ? "Exit Full Screen" : "Full Screen"}
             >
               {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
             </button>

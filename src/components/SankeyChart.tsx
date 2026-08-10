@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { JobApplication } from '../types';
 import { Maximize2, Minimize2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface SankeyChartProps {
   applications: JobApplication[];
+  isDemo?: boolean;
 }
 
-export function SankeyChart({ applications }: SankeyChartProps) {
+export function SankeyChart({ applications, isDemo = false }: SankeyChartProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const total = applications.length;
 
@@ -164,9 +166,15 @@ export function SankeyChart({ applications }: SankeyChartProps) {
             <p className="text-sm text-slate-500">Visualize your application pipeline from submission to outcome.</p>
           </div>
           <button 
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 w-9 p-0 text-slate-500 cursor-pointer"
-            title={isFullscreen ? "Exit Full Screen" : "Full Screen"}
+            onClick={() => {
+              if (isDemo) {
+                toast.info('Demo Mode: Full screen view is disabled in this portfolio preview.');
+                return;
+              }
+              setIsFullscreen(!isFullscreen);
+            }}
+            className={`inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 w-9 p-0 text-slate-500 cursor-pointer ${isDemo ? 'opacity-60 cursor-not-allowed' : ''}`}
+            title={isDemo ? "Full screen disabled in Demo Mode" : isFullscreen ? "Exit Full Screen" : "Full Screen"}
           >
             {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
           </button>
