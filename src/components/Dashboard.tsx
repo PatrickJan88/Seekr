@@ -271,7 +271,8 @@ export function Dashboard() {
       } else if (ext === 'xlsx' || ext === 'xls') {
         const buffer = await file.arrayBuffer();
         const workbook = XLSX.read(buffer);
-        const firstSheetName = workbook.SheetNames[0];
+        const firstSheetName = workbook?.SheetNames?.[0];
+        if (!firstSheetName) throw new Error("No sheets found in Excel file");
         const worksheet = workbook.Sheets[firstSheetName];
         grid = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" }) as any[][];
       } else {
@@ -324,8 +325,8 @@ export function Dashboard() {
           if (h) normalized[h] = row[i];
         });
         
-        const company = normalized['company'] || normalized['company name'] || normalized['employer'] || normalized['organization'] || row[0] || 'Unknown';
-        const position = normalized['position'] || normalized['job title'] || normalized['role'] || normalized['title'] || row[1] || 'Unknown';
+        const company = normalized['company'] || normalized['company name'] || normalized['employer'] || normalized['organization'] || (row && row[0]) || 'Unknown';
+        const position = normalized['position'] || normalized['job title'] || normalized['role'] || normalized['title'] || (row && row[1]) || 'Unknown';
         
         let st = String(normalized['status'] || normalized['stage'] || normalized['state'] || 'Applied').trim();
         st = st.charAt(0).toUpperCase() + st.slice(1).toLowerCase();

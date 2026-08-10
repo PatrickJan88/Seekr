@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { JobApplication, JobStatus } from '../types';
+import { JobApplication, JobStatus, getWorkTypeBadgeStyle } from '../types';
 import { Calendar, Building, MoreVertical, LayoutDashboard, List } from 'lucide-react';
 import { ListView } from './ListView';
 
@@ -167,8 +167,18 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete }: Kanba
                     <MoreVertical size={16} />
                   </button>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-slate-500 mb-3">
+                <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-3 flex-wrap">
                   <span className="truncate">{app.company}</span>
+                  {app.location && (
+                    <span className="text-[11px] text-slate-400 font-medium truncate">
+                      • {app.location}
+                    </span>
+                  )}
+                  {app.workType && (
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${getWorkTypeBadgeStyle(app.workType)}`}>
+                      {app.workType}
+                    </span>
+                  )}
                 </div>
                 {app.nextInterviewDate && (
                   <div className="flex items-center gap-2 text-[10px] font-bold text-blue-700 bg-blue-100 w-fit px-2 py-1 rounded-full uppercase tracking-wider">

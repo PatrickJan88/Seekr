@@ -5,6 +5,8 @@ export const exportCsv = (applications: JobApplication[]) => {
   const csv = Papa.unparse(applications.map(app => ({
     Company: app.company,
     Position: app.position,
+    Location: app.location || '',
+    Work_Type: app.workType || '',
     Status: app.status,
     Applied_Date: app.appliedDate,
     Next_Interview: app.nextInterviewDate || '',

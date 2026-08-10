@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { JobApplication, JobStatus } from '../types';
+import { JobApplication, JobStatus, getWorkTypeBadgeStyle } from '../types';
 import { Calendar, Building, MoreVertical, Eye, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
 const STATUSES: JobStatus[] = ['Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
@@ -234,6 +234,16 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete }: Lis
                 >
                   <td className="border-b border-slate-100 px-6 py-4">
                     <div className="font-bold text-sm text-slate-800 max-w-[180px] truncate" title={app.position}>{app.position}</div>
+                    {(app.location || app.workType) && (
+                      <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5">
+                        {app.location && <span className="truncate max-w-[120px]">{app.location}</span>}
+                        {app.workType && (
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${getWorkTypeBadgeStyle(app.workType)}`}>
+                            {app.workType}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </td>
                   <td className="border-b border-slate-100 px-6 py-4">
                     <div className="text-sm text-slate-600 max-w-[150px] truncate" title={app.company}>{app.company}</div>

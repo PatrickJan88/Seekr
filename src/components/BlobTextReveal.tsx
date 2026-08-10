@@ -232,6 +232,8 @@ function __OriginkitBase_TextRevealBlur({
       });
     }
 
+    if (!chars || chars.length === 0) return null;
+
     if (chars.some((c) => !Number.isFinite(c.center) || c.right <= c.left)) {
       return null;
     }

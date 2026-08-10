@@ -74,12 +74,15 @@ export function SankeyChart({ applications }: SankeyChartProps) {
       borderColor: '#e2e8f0',
       textStyle: { color: '#1e293b' },
       formatter: (params: any) => {
+        if (!params) return '<div></div>';
         if (params.dataType === 'node') {
           const category = params.name === 'Applied' ? 'Applied' : params.name;
           const count = category === 'Total Applications' ? applications.length : (counts[category as keyof typeof counts] || 0);
-          return `<div style="display:flex; align-items:center; gap:8px;"><div style="width:12px; height:12px; border-radius:50%; background-color:${params.color};"></div><span style="color:#1e293b; font-weight:500; font-family: ui-sans-serif, system-ui, sans-serif;">${params.name} : ${count}</span></div>`;
+          return `<div style="display:flex; align-items:center; gap:8px;"><div style="width:12px; height:12px; border-radius:50%; background-color:${params.color || '#3b82f6'};"></div><span style="color:#1e293b; font-weight:500; font-family: ui-sans-serif, system-ui, sans-serif;">${params.name || ''} : ${count}</span></div>`;
         }
-        return `<div style="display:flex; align-items:center; gap:8px;"><div style="width:12px; height:12px; border-radius:50%; background-color:${params.color || '#94a3b8'};"></div><span style="color:#1e293b; font-weight:500; font-family: ui-sans-serif, system-ui, sans-serif;">${params.data.source} &rarr; ${params.data.target}</span></div>`;
+        const source = params.data?.source || params.name || '';
+        const target = params.data?.target || '';
+        return `<div style="display:flex; align-items:center; gap:8px;"><div style="width:12px; height:12px; border-radius:50%; background-color:${params.color || '#94a3b8'};"></div><span style="color:#1e293b; font-weight:500; font-family: ui-sans-serif, system-ui, sans-serif;">${source}${target ? ` &rarr; ${target}` : ''}</span></div>`;
       }
     },
     series: [
@@ -152,34 +155,26 @@ export function SankeyChart({ applications }: SankeyChartProps) {
     ]
   };
 
-  const chartContent = (
-    <div className={`bg-white p-6 ${isFullscreen ? 'w-full h-full' : 'rounded-xl border border-slate-200 shadow-sm w-full h-[600px]'} flex flex-col relative`}>
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <h3 className="text-lg font-bold text-slate-800 mb-2">Application Process Flow</h3>
-          <p className="text-sm text-slate-500">Visualize your application pipeline from submission to outcome.</p>
+  return (
+    <div className={isFullscreen ? "fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md p-4 sm:p-6 flex flex-col justify-center items-center overflow-auto" : "relative w-full"}>
+      <div className={`bg-white p-5 rounded-xl border border-slate-200 shadow-sm w-full ${isFullscreen ? 'max-w-7xl h-[92vh] overflow-hidden' : 'h-[600px]'} flex flex-col relative`}>
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Application Process Flow</h3>
+            <p className="text-sm text-slate-500">Visualize your application pipeline from submission to outcome.</p>
+          </div>
+          <button 
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 w-9 p-0 text-slate-500 cursor-pointer"
+            title={isFullscreen ? "Exit Full Screen" : "Full Screen"}
+          >
+            {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+          </button>
         </div>
-        <button 
-          onClick={() => setIsFullscreen(!isFullscreen)}
-          className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 w-9 p-0 text-slate-500"
-          title={isFullscreen ? "Exit Full Screen" : "Full Screen"}
-        >
-          {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
-        </button>
-      </div>
-      <div className="flex-1 w-full min-h-0 relative">
-        <ReactECharts option={option} style={{ height: '100%', width: '100%' }} notMerge={true} />
+        <div className="flex-1 w-full min-h-0 relative">
+          <ReactECharts option={option} style={{ height: '100%', width: '100%' }} notMerge={true} />
+        </div>
       </div>
     </div>
   );
-
-  if (isFullscreen) {
-    return (
-      <div className="fixed inset-0 z-50 bg-white p-4">
-        {chartContent}
-      </div>
-    );
-  }
-
-  return chartContent;
 }

@@ -27,23 +27,48 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
   const parseJobDescriptionFallback = (text: string) => {
     let company = '';
     let position = '';
+    let location = '';
+    let workType: 'On-site' | 'Hybrid' | 'Remote' | undefined;
     let extraNotes: string[] = [];
 
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
 
+    // Detect workType from text
+    if (/\b(?:On-site|Onsite)\b/i.test(text)) {
+      workType = 'On-site';
+    } else if (/\bHybrid\b/i.test(text)) {
+      workType = 'Hybrid';
+    } else if (/\bRemote\b/i.test(text)) {
+      workType = 'Remote';
+    }
+
     // Helper to clean gender/diversity markers from job titles e.g. (m/w/d), (f/m/d), (m/f/x)
-    const cleanPositionStr = (str: string) => {
+    const cleanPositionStr = (str?: string) => {
+      if (!str) return '';
       return str
         .replace(/[\(\[\{]\s*(?:m\/w\/d|f\/m\/d|m\/f\/x|m\/w\/x|d\/f\/m|w\/m\/d|f\/m\/x|all genders|f\/m\/other|m\/f\/d)\s*[\)\]\}]/gi, '')
         .trim();
     };
 
+    // Helper to clean work method policy tags from location strings e.g. "Berlin, Germany (On-site)" -> "Berlin, Germany"
+    const cleanLocationStr = (str?: string) => {
+      if (!str) return '';
+      let loc = str;
+      // Strip parenthesized or bracketed work modes
+      loc = loc.replace(/[\(\[\{]\s*(?:On-site|Onsite|Hybrid|Remote|Full-time|Part-time)\s*[\)\]\}]/gi, '');
+      // Strip standalone work mode words
+      loc = loc.replace(/\b(?:On-site|Onsite|Hybrid|Remote)\b/gi, '');
+      // Clean duplicate whitespace and leading/trailing separators
+      return loc.replace(/\s+/g, ' ').replace(/^[\s,·•|-]+|[\s,·•|-]+$/g, '').trim();
+    };
+
     // Helper to extract clean company from line with separators like '·', '|', '•', ','
-    const cleanCompanyStr = (str: string) => {
+    const cleanCompanyStr = (str?: string) => {
+      if (!str) return '';
       const parts = str.split(/[\·\•\|]/).map(p => p.trim()).filter(Boolean);
       let comp = parts[0] || str;
       // Remove work modes / location trailing tags if present in the first part
-      comp = comp.replace(/\s*[\(\[\{](?:On-site|Hybrid|Remote|Full-time|Part-time)[\)\]\}]/gi, '').trim();
+      comp = comp.replace(/\s*[\(\[\{](?:On-site|Onsite|Hybrid|Remote|Full-time|Part-time)[\)\]\}]/gi, '').trim();
       return comp;
     };
 
@@ -53,6 +78,9 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
 
     const posMatch = text.match(/(?:Position|Role|Job Title|Title|Job):\s*([^\n]+)/i);
     if (posMatch) position = cleanPositionStr(posMatch[1]);
+
+    const locMatch = text.match(/(?:Location|Site|Office|City):\s*([^\n]+)/i);
+    if (locMatch) location = cleanLocationStr(locMatch[1]);
 
     // 2. Pattern: "Position at Company" or "Position @ Company"
     if (!position || !company) {
@@ -83,7 +111,14 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
             if (nextLine.includes('·') || nextLine.includes('•') || nextLine.includes('|')) {
               const parts = nextLine.split(/[\·\•\|]/).map(p => p.trim()).filter(Boolean);
               if (parts.length > 1) {
-                extraNotes.push(parts.slice(1).join(' · '));
+                const locPart = parts.slice(1).join(' · ');
+                const cleanLoc = cleanLocationStr(locPart);
+                if (!location && cleanLoc) location = cleanLoc;
+
+                const policyMatch = locPart.match(/[\(\[\{]?\b(On-site|Onsite|Hybrid|Remote)\b[\)\]\}]?/i);
+                if (policyMatch) {
+                  extraNotes.push(`Workplace Policy: ${policyMatch[1]}`);
+                }
               }
             }
           }
@@ -124,7 +159,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
       ? extraNotes.join('\n') + '\n\n' + fullTextNotes 
       : fullTextNotes;
 
-    return { company, position, notes };
+    return { company, position, location, workType, notes };
   };
 
   const handleExtract = async () => {
@@ -132,7 +167,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
     setIsExtracting(true);
     setExtractError(null);
     try {
-      let extracted: { company?: string; position?: string; notes?: string } = {};
+      let extracted: { company?: string; position?: string; location?: string; workType?: string; notes?: string } = {};
 
       const res = await fetch('/api/extract-text', {
         method: 'POST',
@@ -161,14 +196,44 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
         const fallback = parseJobDescriptionFallback(pasteText);
         extracted.company = extracted.company || fallback.company;
         extracted.position = extracted.position || fallback.position;
+        extracted.location = extracted.location || fallback.location;
+        extracted.workType = extracted.workType || fallback.workType;
         extracted.notes = extracted.notes || fallback.notes;
       }
 
-      if (extracted.company || extracted.position || extracted.notes) {
+      const cleanLocationStr = (str?: string) => {
+        if (!str) return '';
+        let loc = str;
+        loc = loc.replace(/[\(\[\{]\s*(?:On-site|Onsite|Hybrid|Remote|Full-time|Part-time)\s*[\)\]\}]/gi, '');
+        loc = loc.replace(/\b(?:On-site|Onsite|Hybrid|Remote)\b/gi, '');
+        return loc.replace(/\s+/g, ' ').replace(/^[\s,·•|-]+|[\s,·•|-]+$/g, '').trim();
+      };
+
+      if (extracted.location) {
+        extracted.location = cleanLocationStr(extracted.location);
+      }
+
+      const normalizeWorkType = (val?: string): 'On-site' | 'Hybrid' | 'Remote' | undefined => {
+        if (!val) return undefined;
+        if (/^\s*(?:On-site|Onsite)\s*$/i.test(val)) return 'On-site';
+        if (/^\s*Hybrid\s*$/i.test(val)) return 'Hybrid';
+        if (/^\s*Remote\s*$/i.test(val)) return 'Remote';
+        return undefined;
+      };
+
+      let extractedWorkType = normalizeWorkType(extracted.workType);
+      if (!extractedWorkType) {
+        const fallback = parseJobDescriptionFallback(pasteText);
+        extractedWorkType = fallback.workType;
+      }
+
+      if (extracted.company || extracted.position || extracted.location || extractedWorkType || extracted.notes) {
         setFormData(prev => ({
           ...prev,
           company: extracted.company || prev.company,
           position: extracted.position || prev.position,
+          location: extracted.location || prev.location,
+          workType: extractedWorkType || prev.workType,
           notes: extracted.notes ? (prev.notes ? prev.notes + '\n\n' + extracted.notes : extracted.notes) : prev.notes
         }));
         toast.success('Fields auto-filled successfully!');
@@ -189,6 +254,8 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
         ...prev,
         company: fallback.company || prev.company,
         position: fallback.position || prev.position,
+        location: fallback.location || prev.location,
+        workType: fallback.workType || prev.workType,
         notes: fallback.notes ? (prev.notes ? prev.notes + '\n\n' + fallback.notes : fallback.notes) : prev.notes
       }));
       toast.success('Fields auto-filled from job description!');
@@ -349,6 +416,22 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
             <div>
               <label className="block text-xs font-bold text-slate-400 mb-1">Position *</label>
               <input type="text" name="position" value={formData.position || ''} onChange={handleChange} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Location</label>
+              <input type="text" name="location" value={formData.location || ''} onChange={handleChange} placeholder="e.g. Stockholm, Sweden" className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Work type</label>
+              <div className="relative">
+                <select name="workType" value={formData.workType || ''} onChange={handleChange} className="w-full pl-3 pr-9 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm appearance-none cursor-pointer">
+                  <option value="">Select work type...</option>
+                  <option value="On-site">On-site</option>
+                  <option value="Hybrid">Hybrid</option>
+                  <option value="Remote">Remote</option>
+                </select>
+                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-400 mb-1">Status</label>

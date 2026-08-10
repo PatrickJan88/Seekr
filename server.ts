@@ -51,14 +51,18 @@ async function startServer() {
 
         Guidelines:
         - "position": Clean job title. Omit gender/diversity suffixes such as (m/w/d), (f/m/d), (m/f/x), (d/f/m), (all genders), etc.
-        - "company": The company, team, or department name. If a line lists "Company/Team · Location (Mode)" e.g. "Technology & Strategy · Berlin, Germany (On-site)", extract "Technology & Strategy" as company. Strip locations, work modes (Remote, Hybrid, On-site), and bullet points from the company name.
-        - "notes": Summary of key details, responsibilities, location, workplace model (On-site, Hybrid, Remote), or salary if mentioned.
+        - "company": The company, team, or department name. If a line lists "Company/Team · Location (Mode)" e.g. "Delta Consulting Company · Luxembourg (Hybrid)" or "Technology & Strategy · Berlin, Germany (On-site)", extract "Delta Consulting Company" or "Technology & Strategy" as company. Strip locations and work modes from the company name.
+        - "location": The physical job location (city, region, country), e.g. "Luxembourg", "Berlin, Germany", "Stockholm", "San Francisco, CA", "London, UK". STRICT REQUIREMENT: You MUST strip and exclude work method policy tags like "(On-site)", "(Hybrid)", "(Remote)", "On-site", "Hybrid", "Remote" from the location string. Do NOT include work method policies in location.
+        - "workType": Workplace model policy if mentioned in text e.g. "On-site", "Hybrid", or "Remote". Must strictly be one of: "On-site", "Hybrid", "Remote", or null if not mentioned.
+        - "notes": Summary of key details, responsibilities, workplace model policy (On-site, Hybrid, or Remote), or salary if mentioned.
 
         Return ONLY a JSON object with this schema:
         {
-          "company": "Company or Team Name",
+          "company": "Company Name",
           "position": "Clean Job Title",
-          "notes": "Relevant details / notes"
+          "location": "Clean Physical Location e.g. Luxembourg or Berlin, Germany",
+          "workType": "On-site" | "Hybrid" | "Remote" | null,
+          "notes": "Relevant details / notes including work model"
         }
 
         Job Description Text:

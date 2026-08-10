@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { JobApplication, JobStatus } from '../types';
+import { ApplicationMap } from './ApplicationMap';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   PieChart, Pie, Cell
@@ -40,10 +41,11 @@ export function Analytics({ applications }: AnalyticsProps) {
   };
 
   const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const name = payload[0].name || payload[0].payload.name;
-      const value = payload[0].value;
-      const color = statusColors[name] || payload[0].color || '#3b82f6';
+    if (active && payload && payload.length && payload[0]) {
+      const item = payload[0];
+      const name = item.name || item.payload?.name || '';
+      const value = item.value ?? 0;
+      const color = statusColors[name] || item.color || '#3b82f6';
 
       return (
         <div className="bg-white border border-slate-200 rounded-lg shadow-md p-3">
@@ -67,6 +69,10 @@ export function Analytics({ applications }: AnalyticsProps) {
 
   return (
     <div className="grid grid-cols-12 gap-6">
+      <div className="col-span-12">
+        <ApplicationMap applications={applications} />
+      </div>
+
       <div className="col-span-12 md:col-span-8 bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col">
         <h3 className="text-sm font-bold text-slate-800 mb-4">Active Progress Summary</h3>
         <div className="h-72 flex-grow">
