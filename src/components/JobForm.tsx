@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { JobApplication, JobStatus } from '../types';
-import { Wand2, Loader2, X } from 'lucide-react';
+import { Wand2, Loader2, X, ChevronDown } from 'lucide-react';
 import { FileUpload, UploadedFile } from './FileUpload';
 import { auth } from '../lib/firebase';
 import { toast } from 'sonner';
@@ -211,9 +211,12 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-400 mb-1">Status</label>
-              <select name="status" value={formData.status || 'Applied'} onChange={handleChange} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm">
-                {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
+              <div className="relative">
+                <select name="status" value={formData.status || 'Applied'} onChange={handleChange} className="w-full pl-3 pr-9 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm appearance-none cursor-pointer">
+                  {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-400 mb-1">Applied Date</label>
@@ -224,17 +227,20 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
               <input type="datetime-local" name="nextInterviewDate" value={formData.nextInterviewDate?.slice(0, 16) || ''} onChange={handleChange} className={`w-full px-3 py-2 border rounded-xl bg-slate-50 focus:ring-2 outline-none transition-all text-sm ${isPastInterview ? 'border-amber-400 focus:border-amber-500 focus:ring-amber-200' : 'border-slate-200 focus:border-blue-500 focus:ring-blue-200'}`} />
               {isPastInterview && <p className="text-[10px] text-amber-600 mt-1">This time is in the past. Reminders cannot be set.</p>}
             </div>
-            <div className="flex flex-col justify-end relative">
+            <div className="flex flex-col justify-end">
               <label className="block text-xs font-bold text-slate-400 mb-1">Reminder</label>
-              <select name="reminder" value={(formData.nextInterviewDate && !isPastInterview) ? (formData.reminder || 'none') : 'none'} onChange={handleChange} disabled={!formData.nextInterviewDate || isPastInterview} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                <option value="none">None</option>
-                <option value="15 mins">15 mins before</option>
-                <option value="1 hour">1 hour before</option>
-                <option value="2 hours">2 hours before</option>
-                <option value="1 day">1 day before</option>
-                <option value="2 days">2 days before</option>
-                <option value="custom">Custom</option>
-              </select>
+              <div className="relative">
+                <select name="reminder" value={(formData.nextInterviewDate && !isPastInterview) ? (formData.reminder || 'none') : 'none'} onChange={handleChange} disabled={!formData.nextInterviewDate || isPastInterview} className="w-full pl-3 pr-9 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer">
+                  <option value="none">None</option>
+                  <option value="15 mins">15 mins before</option>
+                  <option value="1 hour">1 hour before</option>
+                  <option value="2 hours">2 hours before</option>
+                  <option value="1 day">1 day before</option>
+                  <option value="2 days">2 days before</option>
+                  <option value="custom">Custom</option>
+                </select>
+                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
               {formData.reminder === 'custom' && (
                 <div className="mt-2 flex items-center gap-2">
                   <input type="date" name="customReminderDate" value={formData.customReminderDate?.split('T')[0] || ''} onChange={handleChange} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-sm" placeholder="Start Date" />

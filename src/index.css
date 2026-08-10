@@ -1,1 +1,8 @@
 @import "tailwindcss";
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  margin-right: 0;
+  padding: 0;
+}
