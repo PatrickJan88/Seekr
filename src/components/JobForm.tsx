@@ -28,30 +28,68 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
     let company = '';
     let position = '';
 
-    const atMatch = text.match(/([A-Z][A-Za-z0-9\s\-\.]{1,40})\s+(?:at|@)\s+([A-Z][A-Za-z0-9\s&\-\.]{1,40})/i);
-    if (atMatch) {
-      position = atMatch[1].trim();
-      company = atMatch[2].trim();
-    } else {
-      const compMatch = text.match(/(?:Company|Organization):\s*([^\n]+)/i);
-      if (compMatch) company = compMatch[1].trim();
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
 
-      const posMatch = text.match(/(?:Position|Role|Title|Job Title):\s*([^\n]+)/i);
-      if (posMatch) position = posMatch[1].trim();
+    // 1. Explicit Labels
+    const compMatch = text.match(/(?:Company|Employer|Organization|Client):\s*([^\n]+)/i);
+    if (compMatch) company = compMatch[1].trim();
+
+    const posMatch = text.match(/(?:Position|Role|Job Title|Title|Job):\s*([^\n]+)/i);
+    if (posMatch) position = posMatch[1].trim();
+
+    // 2. Pattern: "Position at Company" or "Position @ Company"
+    if (!position || !company) {
+      const atMatch = text.match(/([A-Z][A-Za-z0-9\s\-\.\/]{1,50})\s+(?:at|@)\s+([A-Z][A-Za-z0-9\s&\-\.]{1,50})/i);
+      if (atMatch) {
+        if (!position) position = atMatch[1].trim();
+        if (!company) company = atMatch[2].trim();
+      }
     }
 
-    if (!company && !position) {
-      const firstLine = text.trim().split('\n')[0];
-      if (firstLine && (firstLine.includes('-') || firstLine.includes('|'))) {
-        const parts = firstLine.split(/[\-\|]/).map(p => p.trim());
+    // 3. Delimited first line: "Position - Company" or "Company | Position"
+    if ((!position || !company) && lines.length > 0) {
+      const firstLine = lines[0];
+      if (firstLine.includes('-') || firstLine.includes('|') || firstLine.includes(':')) {
+        const parts = firstLine.split(/[\-\|:]/).map(p => p.trim()).filter(Boolean);
         if (parts.length >= 2) {
-          position = parts[0];
-          company = parts[1];
+          const roleRegex = /(Engineer|Developer|Manager|Designer|Analyst|Lead|Architect|Specialist|Director|Consultant|Coordinator|Intern|Associate|Officer|Executive|Scientist|Administrator|Representative)/i;
+          if (roleRegex.test(parts[0])) {
+            if (!position) position = parts[0];
+            if (!company) company = parts[1];
+          } else if (roleRegex.test(parts[1])) {
+            if (!position) position = parts[1];
+            if (!company) company = parts[0];
+          } else {
+            if (!position) position = parts[0];
+            if (!company) company = parts[1];
+          }
         }
       }
     }
 
-    const notes = text.slice(0, 1000).trim();
+    // 4. Look for role keywords in top lines if position still empty
+    if (!position) {
+      const roleRegex = /(?:Senior|Junior|Staff|Lead|Principal|Head of|VP of)?\s*([A-Za-z\s\/]+(?:Engineer|Developer|Manager|Designer|Analyst|Architect|Specialist|Director|Consultant|Coordinator|Intern|Associate|Officer|Executive|Scientist|Administrator|Representative))/i;
+      for (const line of lines.slice(0, 5)) {
+        const m = line.match(roleRegex);
+        if (m) {
+          position = m[0].trim();
+          break;
+        }
+      }
+    }
+
+    // 5. Fallback company from top lines if position found
+    if (!company && position && lines.length > 1) {
+      for (const line of lines.slice(0, 4)) {
+        if (line !== position && line.length < 50 && !line.includes('.')) {
+          company = line;
+          break;
+        }
+      }
+    }
+
+    const notes = text.slice(0, 1500).trim();
     return { company, position, notes };
   };
 
@@ -60,54 +98,39 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
     setIsExtracting(true);
     setExtractError(null);
     try {
+      let extracted: { company?: string; position?: string; notes?: string } = {};
+
       const res = await fetch('/api/extract-text', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: pasteText })
-      });
+      }).catch(() => null);
 
-      const responseText = await res.text();
-      let data: any = null;
-
-      try {
-        data = JSON.parse(responseText);
-      } catch {
-        // If response is non-JSON (e.g. HTML from proxy or error page)
-        const fallback = parseJobDescriptionFallback(pasteText);
-        if (fallback.company || fallback.position) {
-          setFormData(prev => ({
-            ...prev,
-            company: fallback.company || prev.company,
-            position: fallback.position || prev.position,
-            notes: fallback.notes ? (prev.notes ? prev.notes + '\n\n' + fallback.notes : fallback.notes) : prev.notes
-          }));
-          toast.success('Fields auto-filled successfully!');
-          setPasteText('');
-          return;
+      if (res && res.ok) {
+        const responseText = await res.text();
+        try {
+          const data = JSON.parse(responseText);
+          if (data?.application) {
+            extracted = data.application;
+          }
+        } catch {
+          // Response was non-JSON (e.g. static hosting rewrite)
+          extracted = parseJobDescriptionFallback(pasteText);
         }
-        throw new Error('Service returned an unexpected response format. Please try again.');
-      }
-
-      if (!res.ok) {
-        throw new Error(data?.error || data?.message || 'Failed to extract data from description');
-      }
-
-      const extracted = data?.application || {};
-      if (!extracted.company && !extracted.position && !extracted.notes) {
-        const fallback = parseJobDescriptionFallback(pasteText);
-        if (fallback.company || fallback.position) {
-          setFormData(prev => ({
-            ...prev,
-            company: fallback.company || prev.company,
-            position: fallback.position || prev.position,
-            notes: fallback.notes ? (prev.notes ? prev.notes + '\n\n' + fallback.notes : fallback.notes) : prev.notes
-          }));
-          toast.success('Fields auto-filled successfully!');
-          setPasteText('');
-          return;
-        }
-        toast.info('No job details could be automatically identified.');
       } else {
+        // Fetch failed or non-200 (e.g. static host endpoint)
+        extracted = parseJobDescriptionFallback(pasteText);
+      }
+
+      // If backend gave empty or missing fields, complement with fallback
+      if (!extracted.company && !extracted.position) {
+        const fallback = parseJobDescriptionFallback(pasteText);
+        extracted.company = extracted.company || fallback.company;
+        extracted.position = extracted.position || fallback.position;
+        extracted.notes = extracted.notes || fallback.notes;
+      }
+
+      if (extracted.company || extracted.position || extracted.notes) {
         setFormData(prev => ({
           ...prev,
           company: extracted.company || prev.company,
@@ -115,16 +138,27 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
           notes: extracted.notes ? (prev.notes ? prev.notes + '\n\n' + extracted.notes : extracted.notes) : prev.notes
         }));
         toast.success('Fields auto-filled successfully!');
-        setPasteText(''); // Clear after success
+        setPasteText('');
+      } else {
+        toast.info('Pasted text added to notes.');
+        setFormData(prev => ({
+          ...prev,
+          notes: prev.notes ? prev.notes + '\n\n' + pasteText : pasteText
+        }));
+        setPasteText('');
       }
     } catch (err: any) {
       console.error('Extract error:', err);
-      let cleanError = err.message || 'Failed to extract data';
-      if (cleanError.includes('<!doctype') || cleanError.includes('Unexpected token')) {
-        cleanError = 'Extraction service returned an invalid response. Please try again.';
-      }
-      setExtractError(cleanError);
-      toast.error(cleanError);
+      // Even on error, perform fallback fill
+      const fallback = parseJobDescriptionFallback(pasteText);
+      setFormData(prev => ({
+        ...prev,
+        company: fallback.company || prev.company,
+        position: fallback.position || prev.position,
+        notes: fallback.notes ? (prev.notes ? prev.notes + '\n\n' + fallback.notes : fallback.notes) : prev.notes
+      }));
+      toast.success('Fields auto-filled from job description!');
+      setPasteText('');
     } finally {
       setIsExtracting(false);
     }
