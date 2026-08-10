@@ -32,6 +32,10 @@ async function startServer() {
         return res.status(400).json({ error: "No text provided" });
       }
 
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({ error: "GEMINI_API_KEY environment variable is missing on the server." });
+      }
+
       const ai = new GoogleGenAI({
         apiKey: process.env.GEMINI_API_KEY,
         httpOptions: {
@@ -211,6 +215,14 @@ async function startServer() {
     } catch (error: any) {
       console.error("Drive Extraction error:", error);
       res.status(500).json({ error: error.message || "Failed to extract from Drive" });
+    }
+  });
+
+  // Global express error handler to ensure JSON responses for API errors
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error("Express API error:", err);
+    if (!res.headersSent) {
+      res.status(500).json({ error: err.message || "Internal server error" });
     }
   });
 

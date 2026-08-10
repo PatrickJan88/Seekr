@@ -24,6 +24,37 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
   const [extractError, setExtractError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  const parseJobDescriptionFallback = (text: string) => {
+    let company = '';
+    let position = '';
+
+    const atMatch = text.match(/([A-Z][A-Za-z0-9\s\-\.]{1,40})\s+(?:at|@)\s+([A-Z][A-Za-z0-9\s&\-\.]{1,40})/i);
+    if (atMatch) {
+      position = atMatch[1].trim();
+      company = atMatch[2].trim();
+    } else {
+      const compMatch = text.match(/(?:Company|Organization):\s*([^\n]+)/i);
+      if (compMatch) company = compMatch[1].trim();
+
+      const posMatch = text.match(/(?:Position|Role|Title|Job Title):\s*([^\n]+)/i);
+      if (posMatch) position = posMatch[1].trim();
+    }
+
+    if (!company && !position) {
+      const firstLine = text.trim().split('\n')[0];
+      if (firstLine && (firstLine.includes('-') || firstLine.includes('|'))) {
+        const parts = firstLine.split(/[\-\|]/).map(p => p.trim());
+        if (parts.length >= 2) {
+          position = parts[0];
+          company = parts[1];
+        }
+      }
+    }
+
+    const notes = text.slice(0, 1000).trim();
+    return { company, position, notes };
+  };
+
   const handleExtract = async () => {
     if (!pasteText.trim()) return;
     setIsExtracting(true);
@@ -35,22 +66,46 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
         body: JSON.stringify({ text: pasteText })
       });
 
-      const contentType = res.headers.get('content-type') || '';
-      let data: any = {};
+      const responseText = await res.text();
+      let data: any = null;
 
-      if (contentType.includes('application/json')) {
-        data = await res.json();
-      } else {
-        const text = await res.text();
-        throw new Error(res.ok ? 'Server returned invalid response format.' : `Extraction service unavailable (${res.status}).`);
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        // If response is non-JSON (e.g. HTML from proxy or error page)
+        const fallback = parseJobDescriptionFallback(pasteText);
+        if (fallback.company || fallback.position) {
+          setFormData(prev => ({
+            ...prev,
+            company: fallback.company || prev.company,
+            position: fallback.position || prev.position,
+            notes: fallback.notes ? (prev.notes ? prev.notes + '\n\n' + fallback.notes : fallback.notes) : prev.notes
+          }));
+          toast.success('Fields auto-filled successfully!');
+          setPasteText('');
+          return;
+        }
+        throw new Error('Service returned an unexpected response format. Please try again.');
       }
 
       if (!res.ok) {
-        throw new Error(data.error || data.message || 'Failed to extract data from description');
+        throw new Error(data?.error || data?.message || 'Failed to extract data from description');
       }
 
-      const extracted = data.application || {};
+      const extracted = data?.application || {};
       if (!extracted.company && !extracted.position && !extracted.notes) {
+        const fallback = parseJobDescriptionFallback(pasteText);
+        if (fallback.company || fallback.position) {
+          setFormData(prev => ({
+            ...prev,
+            company: fallback.company || prev.company,
+            position: fallback.position || prev.position,
+            notes: fallback.notes ? (prev.notes ? prev.notes + '\n\n' + fallback.notes : fallback.notes) : prev.notes
+          }));
+          toast.success('Fields auto-filled successfully!');
+          setPasteText('');
+          return;
+        }
         toast.info('No job details could be automatically identified.');
       } else {
         setFormData(prev => ({
@@ -64,9 +119,12 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
       }
     } catch (err: any) {
       console.error('Extract error:', err);
-      const cleanError = err.message?.startsWith('<') ? 'Service returned an invalid response. Please try again.' : err.message;
-      setExtractError(cleanError || 'Failed to extract data');
-      toast.error(cleanError || 'Failed to extract data');
+      let cleanError = err.message || 'Failed to extract data';
+      if (cleanError.includes('<!doctype') || cleanError.includes('Unexpected token')) {
+        cleanError = 'Extraction service returned an invalid response. Please try again.';
+      }
+      setExtractError(cleanError);
+      toast.error(cleanError);
     } finally {
       setIsExtracting(false);
     }
