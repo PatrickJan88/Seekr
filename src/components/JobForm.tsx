@@ -12,9 +12,10 @@ interface JobFormProps {
   onSave: (data: Partial<JobApplication>) => Promise<void>;
   onCancel: () => void;
   onDelete?: (id: string) => Promise<void>;
+  isDemo?: boolean;
 }
 
-export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProps) {
+export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = false }: JobFormProps) {
   const [formData, setFormData] = useState<Partial<JobApplication>>(
     initialData || { status: 'Applied', company: '', position: '', appliedDate: new Date().toISOString().split('T')[0] }
   );
@@ -163,6 +164,10 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
   };
 
   const handleExtract = async () => {
+    if (isDemo) {
+      toast.info('Demo Mode: Job description AI extraction is restricted in this portfolio preview.');
+      return;
+    }
     if (!pasteText.trim()) return;
     setIsExtracting(true);
     setExtractError(null);
@@ -323,6 +328,11 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isDemo) {
+      toast.info('Demo Mode: Saving application modifications is restricted in this portfolio preview.');
+      onCancel();
+      return;
+    }
     console.log("Submitting form data", formData);
     
     if (!formData.company?.trim()) {
@@ -378,6 +388,15 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
             <X size={24} />
           </button>
         </div>
+
+        {isDemo && (
+          <div className="bg-amber-50 border-b border-amber-200 text-amber-900 px-6 py-2.5 text-xs font-semibold flex items-center justify-between shrink-0">
+            <span className="flex items-center gap-1.5">
+              <span className="font-bold uppercase tracking-wide bg-amber-200/80 text-amber-900 px-1.5 py-0.5 rounded text-[10px]">Read-Only</span>
+              Portfolio Demo Mode — Application details are in read-only preview
+            </span>
+          </div>
+        )}
         
         <div className="p-6 overflow-y-auto flex-grow">
           {saveError && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">{saveError}</div>}
@@ -497,6 +516,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
               maxFiles={5}
               initialFiles={initialFiles}
               onFilesChange={handleAttachmentsChange} 
+              isDemo={isDemo}
             />
           </div>
 
@@ -505,7 +525,18 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
         
         <div className="p-6 border-t border-slate-100 bg-slate-50 shrink-0 flex justify-between items-center">
           {initialData && onDelete ? (
-              <button type="button" onClick={(e) => { e.preventDefault(); onDelete(initialData.id); }} className="text-red-500 hover:text-red-600 font-bold text-xs">
+              <button 
+                type="button" 
+                onClick={(e) => { 
+                  e.preventDefault(); 
+                  if (isDemo) {
+                    toast.info('Demo Mode: Deleting applications is restricted in this portfolio preview.');
+                    return;
+                  }
+                  onDelete(initialData.id); 
+                }} 
+                className="text-red-500 hover:text-red-600 font-bold text-xs"
+              >
                 Delete
               </button>
           ) : <div></div>}
@@ -514,8 +545,13 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
             <button type="button" onClick={onCancel} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2">
               Cancel
             </button>
-            <button type="submit" form="job-form" disabled={isSaving} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-slate-900 text-slate-50 shadow hover:bg-slate-900/90 h-9 px-4 py-2">
-              {isSaving ? 'Saving...' : 'Save Application'}
+            <button 
+              type="submit" 
+              form="job-form" 
+              disabled={isSaving} 
+              className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-slate-900 text-slate-50 shadow hover:bg-slate-900/90 h-9 px-4 py-2"
+            >
+              {isDemo ? 'Read-Only (Demo)' : isSaving ? 'Saving...' : 'Save Application'}
             </button>
           </div>
         </div>

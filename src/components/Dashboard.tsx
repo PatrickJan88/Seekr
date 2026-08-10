@@ -16,11 +16,16 @@ import { auth, logout } from '../lib/firebase';
 import Papa from 'papaparse';
 import { addNotification } from '../lib/notifications';
 import { toast } from 'sonner';
+import { DEMO_APPLICATIONS } from '../data/seekrDemoData';
 
 import { NotificationsPage } from './NotificationsPage';
 import { SettingsPage } from './SettingsPage';
 
-export function Dashboard() {
+interface DashboardProps {
+  isDemo?: boolean;
+}
+
+export function Dashboard({ isDemo = false }: DashboardProps) {
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -46,13 +51,13 @@ export function Dashboard() {
   }, [isFormOpen, showClearConfirm, deleteConfirmId]);
 
   useEffect(() => {
-    if (auth.currentUser) {
+    if (isDemo || auth.currentUser) {
       loadData();
     }
-  }, [auth.currentUser]);
+  }, [auth.currentUser, isDemo]);
 
   useEffect(() => {
-    if (!applications.length || !auth.currentUser) return;
+    if (!applications.length || !auth.currentUser || isDemo) return;
     
     let isChecking = false;
     const checkReminders = async () => {
@@ -131,7 +136,7 @@ export function Dashboard() {
             });
             
             await updateApplication(app.id, { reminderSent: true });
-            await addNotification(auth.currentUser.uid, 'reminder', `Interview Reminder: ${app.company}`, msg);
+            await addNotification(auth.currentUser!.uid, 'reminder', `Interview Reminder: ${app.company}`, msg);
             updated = true;
           }
         }
@@ -150,9 +155,33 @@ export function Dashboard() {
     checkReminders(); // Initial check
 
     return () => clearInterval(interval);
-  }, [applications]);
+  }, [applications, isDemo]);
 
   const loadData = async () => {
+    if (isDemo) {
+      setLoading(true);
+      try {
+        const local = localStorage.getItem('seekr_demo_applications');
+        let data: JobApplication[] = [];
+        if (local) {
+          try {
+            data = JSON.parse(local);
+          } catch {
+            data = DEMO_APPLICATIONS;
+          }
+        } else {
+          data = DEMO_APPLICATIONS;
+        }
+        setApplications(data);
+      } catch (err) {
+        console.error('Failed to load demo applications', err);
+        setApplications(DEMO_APPLICATIONS);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     if (!auth.currentUser) return;
     try {
       console.log('Loading applications...');
@@ -181,6 +210,18 @@ export function Dashboard() {
   };
 
   const handleStatusChange = async (appId: string, newStatus: string) => {
+    if (isDemo) {
+      const updated = applications.map(a => a.id === appId ? { ...a, status: newStatus as any } : a);
+      setApplications(updated);
+      try {
+        localStorage.setItem('seekr_demo_applications', JSON.stringify(updated));
+      } catch (e) {
+        console.error('Error saving demo state', e);
+      }
+      toast.success('Status updated (Demo Mode)');
+      return;
+    }
+
     try {
       await updateApplication(appId, { status: newStatus as any });
       setApplications(apps => apps.map(a => a.id === appId ? { ...a, status: newStatus as any } : a));
@@ -190,6 +231,13 @@ export function Dashboard() {
   };
 
   const handleSave = async (appData: Partial<JobApplication>) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Adding and editing applications is restricted in this portfolio preview.');
+      setIsFormOpen(false);
+      setEditingApp(null);
+      return;
+    }
+
     if (!auth.currentUser) return;
     try {
       if (editingApp) {
@@ -208,11 +256,21 @@ export function Dashboard() {
   };
 
   const handleDelete = async (id: string) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Deleting applications is restricted in this portfolio preview.');
+      return;
+    }
     setDeleteConfirmId(id);
   };
 
   const confirmDeleteApp = async () => {
     if (!deleteConfirmId) return;
+    if (isDemo) {
+      toast.info('Demo Mode: Deleting applications is restricted in this portfolio preview.');
+      setDeleteConfirmId(null);
+      return;
+    }
+
     try {
       await deleteApplication(deleteConfirmId);
       setIsFormOpen(false);
@@ -228,10 +286,24 @@ export function Dashboard() {
   };
 
   const handleClearData = async () => {
+    if (isDemo) {
+      localStorage.removeItem('seekr_demo_applications');
+      setApplications(DEMO_APPLICATIONS);
+      toast.success('Demo sample data reset to initial 12 European applications!');
+      return;
+    }
     setShowClearConfirm(true);
   };
 
   const confirmClearData = async () => {
+    if (isDemo) {
+      localStorage.removeItem('seekr_demo_applications');
+      setApplications(DEMO_APPLICATIONS);
+      setShowClearConfirm(false);
+      toast.success('Demo sample data reset to initial 12 European applications!');
+      return;
+    }
+
     if (!auth.currentUser) return;
     setIsSyncing(true);
     setShowClearConfirm(false);
@@ -397,10 +469,44 @@ export function Dashboard() {
 
   if (view === 'settings') {
     return <SettingsPage onBack={() => setView('sankey')} onClearData={handleClearData} isSyncing={isSyncing} />;
-  }
-
-  return (
+  }  return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
+      {isDemo && (
+        <div className="bg-slate-900 text-white text-xs py-2.5 px-4 sm:px-6 flex items-center justify-between border-b border-slate-800 shrink-0 sticky top-0 z-50 shadow-sm">
+          <div className="flex items-center gap-2.5 font-medium">
+            <span className="bg-blue-600 text-white px-2 py-0.5 rounded font-bold uppercase tracking-wider text-[10px]">
+              Portfolio Demo
+            </span>
+            <span className="hidden sm:inline text-slate-300">
+              Seekr Interactive Preview — Pre-loaded with 12 European Tech Role Applications
+            </span>
+            <span className="sm:hidden text-slate-300">
+              12 Sample Tech Applications
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                localStorage.removeItem('seekr_demo_applications');
+                setApplications(DEMO_APPLICATIONS);
+                toast.success('Sample data reset to initial 12 European applications!');
+              }}
+              className="text-[11px] font-semibold text-slate-300 hover:text-white underline transition-colors"
+            >
+              Reset Demo Data
+            </button>
+            <a
+              href="https://seekr-37311.firebaseapp.com/"
+              target="_blank"
+              rel="noreferrer"
+              className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-2.5 py-1 rounded-md text-xs transition-colors flex items-center gap-1 shadow-xs"
+            >
+              Launch Full App ↗
+            </a>
+          </div>
+        </div>
+      )}
+
       <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 sticky top-0 z-10">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
@@ -409,7 +515,7 @@ export function Dashboard() {
 
           <div className="flex items-center gap-4 border-l border-slate-200 pl-6">
             <button 
-              onClick={() => { setEditingApp(null); setIsFormOpen(true); }}
+              onClick={isDemo ? () => toast.info('Demo Mode: Adding new applications is restricted in this portfolio preview.') : () => { setEditingApp(null); setIsFormOpen(true); }}
               className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-slate-900 text-slate-50 shadow hover:bg-slate-900/90 h-9 px-4 py-2 gap-2"
             >
               <Plus size={16} />
@@ -454,8 +560,8 @@ export function Dashboard() {
 
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap gap-3">
-                            <button
-                onClick={() => setShowImportModal(true)}
+              <button
+                onClick={isDemo ? () => toast.info('Demo Mode: Importing data is disabled in this portfolio preview.') : () => setShowImportModal(true)}
                 disabled={isSyncing}
                 className={`gap-2 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2 ${isSyncing ? "opacity-50 cursor-not-allowed" : ""}`}
               >
@@ -463,7 +569,7 @@ export function Dashboard() {
                 Import Data
               </button>
               <button
-                onClick={() => exportCsv(applications)}
+                onClick={isDemo ? () => toast.info('Demo Mode: Exporting data is restricted in this portfolio preview.') : () => exportCsv(applications)}
                 disabled={applications.length === 0 || isSyncing}
                 className={`gap-2 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-slate-900 text-slate-50 shadow hover:bg-slate-900/90 h-9 px-4 py-2 ${applications.length === 0 || isSyncing ? "opacity-50 cursor-not-allowed" : ""}`}
               >
@@ -519,11 +625,12 @@ export function Dashboard() {
           onSave={handleSave}
           onCancel={() => { setIsFormOpen(false); setEditingApp(null); }}
           onDelete={handleDelete}
+          isDemo={isDemo}
         />
       )}
       
       
-            {showImportModal && (
+      {showImportModal && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col p-6">
             <div className="flex justify-between items-center mb-6">
@@ -536,7 +643,12 @@ export function Dashboard() {
               label="Upload CSV or Excel"
               accept=".csv,.xlsx,.xls"
               maxFiles={1}
+              isDemo={isDemo}
               onFilesChange={async (files) => {
+                if (isDemo) {
+                  toast.info('Demo Mode: Data import is disabled in this portfolio preview.');
+                  return;
+                }
                 if (files.length > 0 && files[0].file) {
                   await handleDataImport(files[0].file);
                 }

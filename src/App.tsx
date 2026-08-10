@@ -13,12 +13,29 @@ import { Footer } from './components/Footer';
 import { Github, Linkedin } from 'lucide-react';
 
 export default function App() {
+  const isDemo = typeof window !== 'undefined' && (
+    new URLSearchParams(window.location.search).get('demo') === 'true' ||
+    new URLSearchParams(window.location.search).get('mode') === 'demo'
+  );
+
   const [needsAuth, setNeedsAuth] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (isDemo) {
+      setUser({
+        uid: 'demo-user',
+        email: 'demo@seekr.app',
+        displayName: 'Portfolio Visitor',
+        isAnonymous: true
+      } as User);
+      setNeedsAuth(false);
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = initAuth(
       (u) => {
         setUser(u);
@@ -32,7 +49,7 @@ export default function App() {
       }
     );
     return () => unsubscribe();
-  }, []);
+  }, [isDemo]);
 
   const handleLogin = async (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
@@ -136,8 +153,7 @@ export default function App() {
 
   return (
     <>
-      
-      <Dashboard />
+      <Dashboard isDemo={isDemo} />
     </>
   );
 }

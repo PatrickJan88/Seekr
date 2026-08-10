@@ -23,9 +23,10 @@ export interface FileUploadProps {
   maxFiles?: number;
   initialFiles?: UploadedFile[];
   description?: string;
+  isDemo?: boolean;
 }
 
-export function FileUpload({ label, onFilesChange, accept = ".pdf,.doc,.docx", maxSizeMB = 10, maxFiles = 5, initialFiles = [], description }: FileUploadProps) {
+export function FileUpload({ label, onFilesChange, accept = ".pdf,.doc,.docx", maxSizeMB = 10, maxFiles = 5, initialFiles = [], description, isDemo = false }: FileUploadProps) {
   const [files, setFiles] = useState<UploadedFile[]>(initialFiles);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,6 +48,10 @@ export function FileUpload({ label, onFilesChange, accept = ".pdf,.doc,.docx", m
 
 
   const handleFiles = async (newFiles: FileList | File[] | null | undefined) => {
+    if (isDemo) {
+      toast.info('Demo Mode: File attachment uploads are disabled in this portfolio preview.');
+      return;
+    }
     if (!newFiles || newFiles.length === 0) return;
 
     const filesArray = Array.from(newFiles);
@@ -119,12 +124,15 @@ export function FileUpload({ label, onFilesChange, accept = ".pdf,.doc,.docx", m
   };
 
   const removeFile = (id: string) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Removing attachments is disabled in this portfolio preview.');
+      return;
+    }
     setFiles(prev => {
       const updated = prev.filter(f => f.id !== id);
       return updated;
     });
   };
-
 
   const handleDownload = (fileObj: UploadedFile) => {
     const url = fileObj.base64 || fileObj.url;
@@ -154,37 +162,57 @@ export function FileUpload({ label, onFilesChange, accept = ".pdf,.doc,.docx", m
       </div>
 
       {files.length < maxFiles && (
-        <div
-          className="flex justify-center rounded-xl border mt-2 border-dashed border-slate-300 px-6 py-6 hover:bg-slate-50 transition-colors"
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={handleDrop}
-        >
-          <div>
-            <File
-              className="mx-auto h-8 w-8 text-slate-400 mb-2"
-              aria-hidden={true}
-            />
-            <div className="flex text-sm leading-6 text-slate-600 justify-center">
-              <p>Drag and drop or</p>
-              <label
-                className="relative cursor-pointer rounded-sm pl-1 font-bold text-blue-600 hover:text-blue-700 hover:underline"
-              >
-                <span>choose files</span>
-                <input
-                  type="file"
-                  className="sr-only"
-                  accept={accept}
-                  multiple
-                  onChange={handleFileChange}
-                  ref={fileInputRef}
-                />
-              </label>
+        isDemo ? (
+          <div
+            className="flex justify-center rounded-xl border mt-2 border-dashed border-slate-200 bg-slate-50/70 px-6 py-5 text-center cursor-not-allowed select-none"
+            onClick={() => toast.info('Demo Mode: File attachment uploads are disabled in this portfolio preview.')}
+          >
+            <div>
+              <File
+                className="mx-auto h-7 w-7 text-slate-300 mb-1.5"
+                aria-hidden={true}
+              />
+              <p className="text-xs font-semibold text-slate-500">
+                Choose files disabled in Portfolio Demo Mode
+              </p>
+              <p className="mt-0.5 text-[11px] text-slate-400">
+                {description || `Accepted: ${accept}. Max: ${maxSizeMB}MB.`}
+              </p>
             </div>
-            <p className="mt-1 text-xs text-center text-slate-500">
-              {description || `Accepted: ${accept}. Max: ${maxSizeMB}MB.`}
-            </p>
           </div>
-        </div>
+        ) : (
+          <div
+            className="flex justify-center rounded-xl border mt-2 border-dashed border-slate-300 px-6 py-6 hover:bg-slate-50 transition-colors"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleDrop}
+          >
+            <div>
+              <File
+                className="mx-auto h-8 w-8 text-slate-400 mb-2"
+                aria-hidden={true}
+              />
+              <div className="flex text-sm leading-6 text-slate-600 justify-center">
+                <p>Drag and drop or</p>
+                <label
+                  className="relative cursor-pointer rounded-sm pl-1 font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                >
+                  <span>choose files</span>
+                  <input
+                    type="file"
+                    className="sr-only"
+                    accept={accept}
+                    multiple
+                    onChange={handleFileChange}
+                    ref={fileInputRef}
+                  />
+                </label>
+              </div>
+              <p className="mt-1 text-xs text-center text-slate-500">
+                {description || `Accepted: ${accept}. Max: ${maxSizeMB}MB.`}
+              </p>
+            </div>
+          </div>
+        )
       )}
 
       {files.length > 0 && (
@@ -195,18 +223,20 @@ export function FileUpload({ label, onFilesChange, accept = ".pdf,.doc,.docx", m
               className="relative bg-slate-50 p-4 border-slate-200 group cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-colors"
               onClick={() => handleDownload(fileObj)}
             >
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-2 top-2 h-6 w-6 text-slate-400 hover:text-slate-600 rounded-md bg-transparent z-10"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeFile(fileObj.id);
-                }}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              {!isDemo && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-2 h-6 w-6 text-slate-400 hover:text-slate-600 rounded-md bg-transparent z-10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFile(fileObj.id);
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
               <div className="flex items-center space-x-3 pr-8">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm border border-slate-200 group-hover:border-blue-300 group-hover:text-blue-600 transition-colors">
                   <File className="h-5 w-5 text-slate-500 group-hover:text-blue-600 transition-colors" />
