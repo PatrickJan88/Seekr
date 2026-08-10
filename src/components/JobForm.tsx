@@ -27,26 +27,72 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
   const parseJobDescriptionFallback = (text: string) => {
     let company = '';
     let position = '';
+    let extraNotes: string[] = [];
 
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
 
+    // Helper to clean gender/diversity markers from job titles e.g. (m/w/d), (f/m/d), (m/f/x)
+    const cleanPositionStr = (str: string) => {
+      return str
+        .replace(/[\(\[\{]\s*(?:m\/w\/d|f\/m\/d|m\/f\/x|m\/w\/x|d\/f\/m|w\/m\/d|f\/m\/x|all genders|f\/m\/other|m\/f\/d)\s*[\)\]\}]/gi, '')
+        .trim();
+    };
+
+    // Helper to extract clean company from line with separators like '·', '|', '•', ','
+    const cleanCompanyStr = (str: string) => {
+      const parts = str.split(/[\·\•\|]/).map(p => p.trim()).filter(Boolean);
+      let comp = parts[0] || str;
+      // Remove work modes / location trailing tags if present in the first part
+      comp = comp.replace(/\s*[\(\[\{](?:On-site|Hybrid|Remote|Full-time|Part-time)[\)\]\}]/gi, '').trim();
+      return comp;
+    };
+
     // 1. Explicit Labels
     const compMatch = text.match(/(?:Company|Employer|Organization|Client):\s*([^\n]+)/i);
-    if (compMatch) company = compMatch[1].trim();
+    if (compMatch) company = cleanCompanyStr(compMatch[1]);
 
     const posMatch = text.match(/(?:Position|Role|Job Title|Title|Job):\s*([^\n]+)/i);
-    if (posMatch) position = posMatch[1].trim();
+    if (posMatch) position = cleanPositionStr(posMatch[1]);
 
     // 2. Pattern: "Position at Company" or "Position @ Company"
     if (!position || !company) {
       const atMatch = text.match(/([A-Z][A-Za-z0-9\s\-\.\/]{1,50})\s+(?:at|@)\s+([A-Z][A-Za-z0-9\s&\-\.]{1,50})/i);
       if (atMatch) {
-        if (!position) position = atMatch[1].trim();
-        if (!company) company = atMatch[2].trim();
+        if (!position) position = cleanPositionStr(atMatch[1]);
+        if (!company) company = cleanCompanyStr(atMatch[2]);
       }
     }
 
-    // 3. Delimited first line: "Position - Company" or "Company | Position"
+    // 3. Multi-line pattern check (e.g. Line 1: "UX/UI Designer (m/w/d)", Line 2: "Technology & Strategy · Berlin, Germany (On-site)")
+    if ((!position || !company) && lines.length >= 1) {
+      const roleRegex = /(?:Senior|Junior|Staff|Lead|Principal|Head of|VP of|UX\/UI|UI\/UX)?\s*([A-Za-z0-9\s\/&]+(?:Engineer|Developer|Manager|Designer|Analyst|Architect|Specialist|Director|Consultant|Coordinator|Intern|Associate|Officer|Executive|Scientist|Administrator|Representative))/i;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+
+        // Check if line looks like a job title
+        if (!position && roleRegex.test(line)) {
+          position = cleanPositionStr(line);
+          
+          // Check if next line contains company or company · location
+          if (!company && i + 1 < lines.length) {
+            const nextLine = lines[i + 1];
+            company = cleanCompanyStr(nextLine);
+
+            // Collect location or remaining info from nextLine
+            if (nextLine.includes('·') || nextLine.includes('•') || nextLine.includes('|')) {
+              const parts = nextLine.split(/[\·\•\|]/).map(p => p.trim()).filter(Boolean);
+              if (parts.length > 1) {
+                extraNotes.push(parts.slice(1).join(' · '));
+              }
+            }
+          }
+          break;
+        }
+      }
+    }
+
+    // 4. Delimited first line fallback: "Position - Company" or "Company | Position"
     if ((!position || !company) && lines.length > 0) {
       const firstLine = lines[0];
       if (firstLine.includes('-') || firstLine.includes('|') || firstLine.includes(':')) {
@@ -54,42 +100,30 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
         if (parts.length >= 2) {
           const roleRegex = /(Engineer|Developer|Manager|Designer|Analyst|Lead|Architect|Specialist|Director|Consultant|Coordinator|Intern|Associate|Officer|Executive|Scientist|Administrator|Representative)/i;
           if (roleRegex.test(parts[0])) {
-            if (!position) position = parts[0];
-            if (!company) company = parts[1];
+            if (!position) position = cleanPositionStr(parts[0]);
+            if (!company) company = cleanCompanyStr(parts[1]);
           } else if (roleRegex.test(parts[1])) {
-            if (!position) position = parts[1];
-            if (!company) company = parts[0];
+            if (!position) position = cleanPositionStr(parts[1]);
+            if (!company) company = cleanCompanyStr(parts[0]);
           } else {
-            if (!position) position = parts[0];
-            if (!company) company = parts[1];
+            if (!position) position = cleanPositionStr(parts[0]);
+            if (!company) company = cleanCompanyStr(parts[1]);
           }
         }
       }
     }
 
-    // 4. Look for role keywords in top lines if position still empty
-    if (!position) {
-      const roleRegex = /(?:Senior|Junior|Staff|Lead|Principal|Head of|VP of)?\s*([A-Za-z\s\/]+(?:Engineer|Developer|Manager|Designer|Analyst|Architect|Specialist|Director|Consultant|Coordinator|Intern|Associate|Officer|Executive|Scientist|Administrator|Representative))/i;
-      for (const line of lines.slice(0, 5)) {
-        const m = line.match(roleRegex);
-        if (m) {
-          position = m[0].trim();
-          break;
-        }
-      }
+    // Clean up if position & company ended up identical
+    if (position && company && position.toLowerCase() === company.toLowerCase()) {
+      company = '';
     }
 
-    // 5. Fallback company from top lines if position found
-    if (!company && position && lines.length > 1) {
-      for (const line of lines.slice(0, 4)) {
-        if (line !== position && line.length < 50 && !line.includes('.')) {
-          company = line;
-          break;
-        }
-      }
-    }
+    // Build notes: combine location details and rest of text
+    const fullTextNotes = text.slice(0, 1500).trim();
+    const notes = extraNotes.length > 0 
+      ? extraNotes.join('\n') + '\n\n' + fullTextNotes 
+      : fullTextNotes;
 
-    const notes = text.slice(0, 1500).trim();
     return { company, position, notes };
   };
 

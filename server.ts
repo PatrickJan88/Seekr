@@ -46,16 +46,21 @@ async function startServer() {
       });
 
       const prompt = `
-        You are a data extraction assistant.
-        Extract the job application information from this job description text.
-        Return ONLY a JSON object with the following schema:
+        You are an expert job description data extraction assistant.
+        Extract the job application information from this text carefully.
+
+        Guidelines:
+        - "position": Clean job title. Omit gender/diversity suffixes such as (m/w/d), (f/m/d), (m/f/x), (d/f/m), (all genders), etc.
+        - "company": The company, team, or department name. If a line lists "Company/Team · Location (Mode)" e.g. "Technology & Strategy · Berlin, Germany (On-site)", extract "Technology & Strategy" as company. Strip locations, work modes (Remote, Hybrid, On-site), and bullet points from the company name.
+        - "notes": Summary of key details, responsibilities, location, workplace model (On-site, Hybrid, Remote), or salary if mentioned.
+
+        Return ONLY a JSON object with this schema:
         {
-          "company": "Company Name (if found)",
-          "position": "Job Title (if found)",
-          "notes": "Brief summary of key requirements or responsibilities (if found)"
+          "company": "Company or Team Name",
+          "position": "Clean Job Title",
+          "notes": "Relevant details / notes"
         }
-        Return an empty object {} if nothing matches.
-        
+
         Job Description Text:
         ${text.substring(0, 15000)}
       `;
