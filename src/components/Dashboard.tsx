@@ -471,42 +471,6 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     return <SettingsPage onBack={() => setView('sankey')} onClearData={handleClearData} isSyncing={isSyncing} />;
   }  return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
-      {isDemo && (
-        <div className="bg-slate-900 text-white text-xs py-2.5 px-4 sm:px-6 flex items-center justify-between border-b border-slate-800 shrink-0 sticky top-0 z-50 shadow-sm">
-          <div className="flex items-center gap-2.5 font-medium">
-            <span className="bg-blue-600 text-white px-2 py-0.5 rounded font-bold uppercase tracking-wider text-[10px]">
-              Portfolio Demo
-            </span>
-            <span className="hidden sm:inline text-slate-300">
-              Seekr Interactive Preview — Pre-loaded with 12 European Tech Role Applications
-            </span>
-            <span className="sm:hidden text-slate-300">
-              12 Sample Tech Applications
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                localStorage.removeItem('seekr_demo_applications');
-                setApplications(DEMO_APPLICATIONS);
-                toast.success('Sample data reset to initial 12 European applications!');
-              }}
-              className="text-[11px] font-semibold text-slate-300 hover:text-white underline transition-colors"
-            >
-              Reset Demo Data
-            </button>
-            <a
-              href="https://seekr-37311.firebaseapp.com/"
-              target="_blank"
-              rel="noreferrer"
-              className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-2.5 py-1 rounded-md text-xs transition-colors flex items-center gap-1 shadow-xs"
-            >
-              Launch Full App ↗
-            </a>
-          </div>
-        </div>
-      )}
-
       <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 sticky top-0 z-10">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
@@ -602,22 +566,24 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
         )}
       </main>
 
-      <Footer
-        logo={<img src="/assets/seekr%20logo%201.svg" alt="Seekr Logo" className="h-6" />}
-        brandName=""
-        socialLinks={[
-          { icon: <Github size={18} />, href: "https://github.com/PatrickJan88", label: "GitHub" },
-          { icon: <Linkedin size={18} />, href: "https://www.linkedin.com/in/pofei-r-79586395", label: "LinkedIn" },
-          { icon: <img src="/assets/logo%20pofei.svg" alt="Pofei Logo" className="w-[18px] h-[18px]" />, href: "https://pofeiportfolio.vercel.app/", label: "Portfolio" }
-        ]}
-        mainLinks={[
-          { href: "https://pofeiportfolio.vercel.app/", label: "🖋 Made by Pofei" }
-        ]}
-        legalLinks={[]}
-        copyright={{
-          text: "Disclaimer: This is an AI-generated coding project created solely for research and demonstration purposes. It is not a commercial product, and is not affiliated with any existing companies or trademarks utilizing the \"Seekr\" name.",
-        }}
-      />
+      {!isDemo && (
+        <Footer
+          logo={<img src="/assets/seekr%20logo%201.svg" alt="Seekr Logo" className="h-6" />}
+          brandName=""
+          socialLinks={[
+            { icon: <Github size={18} />, href: "https://github.com/PatrickJan88", label: "GitHub" },
+            { icon: <Linkedin size={18} />, href: "https://www.linkedin.com/in/pofei-r-79586395", label: "LinkedIn" },
+            { icon: <img src="/assets/logo%20pofei.svg" alt="Pofei Logo" className="w-[18px] h-[18px]" />, href: "https://pofeiportfolio.vercel.app/", label: "Portfolio" }
+          ]}
+          mainLinks={[
+            { href: "https://pofeiportfolio.vercel.app/", label: "🖋 Made by Pofei" }
+          ]}
+          legalLinks={[]}
+          copyright={{
+            text: "Disclaimer: This is an AI-generated coding project created solely for research and demonstration purposes. It is not a commercial product, and is not affiliated with any existing companies or trademarks utilizing the \"Seekr\" name.",
+          }}
+        />
+      )}
 
       {isFormOpen && (
         <JobForm
