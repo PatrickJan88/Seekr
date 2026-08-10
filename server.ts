@@ -3,6 +3,22 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 
+function safeParseJSON(text: string, fallback: any) {
+  if (!text) return fallback;
+  let clean = text.replace(/```json/gi, "").replace(/```/g, "").trim();
+  const firstBrace = clean.search(/[\{\[]/);
+  const lastBrace = Math.max(clean.lastIndexOf("}"), clean.lastIndexOf("]"));
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    clean = clean.substring(firstBrace, lastBrace + 1);
+  }
+  try {
+    return JSON.parse(clean);
+  } catch (e) {
+    console.error("Failed to parse JSON from Gemini response:", text);
+    return fallback;
+  }
+}
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -16,7 +32,15 @@ async function startServer() {
         return res.status(400).json({ error: "No text provided" });
       }
 
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({
+        apiKey: process.env.GEMINI_API_KEY,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build'
+          }
+        }
+      });
+
       const prompt = `
         You are a data extraction assistant.
         Extract the job application information from this job description text.
@@ -33,13 +57,15 @@ async function startServer() {
       `;
 
       const response = await ai.models.generateContent({
-        model: "gemini-flash-latest",
-        contents: prompt
+        model: "gemini-3.6-flash",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json"
+        }
       });
 
-      let responseText = response.text || "{}";
-      responseText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
-      const application = JSON.parse(responseText);
+      const responseText = response.text || "{}";
+      const application = safeParseJSON(responseText, {});
 
       res.json({ application });
     } catch (error: any) {
@@ -55,7 +81,15 @@ async function startServer() {
         return res.status(400).json({ error: "No PDF data provided" });
       }
 
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({
+        apiKey: process.env.GEMINI_API_KEY,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build'
+          }
+        }
+      });
+
       const prompt = `
         You are a data extraction assistant.
         Extract all job applications mentioned in this PDF.
@@ -72,7 +106,7 @@ async function startServer() {
       `;
 
       const response = await ai.models.generateContent({
-        model: "gemini-flash-latest",
+        model: "gemini-3.6-flash",
         contents: [
           {
             role: "user",
@@ -86,12 +120,14 @@ async function startServer() {
               { text: prompt }
             ]
           }
-        ]
+        ],
+        config: {
+          responseMimeType: "application/json"
+        }
       });
 
-      let responseText = response.text || "[]";
-      responseText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
-      const applications = JSON.parse(responseText);
+      const responseText = response.text || "[]";
+      const applications = safeParseJSON(responseText, []);
 
       res.json({ applications });
     } catch (error: any) {
@@ -107,10 +143,6 @@ async function startServer() {
         return res.status(400).json({ error: "Missing fileId or accessToken" });
       }
 
-      // We'll fetch the file content from Google Drive API
-      // If it's a Google Doc, we can export it as text
-      // If it's a PDF, we can get the base64
-      // Let's first try to get the file metadata to know its mimeType
       const metaResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=mimeType`, {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
@@ -130,7 +162,6 @@ async function startServer() {
         if (!exportResponse.ok) throw new Error("Failed to export Google Doc");
         fileText = await exportResponse.text();
       } else {
-        // Assume text file or something we can download
         const dlResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
            headers: { Authorization: `Bearer ${accessToken}` }
         });
@@ -138,7 +169,15 @@ async function startServer() {
         fileText = await dlResponse.text();
       }
 
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({
+        apiKey: process.env.GEMINI_API_KEY,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build'
+          }
+        }
+      });
+
       const prompt = `
         You are a data extraction assistant.
         Extract all job applications mentioned in this document.
@@ -158,13 +197,15 @@ async function startServer() {
       `;
 
       const response = await ai.models.generateContent({
-        model: "gemini-flash-latest",
-        contents: prompt
+        model: "gemini-3.6-flash",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json"
+        }
       });
 
-      let responseText = response.text || "[]";
-      responseText = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
-      const applications = JSON.parse(responseText);
+      const responseText = response.text || "[]";
+      const applications = safeParseJSON(responseText, []);
 
       res.json({ applications });
     } catch (error: any) {

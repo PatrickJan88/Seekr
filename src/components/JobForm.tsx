@@ -34,24 +34,39 @@ export function JobForm({ initialData, onSave, onCancel, onDelete }: JobFormProp
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: pasteText })
       });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt);
+
+      const contentType = res.headers.get('content-type') || '';
+      let data: any = {};
+
+      if (contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const text = await res.text();
+        throw new Error(res.ok ? 'Server returned invalid response format.' : `Extraction service unavailable (${res.status}).`);
       }
-      const data = await res.json();
-      const extracted = data.application;
-      
-      setFormData(prev => ({
-        ...prev,
-        company: extracted.company || prev.company,
-        position: extracted.position || prev.position,
-        notes: extracted.notes ? (prev.notes ? prev.notes + '\n\n' + extracted.notes : extracted.notes) : prev.notes
-      }));
-      
-      setPasteText(''); // Clear after success
+
+      if (!res.ok) {
+        throw new Error(data.error || data.message || 'Failed to extract data from description');
+      }
+
+      const extracted = data.application || {};
+      if (!extracted.company && !extracted.position && !extracted.notes) {
+        toast.info('No job details could be automatically identified.');
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          company: extracted.company || prev.company,
+          position: extracted.position || prev.position,
+          notes: extracted.notes ? (prev.notes ? prev.notes + '\n\n' + extracted.notes : extracted.notes) : prev.notes
+        }));
+        toast.success('Fields auto-filled successfully!');
+        setPasteText(''); // Clear after success
+      }
     } catch (err: any) {
       console.error('Extract error:', err);
-      setExtractError(err.message || 'Failed to extract data');
+      const cleanError = err.message?.startsWith('<') ? 'Service returned an invalid response. Please try again.' : err.message;
+      setExtractError(cleanError || 'Failed to extract data');
+      toast.error(cleanError || 'Failed to extract data');
     } finally {
       setIsExtracting(false);
     }
