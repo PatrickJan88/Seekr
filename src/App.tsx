@@ -169,9 +169,7 @@ export default function App() {
             { icon: <Linkedin size={18} />, href: "https://www.linkedin.com/in/pofei-r-79586395", label: "LinkedIn" },
             { icon: <img src="/assets/logo%20pofei.svg" alt="Pofei Logo" className="w-[18px] h-[18px]" />, href: "https://pofeiportfolio.vercel.app/", label: "Portfolio" }
           ]}
-          mainLinks={[
-            { href: "https://pofeiportfolio.vercel.app/", label: "🖋 Made by Pofei" }
-          ]}
+          mainLinks={[]}
           legalLinks={[]}
           copyright={{
             text: "Disclaimer: This is an AI-generated coding project created solely for research and demonstration purposes. It is not a commercial product, and is not affiliated with any existing companies or trademarks utilizing the \"Seekr\" name.",
