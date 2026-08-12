@@ -2,6 +2,7 @@
   <img src="public/assets/seekr%20logo%201.svg" alt="Seekr Logo" width="200" />
   <h1>Seekr</h1>
   <p>Your personal job application tracker and career dashboard.</p>
+  <href>https://seekr-37311.firebaseapp.com</href>
 </div>
 
 ## Features
