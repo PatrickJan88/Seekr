@@ -310,36 +310,36 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
   };
 
   const handleExtract = async () => {
-    if (isDemo) {
-      toast.info('Demo Mode: Job description AI extraction is restricted in this portfolio preview.');
-      return;
-    }
     if (!pasteText.trim()) return;
     setIsExtracting(true);
     setExtractError(null);
     try {
       let extracted: { company?: string; position?: string; location?: string; workType?: string; notes?: string } = {};
 
-      const res = await fetch('/api/extract-text', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: pasteText })
-      }).catch(() => null);
+      if (isDemo) {
+        extracted = parseJobDescriptionFallback(pasteText);
+      } else {
+        const res = await fetch('/api/extract-text', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: pasteText })
+        }).catch(() => null);
 
-      if (res && res.ok) {
-        const responseText = await res.text();
-        try {
-          const data = JSON.parse(responseText);
-          if (data?.application) {
-            extracted = data.application;
+        if (res && res.ok) {
+          const responseText = await res.text();
+          try {
+            const data = JSON.parse(responseText);
+            if (data?.application) {
+              extracted = data.application;
+            }
+          } catch {
+            // Response was non-JSON (e.g. static hosting rewrite)
+            extracted = parseJobDescriptionFallback(pasteText);
           }
-        } catch {
-          // Response was non-JSON (e.g. static hosting rewrite)
+        } else {
+          // Fetch failed or non-200 (e.g. static host endpoint)
           extracted = parseJobDescriptionFallback(pasteText);
         }
-      } else {
-        // Fetch failed or non-200 (e.g. static host endpoint)
-        extracted = parseJobDescriptionFallback(pasteText);
       }
 
       // If backend gave empty or missing fields, complement with fallback
