@@ -142,7 +142,7 @@ export default function App() {
         <div className="flex-grow flex items-center justify-center p-6">
           <div className="bg-white p-8 rounded-2xl shadow-2xs max-w-md w-full text-center border border-[#efefef]">
             <img src="/assets/seekr%20logo%201.svg" alt="Seekr Logo" className="h-10 mx-auto mb-4" />
-            <p className="text-[#777c86] font-medium mb-8 text-sm">Track applications, sync interviews, and analyze your job search.</p>
+            <p className="text-[#777c86] font-medium mb-8 text-sm">Track, evaluate, and land your next tech role.</p>
             
             <div className="space-y-3">
               <button onClick={handleLogin} disabled={isLoggingIn} className="w-full flex items-center justify-center gap-3 bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium py-3 px-6 rounded-full transition-all shadow-2xs cursor-pointer">
@@ -165,7 +165,7 @@ export default function App() {
           logo={<img src="/assets/seekr%20logo%201.svg" alt="Seekr Logo" className="h-6" />}
           brandName=""
           socialLinks={[
-            { icon: <Github size={18} />, href: "https://github.com/PatrickJan88", label: "GitHub" },
+            { icon: <Github size={18} />, href: "https://github.com/PatrickJan88/Seekr/blob/main/README.md", label: "GitHub" },
             { icon: <Linkedin size={18} />, href: "https://www.linkedin.com/in/pofei-r-79586395", label: "LinkedIn" },
             { icon: <img src="/assets/logo%20pofei.svg" alt="Pofei Logo" className="w-[18px] h-[18px]" />, href: "https://pofeiportfolio.vercel.app/", label: "Portfolio" }
           ]}

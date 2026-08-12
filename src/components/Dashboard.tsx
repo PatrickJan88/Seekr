@@ -582,7 +582,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
           logo={<img src="/assets/seekr%20logo%201.svg" alt="Seekr Logo" className="h-6" />}
           brandName=""
           socialLinks={[
-            { icon: <Github size={18} />, href: "https://github.com/PatrickJan88", label: "GitHub" },
+            { icon: <Github size={18} />, href: "https://github.com/PatrickJan88/Seekr/blob/main/README.md", label: "GitHub" },
             { icon: <Linkedin size={18} />, href: "https://www.linkedin.com/in/pofei-r-79586395", label: "LinkedIn" },
             { icon: <img src="/assets/logo%20pofei.svg" alt="Pofei Logo" className="w-[18px] h-[18px]" />, href: "https://pofeiportfolio.vercel.app/", label: "Portfolio" }
           ]}
