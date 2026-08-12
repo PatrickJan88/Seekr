@@ -73,7 +73,7 @@ export function CVMatchAssessment({ applications, isDemo = false }: CVMatchAsses
   };
 
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [targetRole, setTargetRole] = useState('Frontend Developer');
+  const [targetRole, setTargetRole] = useState('');
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [cvText, setCvText] = useState(isDemo ? 'Senior Frontend Engineer with 5+ years experience in React, TypeScript, and modern CSS architecture.' : '');
   const [isExtractingPdf, setIsExtractingPdf] = useState(false);
@@ -276,6 +276,7 @@ ${app.notes || 'No extra description provided.'}`;
                 type="button"
                 onClick={() => {
                   setResult(null);
+                  setTargetRole('');
                   setCurrentStep(1);
                 }}
                 className="px-4 py-2 rounded-full border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
@@ -465,7 +466,7 @@ ${app.notes || 'No extra description provided.'}`;
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           
           {/* LEFT STEPPER PROGRESS SIDEBAR (CARD 1) */}
-          <div className="lg:col-span-4 bg-white border border-[#efefef] rounded-2xl p-6 shadow-2xs flex flex-col justify-between space-y-6 h-full">
+          <div className="lg:col-span-4 bg-white border border-[#efefef] rounded-2xl p-6 shadow-2xs flex flex-col justify-between space-y-6 min-h-[500px]">
             <div className="space-y-6">
               <div>
                 <h3 className="text-base font-bold text-[#121722]">
@@ -535,7 +536,7 @@ ${app.notes || 'No extra description provided.'}`;
                 <Sparkles size={14} className="text-[#0068f9]" />
               </p>
               <div className="space-y-1 text-[#777c86] text-xs">
-                <p>• Role: <span className="font-semibold text-[#121722]">{targetRole}</span></p>
+                <p>• Role: <span className="font-semibold text-[#121722]">{targetRole || 'Not selected'}</span></p>
                 <p>• CV: <span className="font-semibold text-[#121722]">{cvFile || cvText ? 'Done' : 'Not added'}</span></p>
                 <p>• JD: <span className="font-semibold text-[#121722]">{jobDescription ? 'Done' : 'Not added'}</span></p>
               </div>
@@ -543,7 +544,7 @@ ${app.notes || 'No extra description provided.'}`;
           </div>
 
           {/* RIGHT STEP CONTENT AREA (CARD 2 - EQUAL HEIGHT) */}
-          <div className="lg:col-span-8 bg-white border border-[#efefef] rounded-2xl p-6 shadow-2xs flex flex-col justify-between h-full space-y-6">
+          <div className="lg:col-span-8 bg-white border border-[#efefef] rounded-2xl p-6 shadow-2xs flex flex-col justify-between min-h-[500px] space-y-6">
             
             {/* STEP 1: SELECT AI EVALUATOR PERSONA */}
             {currentStep === 1 && (
@@ -615,7 +616,7 @@ ${app.notes || 'No extra description provided.'}`;
                     type="button"
                     onClick={() => setCurrentStep(2)}
                     disabled={!validateStep(1)}
-                    className="py-2.5 px-6 rounded-full bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium text-xs shadow-2xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                    className="py-2.5 px-6 rounded-full bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium text-xs shadow-2xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#0068f9]"
                   >
                     <span>Continue to Upload CV</span>
                     <ArrowRight size={16} />
@@ -626,8 +627,8 @@ ${app.notes || 'No extra description provided.'}`;
 
             {/* STEP 2: UPLOAD CV */}
             {currentStep === 2 && (
-              <div className="flex flex-col justify-between h-full space-y-5 animate-in fade-in duration-200">
-                <div className="space-y-5">
+              <div className="flex flex-col justify-between h-full flex-1 space-y-5 animate-in fade-in duration-200">
+                <div className="space-y-5 flex-1 flex flex-col">
                   <div className="flex items-center justify-between border-b border-[#efefef] pb-4">
                     <div>
                       <h3 className="text-base font-bold text-[#121722]">
@@ -658,11 +659,11 @@ ${app.notes || 'No extra description provided.'}`;
                   </div>
 
                   {cvInputMode === 'upload' ? (
-                    <div>
+                    <div className="flex-1 flex flex-col justify-center">
                       <div
                         onDragOver={handleDragOver}
                         onDrop={handleDrop}
-                        className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ${
+                        className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer flex-1 flex flex-col items-center justify-center min-h-[250px] ${
                           cvFile ? 'border-emerald-400 bg-emerald-50/20' : 'border-[#efefef] hover:border-[#0068f9] bg-[#faf9f7]'
                         }`}
                       >
@@ -673,7 +674,7 @@ ${app.notes || 'No extra description provided.'}`;
                           className="hidden"
                           id="cv-file-upload"
                         />
-                        <label htmlFor="cv-file-upload" className="cursor-pointer block">
+                        <label htmlFor="cv-file-upload" className="cursor-pointer block my-auto">
                           <div className="w-12 h-12 rounded-full bg-[#faf9f7] border border-[#efefef] text-[#0068f9] flex items-center justify-center mx-auto mb-3">
                             {isExtractingPdf ? (
                               <RefreshCw size={24} className="animate-spin text-[#0068f9]" />
@@ -716,7 +717,7 @@ ${app.notes || 'No extra description provided.'}`;
                             <textarea
                               readOnly
                               value={cvText}
-                              rows={6}
+                              rows={5}
                               className="w-full mt-2 p-3 text-xs bg-[#faf9f7] border border-[#efefef] rounded-2xl text-[#121722] font-mono"
                             />
                           )}
@@ -724,13 +725,12 @@ ${app.notes || 'No extra description provided.'}`;
                       )}
                     </div>
                   ) : (
-                    <div>
+                    <div className="flex-1 flex flex-col">
                       <textarea
-                        rows={8}
                         value={cvText}
                         onChange={(e) => setCvText(e.target.value)}
                         placeholder="Paste your resume or CV experience bullet points here..."
-                        className="w-full p-3.5 text-xs bg-white border border-[#efefef] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0068f9] text-[#121722] placeholder:text-[#a5a5a5]"
+                        className="w-full flex-1 min-h-[250px] p-3.5 text-xs bg-white border border-[#efefef] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0068f9] text-[#121722] placeholder:text-[#a5a5a5] resize-none"
                       />
                     </div>
                   )}
@@ -760,8 +760,8 @@ ${app.notes || 'No extra description provided.'}`;
 
             {/* STEP 3: JOB DESCRIPTION */}
             {currentStep === 3 && (
-              <div className="flex flex-col justify-between h-full space-y-5 animate-in fade-in duration-200">
-                <div className="space-y-5">
+              <div className="flex flex-col justify-between h-full flex-1 space-y-5 animate-in fade-in duration-200">
+                <div className="space-y-5 flex-1 flex flex-col">
                   <div className="flex items-center justify-between border-b border-[#efefef] pb-4">
                     <div>
                       <h3 className="text-base font-bold text-[#121722]">
@@ -790,30 +790,34 @@ ${app.notes || 'No extra description provided.'}`;
                   </div>
 
                   {jdSource === 'application' && (
-                    <div className="space-y-2">
-                      <label className="text-xs font-semibold text-[#777c86]">Choose from my tracked applications:</label>
-                      <select
-                        value={selectedAppId}
-                        onChange={(e) => handleSelectApplication(e.target.value)}
-                        className="w-full p-2.5 text-xs bg-white border border-[#efefef] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0068f9] text-[#121722] font-medium"
-                      >
-                        <option value="">-- Choose a tracked application --</option>
-                        {applications.map((app) => (
-                          <option key={app.id} value={app.id}>
-                            {app.position} at {app.company} ({app.status})
-                          </option>
-                        ))}
-                      </select>
+                    <div className="space-y-1">
+                      <label className="block text-xs font-medium text-[#777c86]">Choose from my tracked applications:</label>
+                      <div className="relative">
+                        <select
+                          value={selectedAppId}
+                          onChange={(e) => handleSelectApplication(e.target.value)}
+                          className="w-full pl-3.5 pr-9 py-2 text-xs bg-[#faf9f7] border border-[#efefef] rounded-2xl focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-[#121722] appearance-none cursor-pointer font-medium"
+                        >
+                          <option value="">-- Choose a tracked application --</option>
+                          {applications.map((app) => (
+                            <option key={app.id} value={app.id}>
+                              {app.position} at {app.company} ({app.status})
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#777c86] pointer-events-none" />
+                      </div>
                     </div>
                   )}
 
-                  <textarea
-                    rows={8}
-                    value={jobDescription}
-                    onChange={(e) => setJobDescription(e.target.value)}
-                    placeholder="Paste the full job description, required skills, and key responsibilities here..."
-                    className="w-full p-3.5 text-xs bg-white border border-[#efefef] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0068f9] text-[#121722] placeholder:text-[#a5a5a5]"
-                  />
+                  <div className="flex-1 flex flex-col">
+                    <textarea
+                      value={jobDescription}
+                      onChange={(e) => setJobDescription(e.target.value)}
+                      placeholder="Paste the full job description, required skills, and key responsibilities here..."
+                      className="w-full flex-1 min-h-[230px] p-3.5 text-xs bg-white border border-[#efefef] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0068f9] text-[#121722] placeholder:text-[#a5a5a5] resize-none"
+                    />
+                  </div>
                 </div>
 
                 <div className="pt-4 border-t border-[#efefef] flex items-center justify-between mt-auto">

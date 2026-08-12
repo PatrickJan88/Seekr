@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { JobApplication, JobStatus } from '../types';
-import { Wand2, Loader2, X, ChevronDown } from 'lucide-react';
+import { Wand2, Loader2, X, ChevronDown, MapPin, Globe } from 'lucide-react';
 import { FileUpload, UploadedFile } from './FileUpload';
 import { auth } from '../lib/firebase';
 import { toast } from 'sonner';
+import { LOCATION_DATA, parseLocationToGroup } from '../data/locationData';
 
 const STATUSES: JobStatus[] = ['Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
 
@@ -24,6 +25,145 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Two-Level Location Selection State
+  const [selectedCountry, setSelectedCountry] = useState<string>('');
+  const [selectedCity, setSelectedCity] = useState<string>('');
+  const [customCityText, setCustomCityText] = useState<string>('');
+
+  const syncLocationState = (locString?: string) => {
+    if (!locString) {
+      setSelectedCountry('');
+      setSelectedCity('');
+      setCustomCityText('');
+      return;
+    }
+    const parsed = parseLocationToGroup(locString);
+    setSelectedCountry(parsed.country);
+    setSelectedCity(parsed.cityValue);
+    setCustomCityText(parsed.customText || '');
+  };
+
+  useEffect(() => {
+    if (initialData?.location) {
+      syncLocationState(initialData.location);
+    }
+  }, [initialData?.id, initialData?.location]);
+
+  const currentCountryGroup = React.useMemo(() => {
+    return LOCATION_DATA.find(g => g.country === selectedCountry);
+  }, [selectedCountry]);
+
+  const handleCountrySelect = (countryName: string) => {
+    setSelectedCountry(countryName);
+    const group = LOCATION_DATA.find(g => g.country === countryName);
+    if (group && group.cities.length > 0) {
+      const firstCity = group.cities[0].value;
+      setSelectedCity(firstCity);
+      if (firstCity.startsWith('custom_') || countryName === 'Other Country') {
+        const formatted = customCityText 
+          ? (countryName !== 'Other Country' ? `${customCityText}, ${countryName}` : customCityText)
+          : (countryName !== 'Other Country' ? countryName : '');
+        setFormData(prev => ({ ...prev, location: formatted }));
+      } else {
+        setFormData(prev => ({ ...prev, location: firstCity }));
+      }
+    } else {
+      setSelectedCity('');
+      setFormData(prev => ({ ...prev, location: countryName }));
+    }
+  };
+
+  const handleCitySelect = (cityVal: string) => {
+    setSelectedCity(cityVal);
+    if (cityVal.startsWith('custom_') || selectedCountry === 'Other Country') {
+      const formatted = customCityText 
+        ? (selectedCountry && selectedCountry !== 'Other Country' ? `${customCityText}, ${selectedCountry}` : customCityText)
+        : (selectedCountry !== 'Other Country' ? selectedCountry : '');
+      setFormData(prev => ({ ...prev, location: formatted }));
+    } else {
+      setFormData(prev => ({ ...prev, location: cityVal }));
+    }
+  };
+
+  const handleCustomCityChange = (text: string) => {
+    setCustomCityText(text);
+    const formatted = text 
+      ? (selectedCountry && selectedCountry !== 'Other Country' ? `${text}, ${selectedCountry}` : text)
+      : (selectedCountry !== 'Other Country' ? selectedCountry : '');
+    setFormData(prev => ({ ...prev, location: formatted }));
+  };
+
+  // Helper to check if a text fragment is post metadata rather than a physical location
+  const isMetadataSegment = (text: string): boolean => {
+    const trimmed = text.trim();
+    if (!trimmed) return false;
+
+    const timePattern = /\b(?:\d+\+?\s*(?:s|m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|w|wk|wks|week|weeks|mo|mos|mth|mths|month|months|y|yr|yrs|year|years)\s*ago)\b/i;
+    const postedPattern = /\b(?:posted|reposted|just posted|posted today|posted yesterday|today|yesterday)\b/i;
+    const shortTimePattern = /^\d+[dhwm]$/i;
+    const applicantPattern = /\b(?:over|under|about|more than|less than|around)?\s*\d+\+?\s*applicants?\b/i;
+    const firstApplicantPattern = /\b(?:be among the first|first)\s+\d+\s+applicants?\b/i;
+    const statusPattern = /\b(?:easy apply|promoted|actively hiring|actively recruiting|urgent|full-time|part-time)\b/i;
+
+    return timePattern.test(trimmed) || 
+           postedPattern.test(trimmed) || 
+           shortTimePattern.test(trimmed) || 
+           applicantPattern.test(trimmed) || 
+           firstApplicantPattern.test(trimmed) || 
+           statusPattern.test(trimmed);
+  };
+
+  // Helper to sanitize location string and extract metadata (posting date, applicant count) for notes
+  const sanitizeLocationAndExtractMeta = (rawLoc?: string): { location: string; metadata: string[] } => {
+    if (!rawLoc) return { location: '', metadata: [] };
+
+    const metadata: string[] = [];
+    const parts = rawLoc.split(/[\·\•\|]/).map(p => p.trim()).filter(Boolean);
+    const locationParts: string[] = [];
+
+    for (const part of parts) {
+      if (isMetadataSegment(part)) {
+        metadata.push(part);
+      } else {
+        let candidate = part;
+
+        // Extract inline relative time pattern (e.g. "2 days ago") if mixed with location
+        const timeMatch = candidate.match(/\b(?:\d+\+?\s*(?:d|day|days|w|week|weeks|m|month|months)\s*ago)\b/i);
+        if (timeMatch) {
+          metadata.push(timeMatch[0]);
+          candidate = candidate.replace(timeMatch[0], '');
+        }
+
+        // Extract inline applicant counts (e.g. "Over 100 applicants") if mixed
+        const appMatch = candidate.match(/\b(?:over|under|about|more than|less than|around)?\s*\d+\+?\s*applicants?\b/i);
+        if (appMatch) {
+          metadata.push(appMatch[0]);
+          candidate = candidate.replace(appMatch[0], '');
+        }
+
+        // Strip work mode policies
+        candidate = candidate.replace(/[\(\[\{]\s*(?:On-site|Onsite|Hybrid|Remote|Full-time|Part-time)\s*[\)\]\}]/gi, '');
+        candidate = candidate.replace(/\b(?:On-site|Onsite|Hybrid|Remote)\b/gi, '');
+
+        // Clean duplicate whitespace and leading/trailing punctuation
+        candidate = candidate.replace(/\s+/g, ' ').replace(/^[\s,·•|-]+|[\s,·•|-]+$/g, '').trim();
+
+        if (candidate && !isMetadataSegment(candidate)) {
+          locationParts.push(candidate);
+        }
+      }
+    }
+
+    const finalLoc = locationParts.join(', ').replace(/\s+/g, ' ').replace(/^[\s,·•|-]+|[\s,·•|-]+$/g, '').trim();
+
+    // If finalLoc is purely numeric or matches metadata, discard as location
+    if (/^\d+$/.test(finalLoc) || isMetadataSegment(finalLoc)) {
+      return { location: '', metadata };
+    }
+
+    return { location: finalLoc, metadata };
+  };
 
   const parseJobDescriptionFallback = (text: string) => {
     let company = '';
@@ -51,24 +191,11 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
         .trim();
     };
 
-    // Helper to clean work method policy tags from location strings e.g. "Berlin, Germany (On-site)" -> "Berlin, Germany"
-    const cleanLocationStr = (str?: string) => {
-      if (!str) return '';
-      let loc = str;
-      // Strip parenthesized or bracketed work modes
-      loc = loc.replace(/[\(\[\{]\s*(?:On-site|Onsite|Hybrid|Remote|Full-time|Part-time)\s*[\)\]\}]/gi, '');
-      // Strip standalone work mode words
-      loc = loc.replace(/\b(?:On-site|Onsite|Hybrid|Remote)\b/gi, '');
-      // Clean duplicate whitespace and leading/trailing separators
-      return loc.replace(/\s+/g, ' ').replace(/^[\s,·•|-]+|[\s,·•|-]+$/g, '').trim();
-    };
-
     // Helper to extract clean company from line with separators like '·', '|', '•', ','
     const cleanCompanyStr = (str?: string) => {
       if (!str) return '';
       const parts = str.split(/[\·\•\|]/).map(p => p.trim()).filter(Boolean);
       let comp = parts[0] || str;
-      // Remove work modes / location trailing tags if present in the first part
       comp = comp.replace(/\s*[\(\[\{](?:On-site|Onsite|Hybrid|Remote|Full-time|Part-time)[\)\]\}]/gi, '').trim();
       return comp;
     };
@@ -81,7 +208,11 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
     if (posMatch) position = cleanPositionStr(posMatch[1]);
 
     const locMatch = text.match(/(?:Location|Site|Office|City):\s*([^\n]+)/i);
-    if (locMatch) location = cleanLocationStr(locMatch[1]);
+    if (locMatch) {
+      const { location: cleanLoc, metadata: meta } = sanitizeLocationAndExtractMeta(locMatch[1]);
+      if (cleanLoc) location = cleanLoc;
+      if (meta.length > 0) extraNotes.push(`Posting Info: ${meta.join(' · ')}`);
+    }
 
     // 2. Pattern: "Position at Company" or "Position @ Company"
     if (!position || !company) {
@@ -92,34 +223,49 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
       }
     }
 
-    // 3. Multi-line pattern check (e.g. Line 1: "UX/UI Designer (m/w/d)", Line 2: "Technology & Strategy · Berlin, Germany (On-site)")
+    // 3. Multi-line pattern check (e.g. Line 1: "Spiele-Palast GmbH", Line 2: "UI/UX Designer Games (m/f/d)", Line 3: "Berlin, Germany · 2 days ago · Over 100 applicants")
     if ((!position || !company) && lines.length >= 1) {
       const roleRegex = /(?:Senior|Junior|Staff|Lead|Principal|Head of|VP of|UX\/UI|UI\/UX)?\s*([A-Za-z0-9\s\/&]+(?:Engineer|Developer|Manager|Designer|Analyst|Architect|Specialist|Director|Consultant|Coordinator|Intern|Associate|Officer|Executive|Scientist|Administrator|Representative))/i;
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
 
-        // Check if line looks like a job title
         if (!position && roleRegex.test(line)) {
           position = cleanPositionStr(line);
           
-          // Check if next line contains company or company · location
-          if (!company && i + 1 < lines.length) {
-            const nextLine = lines[i + 1];
-            company = cleanCompanyStr(nextLine);
+          // Check if previous line exists and looks like company name
+          if (!company && i > 0) {
+            const prevLine = lines[i - 1];
+            if (!roleRegex.test(prevLine) && !isMetadataSegment(prevLine)) {
+              company = cleanCompanyStr(prevLine);
+            }
+          }
 
-            // Collect location or remaining info from nextLine
+          // Check next lines for company or location
+          if (i + 1 < lines.length) {
+            const nextLine = lines[i + 1];
+            if (!company) {
+              company = cleanCompanyStr(nextLine);
+            }
+
             if (nextLine.includes('·') || nextLine.includes('•') || nextLine.includes('|')) {
               const parts = nextLine.split(/[\·\•\|]/).map(p => p.trim()).filter(Boolean);
-              if (parts.length > 1) {
-                const locPart = parts.slice(1).join(' · ');
-                const cleanLoc = cleanLocationStr(locPart);
-                if (!location && cleanLoc) location = cleanLoc;
-
-                const policyMatch = locPart.match(/[\(\[\{]?\b(On-site|Onsite|Hybrid|Remote)\b[\)\]\}]?/i);
-                if (policyMatch) {
-                  extraNotes.push(`Workplace Policy: ${policyMatch[1]}`);
+              for (const part of parts) {
+                const { location: cleanLoc, metadata: meta } = sanitizeLocationAndExtractMeta(part);
+                if (cleanLoc && !location) {
+                  location = cleanLoc;
                 }
+                if (meta.length > 0) {
+                  extraNotes.push(`Posting Info: ${meta.join(' · ')}`);
+                }
+              }
+            } else {
+              const { location: cleanLoc, metadata: meta } = sanitizeLocationAndExtractMeta(nextLine);
+              if (cleanLoc && !location) {
+                location = cleanLoc;
+              }
+              if (meta.length > 0) {
+                extraNotes.push(`Posting Info: ${meta.join(' · ')}`);
               }
             }
           }
@@ -206,16 +352,13 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
         extracted.notes = extracted.notes || fallback.notes;
       }
 
-      const cleanLocationStr = (str?: string) => {
-        if (!str) return '';
-        let loc = str;
-        loc = loc.replace(/[\(\[\{]\s*(?:On-site|Onsite|Hybrid|Remote|Full-time|Part-time)\s*[\)\]\}]/gi, '');
-        loc = loc.replace(/\b(?:On-site|Onsite|Hybrid|Remote)\b/gi, '');
-        return loc.replace(/\s+/g, ' ').replace(/^[\s,·•|-]+|[\s,·•|-]+$/g, '').trim();
-      };
-
       if (extracted.location) {
-        extracted.location = cleanLocationStr(extracted.location);
+        const { location: cleanLoc, metadata: locMeta } = sanitizeLocationAndExtractMeta(extracted.location);
+        extracted.location = cleanLoc;
+        if (locMeta.length > 0) {
+          const metaText = `Posting Info: ${locMeta.join(' · ')}`;
+          extracted.notes = extracted.notes ? `${extracted.notes}\n\n${metaText}` : metaText;
+        }
       }
 
       const normalizeWorkType = (val?: string): 'On-site' | 'Hybrid' | 'Remote' | undefined => {
@@ -233,6 +376,9 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
       }
 
       if (extracted.company || extracted.position || extracted.location || extractedWorkType || extracted.notes) {
+        if (extracted.location) {
+          syncLocationState(extracted.location);
+        }
         setFormData(prev => ({
           ...prev,
           company: extracted.company || prev.company,
@@ -436,9 +582,54 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
               <label className="block text-xs font-medium text-[#777c86] mb-1">Position *</label>
               <input type="text" name="position" value={formData.position || ''} onChange={handleChange} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-[#777c86] mb-1">Location</label>
-              <input type="text" name="location" value={formData.location || ''} onChange={handleChange} placeholder="e.g. Stockholm, Sweden" className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" />
+            {/* 2-Level Location Selection */}
+            <div className="col-span-2 space-y-1">
+              <label className="block text-xs font-medium text-[#777c86]">Location</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Level 1: Country Dropdown */}
+                <div className="relative">
+                  <select
+                    value={selectedCountry}
+                    onChange={e => handleCountrySelect(e.target.value)}
+                    className="w-full pl-3.5 pr-9 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722] appearance-none cursor-pointer"
+                  >
+                    <option value="">Select Country...</option>
+                    {LOCATION_DATA.map(g => (
+                      <option key={g.country} value={g.country}>{g.country}</option>
+                    ))}
+                  </select>
+                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#777c86] pointer-events-none" />
+                </div>
+
+                {/* Level 2: City & Province Dropdown */}
+                <div className="relative">
+                  <select
+                    value={selectedCity}
+                    onChange={e => handleCitySelect(e.target.value)}
+                    disabled={!selectedCountry}
+                    className="w-full pl-3.5 pr-9 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722] appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">{selectedCountry ? 'Select City / State...' : 'Select Country First'}</option>
+                    {currentCountryGroup?.cities.map(c => (
+                      <option key={c.label} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#777c86] pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Custom Location Details if Custom option is chosen */}
+              {(selectedCity.startsWith('custom_') || selectedCountry === 'Other Country') && (
+                <div className="pt-1">
+                  <input
+                    type="text"
+                    value={customCityText}
+                    onChange={e => handleCustomCityChange(e.target.value)}
+                    placeholder="Enter custom city or province details"
+                    className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]"
+                  />
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-xs font-medium text-[#777c86] mb-1">Work type</label>
@@ -492,10 +683,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
                 </div>
               )}
             </div>
-            <div>
-              <label className="block text-xs font-medium text-[#777c86] mb-1">Contact Name</label>
-              <input type="text" name="contactName" value={formData.contactName || ''} onChange={handleChange} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" />
-            </div>
+
             <div>
               <label className="block text-xs font-medium text-[#777c86] mb-1">Contact Email</label>
               <input type="email" name="contactEmail" value={formData.contactEmail || ''} onChange={handleChange} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" />

@@ -51,10 +51,14 @@ async function startServer() {
 
         Guidelines:
         - "position": Clean job title. Omit gender/diversity suffixes such as (m/w/d), (f/m/d), (m/f/x), (d/f/m), (all genders), etc.
-        - "company": The company, team, or department name. If a line lists "Company/Team · Location (Mode)" e.g. "Delta Consulting Company · Luxembourg (Hybrid)" or "Technology & Strategy · Berlin, Germany (On-site)", extract "Delta Consulting Company" or "Technology & Strategy" as company. Strip locations and work modes from the company name.
-        - "location": The physical job location (city, region, country), e.g. "Luxembourg", "Berlin, Germany", "Stockholm", "San Francisco, CA", "London, UK". STRICT REQUIREMENT: You MUST strip and exclude work method policy tags like "(On-site)", "(Hybrid)", "(Remote)", "On-site", "Hybrid", "Remote" from the location string. Do NOT include work method policies in location.
+        - "company": The company, team, or department name. If a line lists "Company/Team · Location (Mode)", e.g. "Spiele-Palast GmbH" or "Delta Consulting Company · Luxembourg (Hybrid)", extract ONLY the company name ("Spiele-Palast GmbH", "Delta Consulting Company"). Strip locations, work modes, and posting metadata from the company name.
+        - "location": The physical geographic job location ONLY (city, region, country), e.g. "Berlin, Germany", "Luxembourg", "San Francisco, CA", "London, UK".
+          STRICT REQUIREMENTS FOR LOCATION:
+          1. Extract ONLY valid physical geographic locations (city, region, country).
+          2. You MUST strictly exclude and strip non-location metadata such as posting dates/times ("2 days ago", "1 week ago", "Posted yesterday"), applicant counts ("Over 100 applicants", "50+ applicants", "23 applicants"), or work mode tags ("On-site", "Hybrid", "Remote").
+          3. Example: If the text is "Berlin, Germany · 2 days ago · Over 100 applicants", extract ONLY "Berlin, Germany" as "location", and put posting metadata ("Posted 2 days ago · Over 100 applicants") into "notes".
         - "workType": Workplace model policy if mentioned in text e.g. "On-site", "Hybrid", or "Remote". Must strictly be one of: "On-site", "Hybrid", "Remote", or null if not mentioned.
-        - "notes": Summary of key details, responsibilities, workplace model policy (On-site, Hybrid, or Remote), or salary if mentioned.
+        - "notes": Summary of key details, responsibilities, job post metadata (such as "2 days ago", "Over 100 applicants"), or salary if mentioned.
 
         Return ONLY a JSON object with this schema:
         {
@@ -62,7 +66,7 @@ async function startServer() {
           "position": "Clean Job Title",
           "location": "Clean Physical Location e.g. Luxembourg or Berlin, Germany",
           "workType": "On-site" | "Hybrid" | "Remote" | null,
-          "notes": "Relevant details / notes including work model"
+          "notes": "Relevant details / notes including posting date and applicant counts"
         }
 
         Job Description Text:
