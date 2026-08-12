@@ -35,43 +35,42 @@ export function SupportForm() {
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-      <div className="p-6">
-        <h3 className="text-base font-semibold text-slate-900 mb-1">Customer Support</h3>
-        <p className="text-sm text-slate-500 mb-4">
-          Send us your suggestions or report any bugs you encounter.
-        </p>
-        <form id="support-form" onSubmit={handleSubmit} className="space-y-4">
+    <div>
+      <h3 className="text-sm font-semibold text-[#121722] mb-1">Customer Support</h3>
+      <p className="text-xs text-[#777c86] mb-4">
+        Send us your suggestions or report any bugs you encounter.
+      </p>
+      <form id="support-form" onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">Your Name</label>
+            <label htmlFor="name" className="block text-xs font-medium text-[#777c86] mb-1">Your Name</label>
             <input 
               type="text" 
               name="name" 
               id="name" 
               required
-              className="w-full h-10 px-3 py-2 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3.5 py-2.5 rounded-2xl border border-[#efefef] bg-[#faf9f7] text-xs text-[#121722] placeholder:text-[#a5a5a5] focus:outline-none focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] transition-all"
               placeholder="Your Name"
             />
           </div>
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">Your Email</label>
+            <label htmlFor="email" className="block text-xs font-medium text-[#777c86] mb-1">Your Email</label>
             <input 
               type="email" 
               name="email" 
               id="email" 
               required
-              className="w-full h-10 px-3 py-2 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3.5 py-2.5 rounded-2xl border border-[#efefef] bg-[#faf9f7] text-xs text-[#121722] placeholder:text-[#a5a5a5] focus:outline-none focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] transition-all"
               placeholder="you@example.com"
             />
           </div>
           <div>
-            <label htmlFor="message" className="block text-sm font-medium text-slate-700 mb-1">Message</label>
+            <label htmlFor="message" className="block text-xs font-medium text-[#777c86] mb-1">Message</label>
             <textarea 
               name="message" 
               id="message" 
               required
               rows={4}
-              className="w-full px-3 py-2 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3.5 py-2.5 rounded-2xl border border-[#efefef] bg-[#faf9f7] text-xs text-[#121722] placeholder:text-[#a5a5a5] focus:outline-none focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] transition-all resize-y"
               placeholder="How can we help?"
             ></textarea>
           </div>
@@ -79,13 +78,12 @@ export function SupportForm() {
             <button 
               type="submit" 
               disabled={isSubmitting}
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-slate-900 text-slate-50 shadow hover:bg-slate-900/90 h-9 px-4 py-2"
+              className="inline-flex items-center justify-center rounded-full text-xs font-semibold transition-all bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-9 px-6 py-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? "Sending..." : "Send Message"}
             </button>
           </div>
         </form>
-      </div>
     </div>
   );
 }

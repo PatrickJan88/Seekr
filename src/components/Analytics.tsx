@@ -74,24 +74,24 @@ export function Analytics({ applications, isDemo = false }: AnalyticsProps) {
         <ApplicationMap applications={applications} isDemo={isDemo} />
       </div>
 
-      <div className="col-span-12 md:col-span-8 bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col">
-        <h3 className="text-sm font-bold text-slate-800 mb-4">Active Progress Summary</h3>
+      <div className="col-span-12 md:col-span-8 bg-white border border-[#efefef] rounded-2xl p-6 shadow-2xs flex flex-col">
+        <h3 className="text-sm font-bold text-[#121722] mb-4">Active Progress Summary</h3>
         <div className="h-72 flex-grow">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={funnelData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
-              <XAxis type="number" allowDecimals={false} tick={{fill: '#64748b', fontSize: 12}} />
-              <YAxis dataKey="name" type="category" width={80} tick={{fill: '#475569', fontSize: 12, fontWeight: 'bold'}} />
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#efefef" />
+              <XAxis type="number" allowDecimals={false} tick={{fill: '#777c86', fontSize: 12}} />
+              <YAxis dataKey="name" type="category" width={80} tick={{fill: '#121722', fontSize: 12, fontWeight: 'medium'}} />
               <RechartsTooltip content={<CustomTooltip />} cursor={{fill: 'transparent'}} />
-              <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={30} />
+              <Bar dataKey="count" fill="#0068f9" radius={[0, 8, 8, 0]} barSize={28} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      <div className="col-span-12 md:col-span-4 bg-[#314158] border border-[#314158] rounded-xl p-5 shadow-sm flex flex-col justify-between">
+      <div className="col-span-12 md:col-span-4 bg-[#121722] border border-[#121722] rounded-2xl p-6 shadow-2xs flex flex-col justify-between">
         <div>
-          <h3 className="text-sm font-bold text-slate-100 mb-4">Current Status</h3>
+          <h3 className="text-sm font-bold text-white mb-4">Current Status</h3>
           <div className="h-48 mb-4">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -113,38 +113,38 @@ export function Analytics({ applications, isDemo = false }: AnalyticsProps) {
             </ResponsiveContainer>
           </div>
         </div>
-        <div className="text-sm text-slate-300 leading-relaxed text-center">
+        <div className="text-sm text-slate-300 leading-relaxed text-center font-normal">
           Active distribution across <span className="text-white font-bold">{applications.length}</span> total roles.
         </div>
       </div>
 
-      <div className="col-span-12 bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-        <h3 className="text-sm font-bold text-slate-800 mb-4">LinkedIn Premium Insights</h3>
+      <div className="col-span-12 bg-white border border-[#efefef] rounded-2xl p-6 shadow-2xs">
+        <h3 className="text-sm font-bold text-[#121722] mb-4">LinkedIn Premium Insights</h3>
         {!savedInsights ? (
           <form onSubmit={handleSaveInsights} className="flex flex-col md:flex-row gap-4 items-end">
             <div className="flex-1 w-full">
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Profile Views (90 Days)</label>
-              <input type="number" value={linkedinViews} onChange={e => setLinkedinViews(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" placeholder="e.g. 1500" />
+              <label className="block text-xs font-medium text-[#777c86] mb-1">Profile Views (90 Days)</label>
+              <input type="number" value={linkedinViews} onChange={e => setLinkedinViews(e.target.value)} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" placeholder="e.g. 1500" />
             </div>
             <div className="flex-1 w-full">
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Search Appearances</label>
-              <input type="number" value={linkedinSearches} onChange={e => setLinkedinSearches(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" placeholder="e.g. 450" />
+              <label className="block text-xs font-medium text-[#777c86] mb-1">Search Appearances</label>
+              <input type="number" value={linkedinSearches} onChange={e => setLinkedinSearches(e.target.value)} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" placeholder="e.g. 450" />
             </div>
-            <button type="submit" className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-slate-900 text-slate-50 shadow hover:bg-slate-900/90 h-9 px-4 py-2 w-full md:w-auto">
+            <button type="submit" className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-all bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-9 px-5 py-2 w-full md:w-auto cursor-pointer">
               Save Insights
             </button>
           </form>
         ) : (
-          <div className="flex gap-12 p-4 bg-slate-50 rounded-xl border border-slate-100">
+          <div className="flex gap-12 p-4 bg-[#faf9f7] rounded-2xl border border-[#efefef]">
             <div>
-              <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Profile Views</div>
-              <div className="text-3xl font-black text-slate-800">{savedInsights.views}</div>
+              <div className="text-xs font-medium text-[#777c86] mb-1">Profile Views</div>
+              <div className="text-3xl font-extrabold text-[#121722]">{savedInsights.views}</div>
             </div>
             <div>
-              <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Search Appearances</div>
-              <div className="text-3xl font-black text-slate-800">{savedInsights.searches}</div>
+              <div className="text-xs font-medium text-[#777c86] mb-1">Search Appearances</div>
+              <div className="text-3xl font-extrabold text-[#121722]">{savedInsights.searches}</div>
             </div>
-            <button onClick={() => setSavedInsights(null)} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2 mt-auto ml-auto">
+            <button onClick={() => setSavedInsights(null)} className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-all border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] h-9 px-5 py-2 mt-auto ml-auto cursor-pointer shadow-2xs">
               Edit
             </button>
           </div>

@@ -149,6 +149,132 @@ async function startServer() {
     }
   });
 
+  app.post("/api/cv-match", async (req, res) => {
+    try {
+      const { targetRole, cvText, pdfBase64, jobDescription } = req.body;
+      if (!jobDescription) {
+        return res.status(400).json({ error: "Job description is required" });
+      }
+      if (!cvText && !pdfBase64) {
+        return res.status(400).json({ error: "CV text or PDF file is required" });
+      }
+
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({ error: "GEMINI_API_KEY environment variable is missing on the server." });
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey: process.env.GEMINI_API_KEY,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build'
+          }
+        }
+      });
+
+      const role = targetRole || "Tech Hiring Manager";
+
+      const promptText = `
+You are a Senior Hiring Manager, Technical Recruiter, and Lead Evaluator specializing in the role of: ${role}.
+You will be given a candidate's CV (resume) and a Job Description (JD).
+Your task is to conduct a rigorous, intelligent evaluation of the candidate's CV against the Job Description specifically through the technical and domain lens of a ${role}.
+
+Methodology & Rules:
+1. Evaluate using ABDUCTIVE REASONING:
+   - Do NOT just perform basic keyword matching.
+   - Observe the underlying evidence in the candidate's past projects, architecture, tools, metrics, leadership, and experience.
+   - Intelligently infer their true capability, technical depth, and potential to fulfill the required duties in the JD.
+
+2. Score & Category Definition:
+   - 80 to 100: "High Match" (Strong alignment, fulfills key requirements with high technical evidence)
+   - 60 to 79: "Medium Match" (Solid baseline, but has notable competency gaps or framing issues)
+   - Below 60: "Low Match" (Significant missing technical or domain competencies)
+
+3. Actionable Polish:
+   - Provide concrete, strategic guidance on how to rewrite bullet points in the candidate's CV to elevate their experience, reframe basic work into high-impact accomplishments, and bridge missing gaps for this specific JD.
+
+4. Forecasted Interview Questions:
+   - Provide 3 realistic, high-probability interview questions that a top interviewer for this role would ask based on the candidate's CV and this JD.
+
+You MUST return your analysis strictly as a JSON object with this exact structure:
+{
+  "score": 85,
+  "matchCategory": "High Match",
+  "strengths": [
+    "Array of 2-3 strong alignment points based on evidence in CV"
+  ],
+  "gaps": [
+    "Array of 1-2 missing competencies or areas needing stronger evidence"
+  ],
+  "actionable_polish": "Specific instruction on how to rewrite CV bullet points to elevate experience and address gaps.",
+  "interview_questions": [
+    "Tailored question 1",
+    "Tailored question 2",
+    "Tailored question 3"
+  ]
+}
+
+Job Description:
+${jobDescription.substring(0, 15000)}
+
+${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
+`;
+
+      let contentsPayload: any;
+      if (pdfBase64 && !cvText) {
+        contentsPayload = [
+          {
+            role: "user",
+            parts: [
+              {
+                inlineData: {
+                  data: pdfBase64,
+                  mimeType: "application/pdf"
+                }
+              },
+              { text: promptText }
+            ]
+          }
+        ];
+      } else {
+        contentsPayload = promptText;
+      }
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.6-flash",
+        contents: contentsPayload,
+        config: {
+          responseMimeType: "application/json"
+        }
+      });
+
+      const responseText = response.text || "{}";
+      const result = safeParseJSON(responseText, {});
+
+      // Calculate matchCategory if missing or out of sync
+      const rawScore = typeof result.score === "number" ? result.score : 70;
+      let computedCategory = "Medium Match";
+      if (rawScore >= 80) computedCategory = "High Match";
+      else if (rawScore < 60) computedCategory = "Low Match";
+
+      res.json({
+        score: Math.min(100, Math.max(0, rawScore)),
+        matchCategory: result.matchCategory || computedCategory,
+        strengths: Array.isArray(result.strengths) ? result.strengths : ["Good background alignment"],
+        gaps: Array.isArray(result.gaps) ? result.gaps : ["Ensure all key technical keywords from JD are explicitly documented"],
+        actionable_polish: result.actionable_polish || "Reframe past bullet points with quantified metrics and explicit technical tools mentioned in the job description.",
+        interview_questions: Array.isArray(result.interview_questions) ? result.interview_questions : [
+          "Walk me through a complex technical challenge from your past experience.",
+          "How do you handle scope changes or tight deadlines?",
+          "What is your approach to system quality and scalability?"
+        ]
+      });
+    } catch (error: any) {
+      console.error("CV Match error:", error);
+      res.status(500).json({ error: error.message || "Failed to analyze CV match" });
+    }
+  });
+
   app.post("/api/extract-drive", async (req, res) => {
     try {
       const { fileId, accessToken } = req.body;

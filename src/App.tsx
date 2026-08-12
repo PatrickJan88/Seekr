@@ -133,19 +133,19 @@ export default function App() {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-slate-50 font-sans text-slate-900">Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center bg-[#faf9f7] font-sans text-[#121722]">Loading...</div>;
   }
 
   if (needsAuth || !user) {
     return (
-      <div className="min-h-screen bg-slate-50 font-sans flex flex-col">
-        <div className="flex-grow flex items-center justify-center p-4">
-          <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center border-2 border-slate-200">
+      <div className="min-h-screen bg-[#faf9f7] font-sans flex flex-col">
+        <div className="flex-grow flex items-center justify-center p-6">
+          <div className="bg-white p-8 rounded-2xl shadow-2xs max-w-md w-full text-center border border-[#efefef]">
             <img src="/assets/seekr%20logo%201.svg" alt="Seekr Logo" className="h-10 mx-auto mb-4" />
-            <p className="text-slate-500 font-medium mb-8 text-sm">Track applications, sync interviews, and analyze your job search.</p>
+            <p className="text-[#777c86] font-medium mb-8 text-sm">Track applications, sync interviews, and analyze your job search.</p>
             
-            <div className="space-y-4">
-              <button onClick={handleLogin} disabled={isLoggingIn} className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-3 px-4 rounded-xl transition-all shadow-sm">
+            <div className="space-y-3">
+              <button onClick={handleLogin} disabled={isLoggingIn} className="w-full flex items-center justify-center gap-3 bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium py-3 px-6 rounded-full transition-all shadow-2xs cursor-pointer">
                 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="w-5 h-5">
                   <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
                   <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
@@ -155,7 +155,7 @@ export default function App() {
                 </svg>
                 {isLoggingIn ? 'Signing in...' : 'Sign in with Google'}
               </button>
-              <button onClick={handleAnonymousLogin} disabled={isLoggingIn} className="w-full flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-sm">
+              <button onClick={handleAnonymousLogin} disabled={isLoggingIn} className="w-full flex items-center justify-center gap-3 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] font-medium py-3 px-6 rounded-full transition-all shadow-2xs cursor-pointer">
                 Continue as Guest
               </button>
             </div>

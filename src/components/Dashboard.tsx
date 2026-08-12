@@ -20,6 +20,8 @@ import { DEMO_APPLICATIONS } from '../data/seekrDemoData';
 
 import { NotificationsPage } from './NotificationsPage';
 import { SettingsPage } from './SettingsPage';
+import { CVMatchAssessment } from './CVMatchAssessment';
+import { Sparkles } from 'lucide-react';
 
 interface DashboardProps {
   isDemo?: boolean;
@@ -31,7 +33,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   const [isSyncing, setIsSyncing] = useState(false);
   const syncLockRef = useRef(false);
   const [syncError, setSyncError] = useState<string | null>(null);
-  const [view, setView] = useState<'sankey' | 'kanban' | 'analytics' | 'notifications' | 'settings'>('sankey');
+  const [view, setView] = useState<'sankey' | 'kanban' | 'analytics' | 'cv-match' | 'notifications' | 'settings'>('sankey');
   const [editingApp, setEditingApp] = useState<JobApplication | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -457,8 +459,8 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center dark:bg-zinc-950">
-        <Loader2 className="animate-spin text-blue-500" size={48} />
+      <div className="min-h-screen flex items-center justify-center bg-[#faf9f7]">
+        <Loader2 className="animate-spin text-[#0068f9]" size={48} />
       </div>
     );
   }
@@ -470,17 +472,17 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   if (view === 'settings') {
     return <SettingsPage onBack={() => setView('sankey')} onClearData={handleClearData} isSyncing={isSyncing} />;
   }  return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
-      <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 sticky top-0 z-10">
+    <div className="min-h-screen bg-[#faf9f7] text-[#121722] font-sans flex flex-col">
+      <header className="h-16 bg-white border-b border-[#efefef] flex items-center justify-between px-6 md:px-8 shrink-0 sticky top-0 z-30">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
             <img src="/assets/seekr%20logo%201.svg" alt="Seekr Logo" className="h-8" />
           </div>
 
-          <div className="flex items-center gap-4 border-l border-slate-200 pl-6">
+          <div className="flex items-center gap-4 border-l border-[#efefef] pl-6">
             <button 
               onClick={isDemo ? () => toast.info('Demo Mode: Adding new applications is restricted in this portfolio preview.') : () => { setEditingApp(null); setIsFormOpen(true); }}
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-slate-900 text-slate-50 shadow hover:bg-slate-900/90 h-9 px-4 py-2 gap-2"
+              className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-all bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-9 px-5 py-2 gap-2 cursor-pointer"
             >
               <Plus size={16} />
               <span>New Application</span>
@@ -490,52 +492,59 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
         
         <div className="flex items-center gap-3">
           <NotificationCenter onViewAll={() => setView('notifications')} />
-          <button onClick={() => setView('settings')} title="Settings" className="w-10 h-10 rounded-lg bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-all">
+          <button onClick={() => setView('settings')} title="Settings" className="w-10 h-10 rounded-full bg-white border border-[#efefef] shadow-2xs flex items-center justify-center text-[#777c86] hover:text-[#121722] hover:bg-[#faf9f7] transition-all cursor-pointer">
             <Settings size={16} />
           </button>
         </div>
       </header>
 
-      <main className="p-6 w-full flex-grow flex flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-4 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-          <div className="flex gap-2">
+      <main className="p-6 md:p-8 w-full flex-grow flex flex-col gap-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 bg-white border border-[#efefef] rounded-2xl p-3 shadow-2xs">
+          <div className="flex flex-wrap items-center gap-1.5">
             <button
               onClick={() => setView('sankey')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-all ${view === 'sankey' ? 'bg-slate-100 text-slate-800 border border-slate-200 shadow-sm' : 'text-slate-500 hover:bg-slate-50 border border-transparent'}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all cursor-pointer ${view === 'sankey' ? 'bg-[#fbfaf7] text-[#121722] border border-[#efefef] shadow-2xs' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
             >
               <LayoutDashboard size={16} />
               Flow Chart
             </button>
             <button
               onClick={() => setView('kanban')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-all ${view === 'kanban' ? 'bg-slate-100 text-slate-800 border border-slate-200 shadow-sm' : 'text-slate-500 hover:bg-slate-50 border border-transparent'}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all cursor-pointer ${view === 'kanban' ? 'bg-[#fbfaf7] text-[#121722] border border-[#efefef] shadow-2xs' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
             >
               <LayoutDashboard size={16} />
               Kanban
             </button>
             <button
               onClick={() => setView('analytics')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-all ${view === 'analytics' ? 'bg-slate-100 text-slate-800 border border-slate-200 shadow-sm' : 'text-slate-500 hover:bg-slate-50 border border-transparent'}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all cursor-pointer ${view === 'analytics' ? 'bg-[#fbfaf7] text-[#121722] border border-[#efefef] shadow-2xs' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
             >
               <BarChart3 size={16} />
               Analytics
             </button>
+            <button
+              onClick={() => setView('cv-match')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all cursor-pointer ${view === 'cv-match' ? 'bg-[#e8f1ff] text-[#0068f9] border border-[#0068f9]/30 shadow-2xs' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
+            >
+              <Sparkles size={16} className={view === 'cv-match' ? 'text-[#0068f9]' : 'text-[#777c86]'} />
+              AI Evaluator
+            </button>
           </div>
 
           <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2.5">
               <button
                 onClick={isDemo ? () => toast.info('Demo Mode: Importing data is disabled in this portfolio preview.') : () => setShowImportModal(true)}
                 disabled={isSyncing}
-                className={`gap-2 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2 ${isSyncing ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`gap-2 inline-flex items-center justify-center rounded-full text-sm font-medium transition-all border border-[#efefef] bg-white text-[#121722] shadow-2xs hover:bg-[#faf9f7] h-9 px-5 py-2 cursor-pointer ${isSyncing ? "opacity-50 cursor-not-allowed" : ""}`}
               >
-                {isSyncing ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                {isSyncing ? <Loader2 size={16} className="animate-spin text-[#0068f9]" /> : <Upload size={16} />}
                 Import Data
               </button>
               <button
                 onClick={isDemo ? () => toast.info('Demo Mode: Exporting data is restricted in this portfolio preview.') : () => exportCsv(applications)}
                 disabled={applications.length === 0 || isSyncing}
-                className={`gap-2 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-slate-900 text-slate-50 shadow hover:bg-slate-900/90 h-9 px-4 py-2 ${applications.length === 0 || isSyncing ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`gap-2 inline-flex items-center justify-center rounded-full text-sm font-medium transition-all bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-9 px-5 py-2 cursor-pointer ${applications.length === 0 || isSyncing ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 <Download size={16} />
                 Export
@@ -545,13 +554,15 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
           </div>
         </div>
 
-        {applications.length === 0 ? (
-          <div className="flex-grow flex flex-col items-center justify-center bg-white border border-slate-200 rounded-xl p-12 shadow-sm text-center">
-             <h3 className="text-xl font-bold text-slate-800 mb-2">No applications yet</h3>
-             <p className="text-slate-500 max-w-md mb-6">You haven't tracked any job applications. Start by adding one manually or import from a CSV or PDF file.</p>
+        {view === 'cv-match' ? (
+          <CVMatchAssessment applications={applications} isDemo={isDemo} />
+        ) : applications.length === 0 ? (
+          <div className="flex-grow flex flex-col items-center justify-center bg-white border border-[#efefef] rounded-2xl p-12 shadow-2xs text-center">
+             <h3 className="text-xl font-bold text-[#121722] mb-2">No applications yet</h3>
+             <p className="text-[#777c86] max-w-md mb-6 text-sm">You haven't tracked any job applications. Start by adding one manually or import from a CSV or PDF file.</p>
              <button
                onClick={() => { setEditingApp(null); setIsFormOpen(true); }}
-               className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2 gap-2"
+               className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-all bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-9 px-5 py-2 gap-2 cursor-pointer"
              >
                <Plus size={20} />
                <span>Add Your First Application</span>
@@ -575,9 +586,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
             { icon: <Linkedin size={18} />, href: "https://www.linkedin.com/in/pofei-r-79586395", label: "LinkedIn" },
             { icon: <img src="/assets/logo%20pofei.svg" alt="Pofei Logo" className="w-[18px] h-[18px]" />, href: "https://pofeiportfolio.vercel.app/", label: "Portfolio" }
           ]}
-          mainLinks={[
-            { href: "https://pofeiportfolio.vercel.app/", label: "🖋 Made by Pofei" }
-          ]}
+          mainLinks={[]}
           legalLinks={[]}
           copyright={{
             text: "Disclaimer: This is an AI-generated coding project created solely for research and demonstration purposes. It is not a commercial product, and is not affiliated with any existing companies or trademarks utilizing the \"Seekr\" name.",
@@ -597,11 +606,11 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
       
       
       {showImportModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col p-6">
+        <div className="fixed inset-0 bg-[#121722]/40 backdrop-blur-xs z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-[#efefef] shadow-lg w-full max-w-md overflow-hidden flex flex-col p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold">Import Data</h2>
-              <button onClick={() => { setShowImportModal(false); syncLockRef.current = false; }} className="text-slate-400 hover:text-slate-600 transition-colors">
+              <h2 className="text-xl font-bold text-[#121722]">Import Data</h2>
+              <button onClick={() => { setShowImportModal(false); syncLockRef.current = false; }} className="text-[#a5a5a5] hover:text-[#121722] transition-colors cursor-pointer">
                 <X size={20} />
               </button>
             </div>
@@ -622,8 +631,8 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
             />
             {isSyncing && (
               <div className="mt-4 flex flex-col items-center justify-center gap-2">
-                <Loader2 className="animate-spin text-blue-500" size={24} />
-                <span className="text-sm text-slate-500">Processing data...</span>
+                <Loader2 className="animate-spin text-[#0068f9]" size={24} />
+                <span className="text-sm text-[#777c86]">Processing data...</span>
               </div>
             )}
             {syncError && (
@@ -636,25 +645,25 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
       )}
       
       {deleteConfirmId && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+        <div className="fixed inset-0 bg-[#121722]/40 backdrop-blur-xs z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-[#efefef] shadow-lg w-full max-w-md overflow-hidden">
             <div className="p-6">
-              <h2 className="text-xl font-black text-slate-800 mb-2">Delete Application?</h2>
-              <p className="text-slate-500 mb-6 text-sm">
+              <h2 className="text-xl font-bold text-[#121722] mb-2">Delete Application?</h2>
+              <p className="text-[#777c86] mb-6 text-sm">
                 Are you sure you want to delete this job application? This action cannot be undone.
               </p>
               <div className="flex gap-3 justify-end">
                 <button
                   type="button"
                   onClick={() => setDeleteConfirmId(null)}
-                  className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2"
+                  className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-all border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] h-9 px-5 py-2 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={confirmDeleteApp}
-                  className="px-4 py-2 font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors flex items-center gap-2"
+                  className="px-5 py-2 font-medium text-white bg-red-600 hover:bg-red-700 rounded-full transition-colors flex items-center gap-2 cursor-pointer text-sm"
                 >
                   <Trash2 size={16} />
                   Yes, Delete
@@ -666,25 +675,25 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
       )}
 
       {showClearConfirm && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+        <div className="fixed inset-0 bg-[#121722]/40 backdrop-blur-xs z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-[#efefef] shadow-lg w-full max-w-md overflow-hidden">
             <div className="p-6">
-              <h2 className="text-xl font-black text-slate-800 mb-2">Clear All Data?</h2>
-              <p className="text-slate-500 mb-6 text-sm">
+              <h2 className="text-xl font-bold text-[#121722] mb-2">Clear All Data?</h2>
+              <p className="text-[#777c86] mb-6 text-sm">
                 Are you sure you want to delete all your job applications? This action is permanent and cannot be undone.
               </p>
               <div className="flex gap-3 justify-end">
                 <button
                   type="button"
                   onClick={() => setShowClearConfirm(false)}
-                  className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2"
+                  className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-all border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] h-9 px-5 py-2 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={confirmClearData}
-                  className="px-4 py-2 font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors flex items-center gap-2"
+                  className="px-5 py-2 font-medium text-white bg-red-600 hover:bg-red-700 rounded-full transition-colors flex items-center gap-2 cursor-pointer text-sm"
                 >
                   <Trash2 size={16} />
                   Yes, Clear Data

@@ -14,7 +14,7 @@ export function SankeyChart({ applications, isDemo = false }: SankeyChartProps) 
   const total = applications.length;
 
   if (total === 0) {
-    return <div className="flex justify-center items-center h-[500px] text-slate-500 font-medium bg-white rounded-xl border border-slate-200">No data available for flow chart.</div>;
+    return <div className="flex justify-center items-center h-[500px] text-[#777c86] font-medium bg-white rounded-2xl border border-[#efefef]">No data available for flow chart.</div>;
   }
   
   const counts: Record<string, number> = {
@@ -158,12 +158,12 @@ export function SankeyChart({ applications, isDemo = false }: SankeyChartProps) 
   };
 
   return (
-    <div className={isFullscreen ? "fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md p-4 sm:p-6 flex flex-col justify-center items-center overflow-auto" : "relative w-full"}>
-      <div className={`bg-white p-5 rounded-xl border border-slate-200 shadow-sm w-full ${isFullscreen ? 'max-w-7xl h-[92vh] overflow-hidden' : 'h-[600px]'} flex flex-col relative`}>
+    <div className={isFullscreen ? "fixed inset-0 z-50 bg-[#121722]/80 backdrop-blur-md p-4 sm:p-6 flex flex-col justify-center items-center overflow-auto" : "relative w-full"}>
+      <div className={`bg-white p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full ${isFullscreen ? 'max-w-7xl h-[92vh] overflow-hidden' : 'h-[600px]'} flex flex-col relative`}>
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h3 className="text-lg font-bold text-slate-800 mb-2">Application Process Flow</h3>
-            <p className="text-sm text-slate-500">Visualize your application pipeline from submission to outcome.</p>
+            <h3 className="text-lg font-bold text-[#121722] mb-1">Application Process Flow</h3>
+            <p className="text-sm text-[#777c86]">Visualize your application pipeline from submission to outcome.</p>
           </div>
           <button 
             onClick={() => {
@@ -173,10 +173,10 @@ export function SankeyChart({ applications, isDemo = false }: SankeyChartProps) 
               }
               setIsFullscreen(!isFullscreen);
             }}
-            className={`inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 w-9 p-0 text-slate-500 cursor-pointer ${isDemo ? 'opacity-60 cursor-not-allowed' : ''}`}
+            className={`inline-flex items-center justify-center rounded-full text-sm font-medium transition-all border border-[#efefef] bg-white text-[#777c86] hover:bg-[#faf9f7] hover:text-[#121722] h-10 w-10 p-0 cursor-pointer shadow-2xs ${isDemo ? 'opacity-60 cursor-not-allowed' : ''}`}
             title={isDemo ? "Full screen disabled in Demo Mode" : isFullscreen ? "Exit Full Screen" : "Full Screen"}
           >
-            {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+            {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
           </button>
         </div>
         <div className="flex-1 w-full min-h-0 relative">

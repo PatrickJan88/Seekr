@@ -157,44 +157,44 @@ export function FileUpload({ label, onFilesChange, accept = ".pdf,.doc,.docx", m
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-1">
-        <label className="block text-xs font-bold text-slate-400">{label}</label>
-        <span className="text-xs text-slate-400">{files.length} / {maxFiles}</span>
+        <label className="block text-xs font-medium text-[#777c86]">{label}</label>
+        <span className="text-xs text-[#777c86]">{files.length} / {maxFiles}</span>
       </div>
 
       {files.length < maxFiles && (
         isDemo ? (
           <div
-            className="flex justify-center rounded-xl border mt-2 border-dashed border-slate-200 bg-slate-50/70 px-6 py-5 text-center cursor-not-allowed select-none"
+            className="flex justify-center rounded-2xl border mt-2 border-dashed border-[#efefef] bg-[#faf9f7] px-6 py-5 text-center cursor-not-allowed select-none"
             onClick={() => toast.info('Demo Mode: File attachment uploads are disabled in this portfolio preview.')}
           >
             <div>
               <File
-                className="mx-auto h-7 w-7 text-slate-300 mb-1.5"
+                className="mx-auto h-7 w-7 text-[#777c86] mb-1.5"
                 aria-hidden={true}
               />
-              <p className="text-xs font-semibold text-slate-500">
+              <p className="text-xs font-medium text-[#121722]">
                 Choose files disabled in Portfolio Demo Mode
               </p>
-              <p className="mt-0.5 text-[11px] text-slate-400">
+              <p className="mt-0.5 text-[11px] text-[#777c86]">
                 {description || `Accepted: ${accept}. Max: ${maxSizeMB}MB.`}
               </p>
             </div>
           </div>
         ) : (
           <div
-            className="flex justify-center rounded-xl border mt-2 border-dashed border-slate-300 px-6 py-6 hover:bg-slate-50 transition-colors"
+            className="flex justify-center rounded-2xl border mt-2 border-dashed border-[#efefef] bg-[#faf9f7] px-6 py-6 hover:bg-white transition-colors"
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
           >
             <div>
               <File
-                className="mx-auto h-8 w-8 text-slate-400 mb-2"
+                className="mx-auto h-8 w-8 text-[#777c86] mb-2"
                 aria-hidden={true}
               />
-              <div className="flex text-sm leading-6 text-slate-600 justify-center">
+              <div className="flex text-sm leading-6 text-[#777c86] justify-center">
                 <p>Drag and drop or</p>
                 <label
-                  className="relative cursor-pointer rounded-sm pl-1 font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                  className="relative cursor-pointer rounded-sm pl-1 font-semibold text-[#0068f9] hover:underline"
                 >
                   <span>choose files</span>
                   <input
@@ -207,7 +207,7 @@ export function FileUpload({ label, onFilesChange, accept = ".pdf,.doc,.docx", m
                   />
                 </label>
               </div>
-              <p className="mt-1 text-xs text-center text-slate-500">
+              <p className="mt-1 text-xs text-center text-[#777c86]">
                 {description || `Accepted: ${accept}. Max: ${maxSizeMB}MB.`}
               </p>
             </div>
@@ -220,7 +220,7 @@ export function FileUpload({ label, onFilesChange, accept = ".pdf,.doc,.docx", m
           {files.map(fileObj => (
             <Card 
               key={fileObj.id} 
-              className="relative bg-slate-50 p-4 border-slate-200 group cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-colors"
+              className="relative bg-[#faf9f7] p-4 border-[#efefef] rounded-2xl group cursor-pointer hover:border-[#0068f9]/30 hover:bg-white transition-colors shadow-2xs"
               onClick={() => handleDownload(fileObj)}
             >
               {!isDemo && (
@@ -228,7 +228,7 @@ export function FileUpload({ label, onFilesChange, accept = ".pdf,.doc,.docx", m
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="absolute right-2 top-2 h-6 w-6 text-slate-400 hover:text-slate-600 rounded-md bg-transparent z-10"
+                  className="absolute right-2 top-2 h-6 w-6 text-[#777c86] hover:text-[#121722] rounded-full bg-transparent z-10"
                   onClick={(e) => {
                     e.stopPropagation();
                     removeFile(fileObj.id);
@@ -238,14 +238,14 @@ export function FileUpload({ label, onFilesChange, accept = ".pdf,.doc,.docx", m
                 </Button>
               )}
               <div className="flex items-center space-x-3 pr-8">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm border border-slate-200 group-hover:border-blue-300 group-hover:text-blue-600 transition-colors">
-                  <File className="h-5 w-5 text-slate-500 group-hover:text-blue-600 transition-colors" />
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white shadow-2xs border border-[#efefef] group-hover:border-[#0068f9]/30 group-hover:text-[#0068f9] transition-colors">
+                  <File className="h-5 w-5 text-[#777c86] group-hover:text-[#0068f9] transition-colors" />
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 truncate group-hover:text-blue-700 transition-colors">
+                  <p className="text-sm font-medium text-[#121722] truncate group-hover:text-[#0068f9] transition-colors">
                     {fileObj.fileName}
                   </p>
-                  <p className="mt-0.5 text-xs text-slate-500 group-hover:text-blue-500 transition-colors">
+                  <p className="mt-0.5 text-xs text-[#777c86] transition-colors">
                     {fileObj.file ? formatFileSize(fileObj.file.size) : 'Uploaded previously'}
                   </p>
                 </div>
@@ -253,8 +253,8 @@ export function FileUpload({ label, onFilesChange, accept = ".pdf,.doc,.docx", m
 
               {(fileObj.uploading || fileObj.progress < 100) && (
                 <div className="flex items-center space-x-3 mt-4">
-                  <Progress value={fileObj.progress} className="h-1.5 flex-1 bg-slate-200" />
-                  <span className="text-xs text-slate-500 font-medium w-8 text-right">{fileObj.progress}%</span>
+                  <Progress value={fileObj.progress} className="h-1.5 flex-1 bg-[#efefef]" />
+                  <span className="text-xs text-[#777c86] font-medium w-8 text-right">{fileObj.progress}%</span>
                 </div>
               )}
             </Card>

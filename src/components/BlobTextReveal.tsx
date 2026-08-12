@@ -700,7 +700,7 @@ function __OriginkitBase_TextRevealBlur({
 const __originkitPresetProps = {
   "prefix": (
     <>
-      Built by <a href="https://pofeiportfolio.vercel.app/" target="_blank" rel="noreferrer" className="hover:underline hover:text-slate-900 transition-colors cursor-pointer">POFEI</a>. Powered by
+      Built by <a href="https://pofeiportfolio.vercel.app/" target="_blank" rel="noreferrer" className="hover:underline hover:text-[#121722] transition-colors cursor-pointer font-semibold text-[#121722]">POFEI</a>. Powered by
     </>
   ),
   "texts": [
@@ -709,17 +709,17 @@ const __originkitPresetProps = {
   ],
   "font": {
     "variant": "Bold",
-    "fontSize": "14px",
+    "fontSize": "13px",
     "textAlign": "left",
     "fontFamily": "inherit",
     "fontWeight": 600,
     "lineHeight": "1.5em",
     "letterSpacing": "-0.2px"
   },
-  "color": "#1e293b",
-  "prefixColor": "#1e293b",
-  "wipeColor": "#1e293b",
-  "revealColor": "#3E69EA",
+  "color": "#121722",
+  "prefixColor": "#777c86",
+  "wipeColor": "#121722",
+  "revealColor": "#0068f9",
   "blobPosition": -2,
   "transition": {
     "type": "tween",

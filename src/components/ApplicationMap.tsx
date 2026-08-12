@@ -660,19 +660,19 @@ export function ApplicationMap({ applications, isDemo = false }: ApplicationMapP
   }, [isMapLoaded, scatterData, countryData]);
 
   return (
-    <div className={isFullscreen ? "fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md p-4 sm:p-6 flex flex-col justify-center items-center overflow-auto" : "relative w-full"}>
-      <div className={`flex flex-col gap-4 bg-white p-5 rounded-xl shadow-sm border border-slate-200 w-full ${isFullscreen ? 'max-w-7xl h-[92vh] overflow-hidden' : ''}`}>
+    <div className={isFullscreen ? "fixed inset-0 z-50 bg-[#121722]/80 backdrop-blur-md p-4 sm:p-6 flex flex-col justify-center items-center overflow-auto" : "relative w-full"}>
+      <div className={`flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-2xs border border-[#efefef] w-full ${isFullscreen ? 'max-w-7xl h-[92vh] overflow-hidden' : ''}`}>
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-bold text-slate-800 m-0">Global Application Map</h3>
+            <h3 className="text-sm font-bold text-[#121722] m-0">Global Application Map</h3>
           </div>
-          <div className="flex items-center gap-3 text-xs text-slate-500">
-            <span className="inline-flex items-center gap-1 font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
-              <Building2 size={13} className="text-blue-500" />
+          <div className="flex items-center gap-3 text-xs text-[#777c86]">
+            <span className="inline-flex items-center gap-1 font-semibold text-[#121722] bg-[#faf9f7] px-3 py-1.5 rounded-full border border-[#efefef]">
+              <Building2 size={13} className="text-[#0068f9]" />
               {locationGroups.length} Location Hubs
             </span>
-            <span className="inline-flex items-center gap-1 font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
-              <MapPin size={13} className="text-emerald-500" />
+            <span className="inline-flex items-center gap-1 font-semibold text-[#121722] bg-[#faf9f7] px-3 py-1.5 rounded-full border border-[#efefef]">
+              <MapPin size={13} className="text-emerald-600" />
               {applications.length} Total Applications
             </span>
             <button 
@@ -683,7 +683,7 @@ export function ApplicationMap({ applications, isDemo = false }: ApplicationMapP
                 }
                 setIsFullscreen(!isFullscreen);
               }}
-              className={`inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 border border-slate-200 bg-white shadow-sm hover:bg-slate-100 hover:text-slate-900 h-9 w-9 p-0 text-slate-600 ml-1 cursor-pointer ${isDemo ? 'opacity-60 cursor-not-allowed' : ''}`}
+              className={`inline-flex items-center justify-center rounded-full text-sm font-medium transition-all border border-[#efefef] bg-white text-[#777c86] hover:bg-[#faf9f7] hover:text-[#121722] h-10 w-10 p-0 cursor-pointer shadow-2xs ${isDemo ? 'opacity-60 cursor-not-allowed' : ''}`}
               title={isDemo ? "Full screen disabled in Demo Mode" : isFullscreen ? "Exit Full Screen" : "Full Screen"}
             >
               {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
@@ -692,14 +692,14 @@ export function ApplicationMap({ applications, isDemo = false }: ApplicationMapP
         </div>
 
         {!isMapLoaded && !mapError && (
-          <div className={`${isFullscreen ? 'flex-1 min-h-[500px]' : 'h-[600px]'} w-full flex flex-col items-center justify-center bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-400 gap-2`}>
-            <Loader2 size={24} className="animate-spin text-blue-500" />
+          <div className={`${isFullscreen ? 'flex-1 min-h-[500px]' : 'h-[600px]'} w-full flex flex-col items-center justify-center bg-[#faf9f7] rounded-2xl border border-dashed border-[#efefef] text-[#777c86] gap-2`}>
+            <Loader2 size={24} className="animate-spin text-[#0068f9]" />
             <span className="text-xs font-medium">Loading World Map resources...</span>
           </div>
         )}
 
         {mapError && (
-          <div className="p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs flex items-center gap-2">
+          <div className="p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl text-xs flex items-center gap-2">
             <Info size={16} />
             {mapError}
           </div>
@@ -717,17 +717,17 @@ export function ApplicationMap({ applications, isDemo = false }: ApplicationMapP
 
         {/* Location Pills Breakdown */}
         {locationGroups.length > 0 && (
-          <div className="pt-2 border-t border-slate-100">
-            <div className="text-[11px] font-bold text-slate-400 mb-2">Locations</div>
+          <div className="pt-3 border-t border-[#efefef]">
+            <div className="text-[11px] font-medium text-[#777c86] mb-2">Locations</div>
             <div className="flex flex-wrap gap-2 max-h-28 overflow-y-auto pr-1">
               {locationGroups.map((g, idx) => (
                 <div 
                   key={idx}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#faf9f7] hover:bg-white border border-[#efefef] rounded-full text-xs font-medium text-[#121722] transition-colors"
                 >
                   <span>{getCountryFlagEmoji(g.country)}</span>
                   <span>{g.city}, {g.country}</span>
-                  <span className="ml-1 px-1.5 py-0.2 bg-blue-100 text-blue-700 rounded-full text-[10px] font-bold">
+                  <span className="ml-1 px-1.5 py-0.2 bg-[#0068f9]/10 text-[#0068f9] rounded-full text-[10px] font-semibold">
                     {g.count}
                   </span>
                 </div>

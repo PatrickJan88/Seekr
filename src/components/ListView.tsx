@@ -189,39 +189,39 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete }: Lis
       return <ArrowUpDown size={12} className="ml-1 inline-block opacity-40 group-hover:opacity-100 transition-opacity" />;
     }
     return sortConfig.direction === 'asc' ? 
-      <ArrowUp size={12} className="ml-1 inline-block text-blue-500" /> : 
-      <ArrowDown size={12} className="ml-1 inline-block text-blue-500" />;
+      <ArrowUp size={12} className="ml-1 inline-block text-[#0068f9]" /> : 
+      <ArrowDown size={12} className="ml-1 inline-block text-[#0068f9]" />;
   };
 
   return (
-    <div className="w-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex-grow flex flex-col h-[calc(100vh-270px)]">
+    <div className="w-full bg-white border border-[#efefef] rounded-2xl shadow-2xs overflow-hidden flex-grow flex flex-col h-[calc(100vh-270px)]">
       <div className="overflow-auto flex-grow scrollbar-thin outline-none focus:outline-none">
         <table className="w-full text-left border-separate border-spacing-0 outline-none focus:outline-none">
-          <thead className="bg-slate-50 sticky top-0 z-10">
+          <thead className="bg-[#faf9f7] sticky top-0 z-10">
             <tr className="outline-none focus:outline-none border-0">
-              <th className="border-b border-slate-200 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap cursor-pointer group hover:bg-slate-100/50 transition-colors select-none outline-none focus:outline-none ring-0 focus:ring-0"
+              <th className="border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap cursor-pointer group hover:bg-[#efefef]/50 transition-colors select-none outline-none focus:outline-none ring-0 focus:ring-0"
                 onClick={() => requestSort('position')} onMouseDown={(e) => e.preventDefault()}
               >
                 <div className="flex items-center">Position {getSortIcon('position')}</div>
               </th>
-              <th className="border-b border-slate-200 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap cursor-pointer group hover:bg-slate-100/50 transition-colors select-none outline-none focus:outline-none ring-0 focus:ring-0"
+              <th className="border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap cursor-pointer group hover:bg-[#efefef]/50 transition-colors select-none outline-none focus:outline-none ring-0 focus:ring-0"
                 onClick={() => requestSort('company')} onMouseDown={(e) => e.preventDefault()}
               >
                 <div className="flex items-center">Company {getSortIcon('company')}</div>
               </th>
-              <th className="border-b border-slate-200 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap cursor-pointer group hover:bg-slate-100/50 transition-colors select-none outline-none focus:outline-none ring-0 focus:ring-0"
+              <th className="border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap cursor-pointer group hover:bg-[#efefef]/50 transition-colors select-none outline-none focus:outline-none ring-0 focus:ring-0"
                 onClick={() => requestSort('appliedDate')} onMouseDown={(e) => e.preventDefault()}
               >
                 <div className="flex items-center">Applied Date {getSortIcon('appliedDate')}</div>
               </th>
-              <th className="border-b border-slate-200 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Next Interview</th>
-              <th className="border-b border-slate-200 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Notes</th>
-              <th className="border-b border-slate-200 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap cursor-pointer group hover:bg-slate-100/50 transition-colors select-none outline-none focus:outline-none ring-0 focus:ring-0"
+              <th className="border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap">Next Interview</th>
+              <th className="border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86]">Notes</th>
+              <th className="border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap cursor-pointer group hover:bg-[#efefef]/50 transition-colors select-none outline-none focus:outline-none ring-0 focus:ring-0"
                 onClick={() => requestSort('status')} onMouseDown={(e) => e.preventDefault()}
               >
                 <div className="flex items-center">Status {getSortIcon('status')}</div>
               </th>
-              <th className="border-b border-slate-200 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap text-right">Actions</th>
+              <th className="border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -230,56 +230,56 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete }: Lis
                 <tr 
                   key={app.id} 
                   onClick={() => onEdit(app)}
-                  className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
+                  className="hover:bg-[#faf9f7] transition-colors cursor-pointer group"
                 >
-                  <td className="border-b border-slate-100 px-6 py-4">
-                    <div className="font-bold text-sm text-slate-800 max-w-[180px] truncate" title={app.position}>{app.position}</div>
+                  <td className="border-b border-[#efefef] px-6 py-4">
+                    <div className="font-bold text-sm text-[#121722] max-w-[180px] truncate" title={app.position}>{app.position}</div>
                     {(app.location || app.workType) && (
-                      <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5">
+                      <div className="flex items-center gap-1.5 text-xs text-[#777c86] mt-0.5">
                         {app.location && <span className="truncate max-w-[120px]">{app.location}</span>}
                         {app.workType && (
-                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${getWorkTypeBadgeStyle(app.workType)}`}>
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${getWorkTypeBadgeStyle(app.workType)}`}>
                             {app.workType}
                           </span>
                         )}
                       </div>
                     )}
                   </td>
-                  <td className="border-b border-slate-100 px-6 py-4">
-                    <div className="text-sm text-slate-600 max-w-[150px] truncate" title={app.company}>{app.company}</div>
+                  <td className="border-b border-[#efefef] px-6 py-4">
+                    <div className="text-sm text-[#777c86] max-w-[150px] truncate" title={app.company}>{app.company}</div>
                   </td>
-                  <td className="border-b border-slate-100 px-6 py-4">
-                    <span className="text-sm text-slate-600">
+                  <td className="border-b border-[#efefef] px-6 py-4">
+                    <span className="text-sm text-[#777c86]">
                       {app.appliedDate ? new Date(app.appliedDate).toLocaleDateString() : '-'}
                     </span>
                   </td>
-                  <td className="border-b border-slate-100 px-6 py-4">
+                  <td className="border-b border-[#efefef] px-6 py-4">
                     {app.nextInterviewDate ? (
-                      <div className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-md whitespace-nowrap">
+                      <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0068f9] bg-[#faf9f7] border border-[#efefef] px-2.5 py-1 rounded-full whitespace-nowrap">
                         <Calendar size={12} />
                         {new Date(app.nextInterviewDate).toLocaleDateString()}
                       </div>
                     ) : (
-                      <span className="text-slate-400">-</span>
+                      <span className="text-[#777c86]">-</span>
                     )}
                   </td>
-                  <td className="border-b border-slate-100 px-6 py-4 w-full max-w-0 min-w-[200px]">
+                  <td className="border-b border-[#efefef] px-6 py-4 w-full max-w-0 min-w-[200px]">
                     <TruncatedNotes text={app.notes || ''} />
                   </td>
-                  <td className="border-b border-slate-100 px-6 py-4">
+                  <td className="border-b border-[#efefef] px-6 py-4">
                     <StatusDropdown 
                       status={app.status} 
                       onChange={(newStatus) => onStatusChange(app.id, newStatus)} 
                     />
                   </td>
-                  <td className="border-b border-slate-100 px-6 py-4 text-right">
+                  <td className="border-b border-[#efefef] px-6 py-4 text-right">
                     <ActionDropdown onEdit={() => onEdit(app)} onDelete={() => onDelete(app.id)} />
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-slate-500 text-sm">
+                <td colSpan={7} className="px-6 py-12 text-center text-[#777c86] text-sm">
                   No applications found for the selected filters.
                 </td>
               </tr>
