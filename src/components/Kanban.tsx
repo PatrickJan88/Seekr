@@ -175,7 +175,7 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete }: Kanba
                     </span>
                   )}
                   {app.workType && (
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${getWorkTypeBadgeStyle(app.workType)}`}>
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border whitespace-nowrap ${getWorkTypeBadgeStyle(app.workType)}`}>
                       {app.workType}
                     </span>
                   )}

@@ -238,7 +238,7 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete }: Lis
                       <div className="flex items-center gap-1.5 text-xs text-[#777c86] mt-0.5">
                         {app.location && <span className="truncate max-w-[120px]">{app.location}</span>}
                         {app.workType && (
-                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${getWorkTypeBadgeStyle(app.workType)}`}>
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border whitespace-nowrap ${getWorkTypeBadgeStyle(app.workType)}`}>
                             {app.workType}
                           </span>
                         )}
