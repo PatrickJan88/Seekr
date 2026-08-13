@@ -19,6 +19,66 @@ function safeParseJSON(text: string, fallback: any) {
   }
 }
 
+/**
+ * Resilient helper to execute Gemini API calls with automatic retries and fallback models
+ * when encountering temporary 503 high demand, rate limits (429), or capacity issues.
+ */
+async function generateContentWithRetry(
+  ai: GoogleGenAI,
+  params: {
+    contents: any;
+    config?: any;
+    preferredModel?: string;
+  }
+) {
+  const modelsToTry = [
+    params.preferredModel || "gemini-3.6-flash",
+    "gemini-3.1-flash-lite",
+    "gemini-flash-latest"
+  ];
+
+  let lastError: any = null;
+
+  for (const model of modelsToTry) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: params.contents,
+          config: params.config,
+        });
+        return response;
+      } catch (err: any) {
+        lastError = err;
+        const errMessage = err?.message || JSON.stringify(err) || "";
+        const isUnavailable =
+          errMessage.includes("503") ||
+          errMessage.includes("UNAVAILABLE") ||
+          errMessage.includes("high demand") ||
+          errMessage.includes("429") ||
+          errMessage.includes("RESOURCE_EXHAUSTED") ||
+          errMessage.includes("overloaded");
+
+        if (isUnavailable) {
+          console.warn(`Model '${model}' high demand / 503 error (attempt ${attempt + 1}). Retrying or attempting fallback...`);
+          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+          continue;
+        }
+
+        // Non-transient error
+        throw err;
+      }
+    }
+  }
+
+  const finalMsg = lastError?.message || "";
+  if (finalMsg.includes("503") || finalMsg.includes("high demand") || finalMsg.includes("UNAVAILABLE")) {
+    throw new Error("The AI service is currently experiencing high demand. Please wait a few seconds and try again.");
+  }
+
+  throw lastError;
+}
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -73,8 +133,8 @@ async function startServer() {
         ${text.substring(0, 15000)}
       `;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3.6-flash",
+      const response = await generateContentWithRetry(ai, {
+        preferredModel: "gemini-3.6-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json"
@@ -122,8 +182,8 @@ async function startServer() {
         If no applications are found, return [].
       `;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3.6-flash",
+      const response = await generateContentWithRetry(ai, {
+        preferredModel: "gemini-3.6-flash",
         contents: [
           {
             role: "user",
@@ -244,8 +304,8 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
         contentsPayload = promptText;
       }
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3.6-flash",
+      const response = await generateContentWithRetry(ai, {
+        preferredModel: "gemini-3.6-flash",
         contents: contentsPayload,
         config: {
           responseMimeType: "application/json"
@@ -339,8 +399,8 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
         ${fileText.substring(0, 50000)}
       `;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3.6-flash",
+      const response = await generateContentWithRetry(ai, {
+        preferredModel: "gemini-3.6-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json"

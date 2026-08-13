@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { JobApplication } from '../types';
 import { extractTextFromPDF, fileToBase64 } from '../lib/pdf';
 import AgentAvatar from './AgentAvatar';
+import PersonaOrbCarousel, { TECH_ROLES } from './PersonaOrbCarousel';
 import { InlineLoader } from 'generative-loaders';
 import 'generative-loaders/styles.css';
 import { 
@@ -14,15 +15,26 @@ import {
   Copy, 
   Check, 
   FileText, 
-  UserCheck, 
-  Briefcase, 
   ArrowRight,
   RefreshCw,
-  Layers,
   ChevronDown,
-  Info
+  Info,
+  LoaderCircleIcon,
+  Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  Stepper,
+  StepperContent,
+  StepperDescription,
+  StepperIndicator,
+  StepperItem,
+  StepperNav,
+  StepperPanel,
+  StepperSeparator,
+  StepperTitle,
+  StepperTrigger,
+} from './ui/stepper';
 
 interface CVMatchAssessmentProps {
   applications: JobApplication[];
@@ -37,19 +49,6 @@ export interface MatchResult {
   actionable_polish: string;
   interview_questions: string[];
 }
-
-const TECH_ROLES = [
-  { id: 'Product Manager', label: 'Product Manager', icon: '🎯', desc: 'Focus: Strategy, Roadmap, User Metrics, Agile Delivery' },
-  { id: 'UX/UI Designer', label: 'UX/UI Designer', icon: '🎨', desc: 'Focus: Design Systems, Prototyping, Figma, User Research' },
-  { id: 'Frontend Developer', label: 'Frontend Developer', icon: '💻', desc: 'Focus: React, TypeScript, State, Performance, CSS Architecture' },
-  { id: 'Backend Developer', label: 'Backend Developer', icon: '⚙️', desc: 'Focus: APIs, Microservices, Databases, Concurrency, Scaling' },
-  { id: 'Fullstack Developer', label: 'Fullstack Developer', icon: '⚡', desc: 'Focus: End-to-End Delivery, DB Schema, Frontend & Node/Python' },
-  { id: 'AI Engineer', label: 'AI Engineer', icon: '🧠', desc: 'Focus: Model Tuning, PyTorch, RAG, Inference, GenAI Systems' },
-  { id: 'LLM Engineer', label: 'LLM Engineer', icon: '🤖', desc: 'Focus: Prompting, Agentic Workflows, Fine-Tuning, Guardrails' },
-  { id: 'Data Analyst', label: 'Data Analyst', icon: '📊', desc: 'Focus: SQL, Visualization, Funnel Metrics, Experimentation' },
-  { id: 'QA Engineer', label: 'QA Engineer', icon: '🧪', desc: 'Focus: Automation, Integration Tests, CI/CD Pipelines' },
-  { id: 'Systems Architect', label: 'Systems Architect', icon: '🏗️', desc: 'Focus: Distributed Infrastructure, Cloud Security, High Availability' }
-];
 
 export function CVMatchAssessment({ applications, isDemo = false }: CVMatchAssessmentProps) {
   const DEMO_RESULT: MatchResult = {
@@ -84,14 +83,14 @@ export function CVMatchAssessment({ applications, isDemo = false }: CVMatchAsses
   const [jobDescription, setJobDescription] = useState(isDemo ? 'Looking for a Senior Frontend Developer skilled in React 18, TypeScript, Tailwind CSS, and performance optimization.' : '');
 
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<MatchResult | null>(isDemo ? DEMO_RESULT : null);
+  const [result, setResult] = useState<MatchResult | null>(null);
   const [copiedPolish, setCopiedPolish] = useState(false);
   const [showCvTextPreview, setShowCvTextPreview] = useState(false);
 
   // Handle PDF Upload
   const handleFileUpload = async (file: File) => {
     if (isDemo) {
-      toast.info('Demo Mode: File upload is strictly read-only in this preview.');
+      toast.info('Demo Mode: File upload is disabled in demo preview. Sample CV text is pre-loaded below or you can paste text.');
       return;
     }
     if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
@@ -111,6 +110,19 @@ export function CVMatchAssessment({ applications, isDemo = false }: CVMatchAsses
     } finally {
       setIsExtractingPdf(false);
     }
+  };
+
+  const handleRemoveCvFile = (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    setCvFile(null);
+    setCvText('');
+    setShowCvTextPreview(false);
+    const inputEl = document.getElementById('cv-file-upload') as HTMLInputElement;
+    if (inputEl) inputEl.value = '';
+    toast.info('Uploaded CV removed');
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -151,8 +163,12 @@ ${app.notes || 'No extra description provided.'}`;
   // Submit AI Match Request
   const handleAnalyzeMatch = async () => {
     if (isDemo) {
-      toast.info('Demo Mode: Strictly read-only preview active.');
-      setResult(DEMO_RESULT);
+      setIsLoading(true);
+      setTimeout(() => {
+        setIsLoading(false);
+        setResult(DEMO_RESULT);
+        toast.success('Demo Mode: Simulated AI match evaluation generated!');
+      }, 1200);
       return;
     }
     if (!jobDescription.trim()) {
@@ -233,16 +249,16 @@ ${app.notes || 'No extra description provided.'}`;
     }
   };
 
-  const stepsList = [
-    { step: 1, label: 'Select Evaluator', icon: UserCheck, desc: 'Target Persona' },
-    { step: 2, label: 'Upload CV', icon: FileText, desc: 'PDF or Raw Text' },
-    { step: 3, label: 'Job Description', icon: Briefcase, desc: 'JD Analysis' },
+  const steps = [
+    { title: 'Select AI Evaluator', description: 'Target Persona' },
+    { title: 'Upload CV', description: 'PDF or Raw Text' },
+    { title: 'Job Description', description: 'JD Analysis' },
   ];
 
   const selectedRoleObj = TECH_ROLES.find(r => r.id === targetRole);
 
   return (
-    <div className="w-full pb-12 space-y-6">
+    <div className="w-full space-y-6">
       {isDemo && (
         <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 text-xs text-amber-800 flex items-center justify-between gap-3 shadow-2xs">
           <div className="flex items-center gap-2">
@@ -261,9 +277,8 @@ ${app.notes || 'No extra description provided.'}`;
             <div className="flex items-center gap-3">
               <AgentAvatar seed={targetRole} size={38} animated={true} />
               <div>
-                <h3 className="text-sm font-bold text-[#121722] flex items-center gap-2">
-                  <span>Match Analysis for {targetRole}</span>
-                  <span className="text-xs font-normal text-[#777c86]">({selectedRoleObj?.icon})</span>
+                <h3 className="text-sm font-bold text-[#121722]">
+                  Match Analysis for {targetRole}
                 </h3>
                 <p className="text-xs text-[#777c86]">
                   Evaluated using domain-specific reasoning engine
@@ -462,174 +477,77 @@ ${app.notes || 'No extra description provided.'}`;
           </div>
         </div>
       ) : (
-        /* STEPPER GUIDED FORM WORKFLOW - EQUAL HEIGHT CARDS */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-          
-          {/* LEFT STEPPER PROGRESS SIDEBAR (CARD 1) */}
-          <div className="lg:col-span-4 bg-white border border-[#efefef] rounded-2xl p-6 shadow-2xs flex flex-col justify-between space-y-6 min-h-[500px]">
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-base font-bold text-[#121722]">
-                  AI Evaluator Assessment
-                </h3>
-                <p className="text-xs text-[#777c86] mt-1 leading-relaxed">
-                  Complete the 3 quick steps below to generate an AI domain assessment.
-                </p>
-              </div>
-
-              {/* Stepper list */}
-              <div className="space-y-3 relative">
-                {stepsList.map((st) => {
-                  const isCompleted = currentStep > st.step;
-                  const isCurrent = currentStep === st.step;
-                  const Icon = st.icon;
-
-                  return (
-                    <button
-                      key={st.step}
-                      type="button"
-                      onClick={() => {
-                        if (st.step <= currentStep || validateStep(currentStep)) {
-                          setCurrentStep(st.step);
-                        }
-                      }}
-                      className={`w-full text-left p-3.5 rounded-2xl border transition-all flex items-center gap-3.5 cursor-pointer ${
-                        isCurrent
-                          ? 'border-[#0068f9] bg-[#faf9f7] shadow-2xs'
-                          : isCompleted
-                          ? 'border-emerald-200 bg-emerald-50/20'
-                          : 'border-[#efefef] bg-[#faf9f7] hover:bg-white'
-                      }`}
-                    >
-                      <div
-                        className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors ${
-                          isCurrent
-                            ? 'bg-[#0068f9] text-white font-bold'
-                            : isCompleted
-                            ? 'bg-emerald-600 text-white font-bold'
-                            : 'bg-[#efefef] text-[#777c86]'
-                        }`}
-                      >
-                        {isCompleted ? <Check size={18} /> : <Icon size={18} />}
+        /* STEPPER GUIDED FORM WORKFLOW */
+        <Stepper
+          value={currentStep}
+          onValueChange={(val) => {
+            if (val <= currentStep || validateStep(currentStep)) {
+              setCurrentStep(val);
+            }
+          }}
+          orientation="vertical"
+          indicators={{
+            completed: <Check className="size-3.5" />,
+            loading: <LoaderCircleIcon className="size-3.5 animate-spin" />,
+          }}
+          className="flex flex-col md:flex-row gap-6 items-stretch w-full"
+        >
+          {/* STEPPER SIDEBAR NAV - LEFT SIDE */}
+          <div className="w-full md:w-60 lg:w-64 shrink-0 bg-white border border-[#efefef] rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col self-stretch justify-between min-h-[520px] md:h-[520px]">
+            <StepperNav className="w-full flex-1 flex flex-col justify-between py-2">
+              {steps.map((step, index) => (
+                <React.Fragment key={index}>
+                  <StepperItem step={index + 1} className="relative flex items-center w-full z-10">
+                    <StepperTrigger className="flex items-center gap-3 text-left w-full p-2.5 rounded-xl hover:bg-[#faf9f7] transition-all cursor-pointer group border border-transparent data-[state=active]:bg-[#faf9f7] data-[state=active]:border-[#efefef]">
+                      <StepperIndicator className="size-7 text-xs font-bold border border-[#e5e7eb] bg-[#f3f4f6] text-[#6b7280] data-[state=active]:bg-[#121722] data-[state=active]:text-white data-[state=active]:border-[#121722] data-[state=completed]:bg-[#121722] data-[state=completed]:text-white data-[state=completed]:border-[#121722] transition-colors shrink-0 rounded-full shadow-2xs">
+                        {index + 1}
+                      </StepperIndicator>
+                      <div className="flex flex-col min-w-0">
+                        <StepperTitle className="text-sm font-bold text-[#121722] leading-snug">
+                          {step.title}
+                        </StepperTitle>
+                        <StepperDescription className="text-[10px] text-[#777c86] font-medium tracking-tight mt-0.5 truncate">
+                          {step.description}
+                        </StepperDescription>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between">
-                          <p className={`text-xs font-bold ${isCurrent ? 'text-[#0068f9]' : 'text-[#121722]'}`}>
-                            {st.label}
-                          </p>
-                          <span className="text-xs text-[#777c86] font-semibold">
-                            {st.step} of 3
-                          </span>
-                        </div>
-                        <p className="text-xs text-[#777c86] truncate mt-0.5">{st.desc}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+                    </StepperTrigger>
+                  </StepperItem>
 
-            {/* Active Selections Summary Card */}
-            <div className="p-4 bg-[#faf9f7] border border-[#efefef] rounded-2xl space-y-2 text-xs mt-auto">
-              <p className="font-bold text-[#121722] flex items-center justify-between">
-                <span>Summary selection</span>
-                <Sparkles size={14} className="text-[#0068f9]" />
-              </p>
-              <div className="space-y-1 text-[#777c86] text-xs">
-                <p>• Role: <span className="font-semibold text-[#121722]">{targetRole || 'Not selected'}</span></p>
-                <p>• CV: <span className="font-semibold text-[#121722]">{cvFile || cvText ? 'Done' : 'Not added'}</span></p>
-                <p>• JD: <span className="font-semibold text-[#121722]">{jobDescription ? 'Done' : 'Not added'}</span></p>
-              </div>
-            </div>
+                  {/* Clean line segment placed ONLY between steps, never above step 1 or below step 3 */}
+                  {index < steps.length - 1 && (
+                    <div className="ml-[23px] my-1.5 w-[2px] flex-1 bg-[#e5e7eb] min-h-[20px]" />
+                  )}
+                </React.Fragment>
+              ))}
+            </StepperNav>
           </div>
 
-          {/* RIGHT STEP CONTENT AREA (CARD 2 - EQUAL HEIGHT) */}
-          <div className="lg:col-span-8 bg-white border border-[#efefef] rounded-2xl p-6 shadow-2xs flex flex-col justify-between min-h-[500px] space-y-6">
-            
-            {/* STEP 1: SELECT AI EVALUATOR PERSONA */}
-            {currentStep === 1 && (
-              <div className="flex flex-col justify-between h-full space-y-5 animate-in fade-in duration-200">
-                <div className="space-y-5">
-                  <div className="flex items-center justify-between border-b border-[#efefef] pb-4">
-                    <div>
-                      <h3 className="text-base font-bold text-[#121722]">
-                        Select AI Evaluator Persona
-                      </h3>
-                      <p className="text-xs text-[#777c86] mt-0.5">
-                        Each role activates dedicated domain knowledge and evaluation criteria.
-                      </p>
-                    </div>
-                    <span className="text-xs font-bold px-3 py-1 bg-[#faf9f7] text-[#0068f9] rounded-full border border-[#efefef]">
-                      Step 1 of 3
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {TECH_ROLES.map((role) => {
-                      const isSelected = targetRole === role.id;
-                      return (
-                        <div key={role.id} className="relative group">
-                          {/* Hover Popover displaying all focus content */}
-                          <div className="hidden group-hover:block absolute z-30 bottom-full left-0 mb-2 w-full p-3 bg-[#121722] text-white text-xs rounded-2xl shadow-lg pointer-events-none animate-in fade-in duration-150 border border-[#efefef]/20">
-                            <div className="font-bold flex items-center gap-1.5 mb-1 text-[#0068f9]">
-                              <span>{role.icon}</span>
-                              <span>{role.label}</span>
-                            </div>
-                            <p className="text-slate-200 text-xs leading-relaxed font-normal">{role.desc}</p>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => setTargetRole(role.id)}
-                            className={`w-full text-left p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-3 ${
-                              isSelected 
-                                ? 'border-[#0068f9] bg-[#faf9f7] shadow-2xs' 
-                                : 'border-[#efefef] bg-white hover:border-[#a5a5a5] hover:bg-[#faf9f7]'
-                            }`}
-                          >
-                            <div className="shrink-0 relative">
-                              <AgentAvatar seed={role.id} size={42} animated={isSelected} />
-                              {isSelected && (
-                                <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#0068f9] text-white rounded-full flex items-center justify-center text-xs ring-2 ring-white font-bold">
-                                  ✓
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-1">
-                                <h4 className={`text-xs font-bold truncate ${isSelected ? 'text-[#0068f9]' : 'text-[#121722]'}`}>
-                                  {role.label}
-                                </h4>
-                                <span className="text-xs">{role.icon}</span>
-                              </div>
-                              <p className="text-xs text-[#777c86] line-clamp-1 mt-0.5">{role.desc}</p>
-                            </div>
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
+          {/* RIGHT CONTENT AREA */}
+          <StepperPanel className="flex-1 w-full min-w-0 self-stretch flex flex-col min-h-[520px] md:h-[520px]">
+            {/* STEP 1: SELECT AI EVALUATOR */}
+            <StepperContent value={1} className="h-full flex flex-col flex-1">
+              <div className="bg-white border border-[#efefef] rounded-2xl p-5 sm:p-6 shadow-2xs h-full md:h-[520px] flex-1 flex flex-col justify-between animate-in fade-in duration-200">
+                <div className="shrink-0 pb-1">
+                  <h3 className="text-base font-bold text-[#121722]">
+                    Select AI Evaluator
+                  </h3>
+                  <p className="text-xs text-[#777c86] mt-0.5">
+                    Browse and select a specialized domain evaluator to review your resume against job criteria.
+                  </p>
                 </div>
 
-                <div className="pt-4 border-t border-[#efefef] flex justify-end mt-auto">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(2)}
-                    disabled={!validateStep(1)}
-                    className="py-2.5 px-6 rounded-full bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium text-xs shadow-2xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#0068f9]"
-                  >
-                    <span>Continue to Upload CV</span>
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
+                <PersonaOrbCarousel
+                  selectedRoleId={targetRole}
+                  onSelectRole={(roleId) => setTargetRole(roleId)}
+                  onContinue={() => setCurrentStep(2)}
+                />
               </div>
-            )}
+            </StepperContent>
 
             {/* STEP 2: UPLOAD CV */}
-            {currentStep === 2 && (
-              <div className="flex flex-col justify-between h-full flex-1 space-y-5 animate-in fade-in duration-200">
-                <div className="space-y-5 flex-1 flex flex-col">
-                  <div className="flex items-center justify-between border-b border-[#efefef] pb-4">
+            <StepperContent value={2} className="h-full flex flex-col flex-1">
+              <div className="bg-white border border-[#efefef] rounded-2xl p-5 sm:p-6 shadow-2xs h-full md:h-[520px] flex-1 flex flex-col justify-between">
+                <div className="flex items-center justify-between border-b border-[#efefef] pb-3 shrink-0">
                     <div>
                       <h3 className="text-base font-bold text-[#121722]">
                         Upload your CV
@@ -659,37 +577,72 @@ ${app.notes || 'No extra description provided.'}`;
                   </div>
 
                   {cvInputMode === 'upload' ? (
-                    <div className="flex-1 flex flex-col justify-center">
+                    <div className="flex-1 flex flex-col justify-center my-2 min-h-0">
                       <div
                         onDragOver={handleDragOver}
                         onDrop={handleDrop}
-                        className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer flex-1 flex flex-col items-center justify-center min-h-[250px] ${
+                        className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer flex-1 flex flex-col items-center justify-center min-h-[220px] ${
                           cvFile ? 'border-emerald-400 bg-emerald-50/20' : 'border-[#efefef] hover:border-[#0068f9] bg-[#faf9f7]'
                         }`}
                       >
                         <input
                           type="file"
                           accept=".pdf,application/pdf"
+                          disabled={isDemo}
                           onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
                           className="hidden"
                           id="cv-file-upload"
                         />
-                        <label htmlFor="cv-file-upload" className="cursor-pointer block my-auto">
+                        <label htmlFor="cv-file-upload" className={`${isDemo ? 'cursor-not-allowed' : 'cursor-pointer'} block my-auto`}>
                           <div className="w-12 h-12 rounded-full bg-[#faf9f7] border border-[#efefef] text-[#0068f9] flex items-center justify-center mx-auto mb-3">
                             {isExtractingPdf ? (
                               <RefreshCw size={24} className="animate-spin text-[#0068f9]" />
                             ) : (
-                              <Upload size={24} />
+                              <Upload size={24} className={isDemo ? 'opacity-50' : ''} />
                             )}
                           </div>
                           {cvFile ? (
-                            <div>
-                              <p className="text-sm font-bold text-[#121722] flex items-center justify-center gap-1.5">
-                                <FileCheck size={16} className="text-emerald-600" />
-                                <span>{cvFile.name}</span>
+                            <div className="space-y-2">
+                              <p className="text-sm font-bold text-[#121722] flex items-center justify-center gap-1.5 max-w-full px-2">
+                                <FileCheck size={18} className="text-emerald-600 shrink-0" />
+                                <span className="truncate max-w-[260px] sm:max-w-[320px]">{cvFile.name}</span>
                               </p>
-                              <p className="text-xs text-[#777c86] mt-1">
+                              <p className="text-xs text-[#777c86]">
                                 {(cvFile.size / 1024).toFixed(1)} KB • {cvText ? `${cvText.length} characters parsed` : 'Ready'}
+                              </p>
+
+                              {/* ACTION BUTTONS: REMOVE OR REPLACE PDF */}
+                              <div className="flex items-center justify-center gap-2 pt-2" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  type="button"
+                                  onClick={handleRemoveCvFile}
+                                  className="px-3 py-1.5 rounded-full text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 transition-colors inline-flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                                  title="Delete uploaded PDF"
+                                >
+                                  <Trash2 size={13} />
+                                  <span>Delete PDF</span>
+                                </button>
+                                <label
+                                  htmlFor="cv-file-upload"
+                                  className="px-3 py-1.5 rounded-full text-xs font-semibold text-[#0068f9] bg-white hover:bg-blue-50 border border-[#efefef] transition-colors inline-flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                                  title="Upload a different PDF file"
+                                >
+                                  <Upload size={13} />
+                                  <span>Replace PDF</span>
+                                </label>
+                              </div>
+                            </div>
+                          ) : isDemo ? (
+                            <div className="space-y-1">
+                              <div className="mb-2 px-3 py-1 bg-amber-50 border border-amber-200/80 rounded-full text-[11px] font-semibold text-amber-800 inline-flex items-center gap-1.5 mx-auto">
+                                <Info size={13} className="text-amber-600 shrink-0" />
+                                <span>PDF Upload Banned in Demo Mode</span>
+                              </div>
+                              <p className="text-sm font-semibold text-[#121722]">
+                                Sample CV text is pre-loaded for demonstration
+                              </p>
+                              <p className="text-xs text-[#777c86] mt-1 max-w-sm mx-auto">
+                                Switch to "Paste text" mode above to edit CV details or click "Continue to Job Description".
                               </p>
                             </div>
                           ) : (
@@ -704,7 +657,7 @@ ${app.notes || 'No extra description provided.'}`;
                       </div>
 
                       {cvText && (
-                        <div className="mt-3 text-right">
+                        <div className="mt-2 text-right shrink-0">
                           <button
                             type="button"
                             onClick={() => setShowCvTextPreview(!showCvTextPreview)}
@@ -717,7 +670,7 @@ ${app.notes || 'No extra description provided.'}`;
                             <textarea
                               readOnly
                               value={cvText}
-                              rows={5}
+                              rows={4}
                               className="w-full mt-2 p-3 text-xs bg-[#faf9f7] border border-[#efefef] rounded-2xl text-[#121722] font-mono"
                             />
                           )}
@@ -725,18 +678,17 @@ ${app.notes || 'No extra description provided.'}`;
                       )}
                     </div>
                   ) : (
-                    <div className="flex-1 flex flex-col">
+                    <div className="flex-1 flex flex-col my-2 min-h-0">
                       <textarea
                         value={cvText}
                         onChange={(e) => setCvText(e.target.value)}
                         placeholder="Paste your resume or CV experience bullet points here..."
-                        className="w-full flex-1 min-h-[250px] p-3.5 text-xs bg-white border border-[#efefef] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0068f9] text-[#121722] placeholder:text-[#a5a5a5] resize-none"
+                        className="w-full flex-1 min-h-[220px] p-3.5 text-xs bg-white border border-[#efefef] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0068f9] text-[#121722] placeholder:text-[#a5a5a5] resize-none"
                       />
                     </div>
                   )}
-                </div>
 
-                <div className="pt-4 border-t border-[#efefef] flex items-center justify-between mt-auto">
+                <div className="pt-3 border-t border-[#efefef] flex items-center justify-between shrink-0 mt-auto">
                   <button
                     type="button"
                     onClick={() => setCurrentStep(1)}
@@ -756,13 +708,12 @@ ${app.notes || 'No extra description provided.'}`;
                   </button>
                 </div>
               </div>
-            )}
+            </StepperContent>
 
             {/* STEP 3: JOB DESCRIPTION */}
-            {currentStep === 3 && (
-              <div className="flex flex-col justify-between h-full flex-1 space-y-5 animate-in fade-in duration-200">
-                <div className="space-y-5 flex-1 flex flex-col">
-                  <div className="flex items-center justify-between border-b border-[#efefef] pb-4">
+            <StepperContent value={3} className="h-full flex flex-col flex-1">
+              <div className="bg-white border border-[#efefef] rounded-2xl p-5 sm:p-6 shadow-2xs h-full md:h-[520px] flex-1 flex flex-col justify-between">
+                <div className="flex items-center justify-between border-b border-[#efefef] pb-3 shrink-0">
                     <div>
                       <h3 className="text-base font-bold text-[#121722]">
                         Job Description
@@ -790,7 +741,7 @@ ${app.notes || 'No extra description provided.'}`;
                   </div>
 
                   {jdSource === 'application' && (
-                    <div className="space-y-1">
+                    <div className="space-y-1 my-2 shrink-0">
                       <label className="block text-xs font-medium text-[#777c86]">Choose from my tracked applications:</label>
                       <div className="relative">
                         <select
@@ -810,17 +761,16 @@ ${app.notes || 'No extra description provided.'}`;
                     </div>
                   )}
 
-                  <div className="flex-1 flex flex-col">
+                  <div className="flex-1 flex flex-col my-2 min-h-0">
                     <textarea
                       value={jobDescription}
                       onChange={(e) => setJobDescription(e.target.value)}
                       placeholder="Paste the full job description, required skills, and key responsibilities here..."
-                      className="w-full flex-1 min-h-[230px] p-3.5 text-xs bg-white border border-[#efefef] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0068f9] text-[#121722] placeholder:text-[#a5a5a5] resize-none"
+                      className="w-full flex-1 min-h-[220px] p-3.5 text-xs bg-white border border-[#efefef] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0068f9] text-[#121722] placeholder:text-[#a5a5a5] resize-none"
                     />
                   </div>
-                </div>
 
-                <div className="pt-4 border-t border-[#efefef] flex items-center justify-between mt-auto">
+                <div className="pt-3 border-t border-[#efefef] flex items-center justify-between shrink-0 mt-auto">
                   <button
                     type="button"
                     onClick={() => setCurrentStep(2)}
@@ -849,11 +799,9 @@ ${app.notes || 'No extra description provided.'}`;
                   </button>
                 </div>
               </div>
-            )}
-
-          </div>
-
-        </div>
+            </StepperContent>
+          </StepperPanel>
+        </Stepper>
       )}
     </div>
   );

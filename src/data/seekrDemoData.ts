@@ -6,7 +6,7 @@ export const DEMO_APPLICATIONS: JobApplication[] = [
   {
     id: 'demo-1',
     userId: 'demo-user',
-    company: 'Spotify',
+    company: 'Tech Company A',
     position: 'Product Designer',
     location: 'Stockholm, Sweden',
     workType: 'Hybrid',
@@ -14,14 +14,14 @@ export const DEMO_APPLICATIONS: JobApplication[] = [
     appliedDate: '2026-07-15',
     nextInterviewDate: '2026-08-14T14:00',
     reminder: '1 day',
-    notes: 'Portfolio review completed. Design challenge presentation scheduled with Senior Design Lead in Stockholm.',
+    notes: 'Portfolio review completed. Design challenge presentation scheduled with Senior Design Lead.',
     createdAt: NOW - 25 * 86400000,
     updatedAt: NOW - 25 * 86400000
   },
   {
     id: 'demo-2',
     userId: 'demo-user',
-    company: 'Zalando',
+    company: 'Tech Company B',
     position: 'Design Engineer',
     location: 'Berlin, Germany',
     workType: 'On-site',
@@ -29,14 +29,14 @@ export const DEMO_APPLICATIONS: JobApplication[] = [
     appliedDate: '2026-07-02',
     nextInterviewDate: '2026-08-12T10:00',
     reminder: '2 hours',
-    notes: 'On-site interview rounds at Berlin HQ. Live frontend component exercise and design system review.',
+    notes: 'On-site interview rounds at European HQ. Live frontend component exercise and design system review.',
     createdAt: NOW - 38 * 86400000,
     updatedAt: NOW - 38 * 86400000
   },
   {
     id: 'demo-3',
     userId: 'demo-user',
-    company: 'Adyen',
+    company: 'Tech Company C',
     position: 'UX/UI Designer',
     location: 'Amsterdam, Netherlands',
     workType: 'Hybrid',
@@ -44,14 +44,14 @@ export const DEMO_APPLICATIONS: JobApplication[] = [
     appliedDate: '2026-07-28',
     nextInterviewDate: '2026-08-11T11:30',
     reminder: '15 mins',
-    notes: 'Recruiter introductory call with Amsterdam Talent Acquisition team regarding Fintech UX expansion.',
+    notes: 'Recruiter introductory call with Talent Acquisition team regarding Fintech UX expansion.',
     createdAt: NOW - 13 * 86400000,
     updatedAt: NOW - 13 * 86400000
   },
   {
     id: 'demo-4',
     userId: 'demo-user',
-    company: 'Revolut',
+    company: 'Tech Company D',
     position: 'Product Manager',
     location: 'London, UK',
     workType: 'Remote',
@@ -66,7 +66,7 @@ export const DEMO_APPLICATIONS: JobApplication[] = [
   {
     id: 'demo-5',
     userId: 'demo-user',
-    company: 'Stripe',
+    company: 'Tech Company E',
     position: 'Full Stack Developer',
     location: 'Dublin, Ireland',
     workType: 'Hybrid',
@@ -74,14 +74,14 @@ export const DEMO_APPLICATIONS: JobApplication[] = [
     appliedDate: '2026-07-10',
     nextInterviewDate: '2026-08-15T15:00',
     reminder: '1 hour',
-    notes: 'Pair programming & API architecture assessment with Senior Platform Engineers in Dublin.',
+    notes: 'Pair programming & API architecture assessment with Senior Platform Engineers.',
     createdAt: NOW - 30 * 86400000,
     updatedAt: NOW - 30 * 86400000
   },
   {
     id: 'demo-6',
     userId: 'demo-user',
-    company: 'Google',
+    company: 'Tech Company F',
     position: 'AI Engineer',
     location: 'Zurich, Switzerland',
     workType: 'On-site',
@@ -89,14 +89,14 @@ export const DEMO_APPLICATIONS: JobApplication[] = [
     appliedDate: '2026-08-01',
     nextInterviewDate: '',
     reminder: 'none',
-    notes: 'Application submitted for Gemini Infrastructure & Inference team at Zurich Tech Campus.',
+    notes: 'Application submitted for AI Infrastructure & Inference engineering team.',
     createdAt: NOW - 9 * 86400000,
     updatedAt: NOW - 9 * 86400000
   },
   {
     id: 'demo-7',
     userId: 'demo-user',
-    company: 'Datadog',
+    company: 'Tech Company G',
     position: 'Data Analyst',
     location: 'Paris, France',
     workType: 'Hybrid',
@@ -111,7 +111,7 @@ export const DEMO_APPLICATIONS: JobApplication[] = [
   {
     id: 'demo-8',
     userId: 'demo-user',
-    company: 'Trustpilot',
+    company: 'Tech Company H',
     position: 'Design Engineer',
     location: 'Copenhagen, Denmark',
     workType: 'Remote',
@@ -126,7 +126,7 @@ export const DEMO_APPLICATIONS: JobApplication[] = [
   {
     id: 'demo-9',
     userId: 'demo-user',
-    company: 'BMW Group',
+    company: 'Tech Company I',
     position: 'Product Manager',
     location: 'Munich, Germany',
     workType: 'On-site',
@@ -141,7 +141,7 @@ export const DEMO_APPLICATIONS: JobApplication[] = [
   {
     id: 'demo-10',
     userId: 'demo-user',
-    company: 'TravelPerk',
+    company: 'Tech Company J',
     position: 'Full Stack Developer',
     location: 'Barcelona, Spain',
     workType: 'Remote',
@@ -156,7 +156,7 @@ export const DEMO_APPLICATIONS: JobApplication[] = [
   {
     id: 'demo-11',
     userId: 'demo-user',
-    company: 'Klarna',
+    company: 'Tech Company K',
     position: 'UX/UI Designer',
     location: 'Stockholm, Sweden',
     workType: 'On-site',
@@ -171,7 +171,7 @@ export const DEMO_APPLICATIONS: JobApplication[] = [
   {
     id: 'demo-12',
     userId: 'demo-user',
-    company: 'Miro',
+    company: 'Tech Company L',
     position: 'AI Engineer',
     location: 'Amsterdam, Netherlands',
     workType: 'Remote',

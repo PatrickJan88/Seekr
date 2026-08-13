@@ -167,7 +167,17 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
         let data: JobApplication[] = [];
         if (local) {
           try {
-            data = JSON.parse(local);
+            const parsed: JobApplication[] = JSON.parse(local);
+            data = parsed.map((app, idx) => {
+              if (DEMO_APPLICATIONS[idx] && app.id === DEMO_APPLICATIONS[idx].id) {
+                return {
+                  ...app,
+                  company: DEMO_APPLICATIONS[idx].company,
+                  notes: DEMO_APPLICATIONS[idx].notes
+                };
+              }
+              return app;
+            });
           } catch {
             data = DEMO_APPLICATIONS;
           }
@@ -498,7 +508,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
         </div>
       </header>
 
-      <main className="p-6 md:p-8 w-full flex-grow flex flex-col gap-6">
+      <main className="p-6 md:p-8 w-full flex-1 flex flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-4 bg-white border border-[#efefef] rounded-2xl p-3 shadow-2xs">
           <div className="flex flex-wrap items-center gap-1.5">
             <button
