@@ -141,7 +141,7 @@ export default function App() {
       <div className="min-h-screen bg-[#faf9f7] font-sans flex flex-col">
         <div className="flex-grow flex items-center justify-center p-6">
           <div className="bg-white p-8 rounded-2xl shadow-2xs max-w-md w-full text-center border border-[#efefef]">
-            <img src="/assets/seekr%20logo%201.svg" alt="Seekr Logo" className="h-10 mx-auto mb-4" />
+            <img src="/assets/seekr%20logo%201.webp" alt="Seekr Logo" className="h-10 mx-auto mb-4" />
             <p className="text-[#777c86] font-medium mb-8 text-sm">Track, evaluate, and land your next tech role.</p>
             
             <div className="space-y-3">
@@ -162,7 +162,7 @@ export default function App() {
           </div>
         </div>
         <Footer
-          logo={<img src="/assets/seekr%20logo%201.svg" alt="Seekr Logo" className="h-6" />}
+          logo={<img src="/assets/seekr%20logo%201.webp" alt="Seekr Logo" className="h-6" />}
           brandName=""
           socialLinks={[
             { icon: <Github size={18} />, href: "https://github.com/PatrickJan88/Seekr/blob/main/README.md", label: "GitHub" },

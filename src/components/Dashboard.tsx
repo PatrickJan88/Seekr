@@ -486,7 +486,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
       <header className="h-16 bg-white border-b border-[#efefef] flex items-center justify-between px-6 md:px-8 shrink-0 sticky top-0 z-30">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
-            <img src="/assets/seekr%20logo%201.svg" alt="Seekr Logo" className="h-8" />
+            <img src="/assets/seekr%20logo%201.webp" alt="Seekr Logo" className="h-8" />
           </div>
 
           <div className="flex items-center gap-4 border-l border-[#efefef] pl-6">
@@ -589,7 +589,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
 
       {!isDemo && (
         <Footer
-          logo={<img src="/assets/seekr%20logo%201.svg" alt="Seekr Logo" className="h-6" />}
+          logo={<img src="/assets/seekr%20logo%201.webp" alt="Seekr Logo" className="h-6" />}
           brandName=""
           socialLinks={[
             { icon: <Github size={18} />, href: "https://github.com/PatrickJan88/Seekr/blob/main/README.md", label: "GitHub" },

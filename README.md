@@ -1,5 +1,4 @@
-<img width="302" height="80" alt="seekr logo 1" src="https://github.com/user-attachments/assets/f9b93062-b1ef-4d60-8f46-3fcdf96e852f" />
-
+# Seekr
 
 > **Track, evaluate, and land your next tech role. Built in collaboration with AI agents.**
 
