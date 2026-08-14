@@ -36,5 +36,26 @@ Seekr is a personal application tracker and career dashboard engineered specific
 
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/PatrickJan88/Seekr.git](https://github.com/PatrickJan88/Seekr.git)
+   git clone https://github.com/PatrickJan88/Seekr.git
    cd Seekr
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Set up your environment variables. Create a `.env` file in the root directory and add your Firebase credentials and your Google Gemini API key:
+   ```env
+   VITE_GEMINI_API_KEY=your_gemini_api_key_here
+   VITE_FIREBASE_API_KEY=your_firebase_api_key_here
+   # Add remaining Firebase config variables
+   ```
+
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+## Acknowledgements
+Built by [POFEI](https://pofeiportfolio.vercel.app/)
