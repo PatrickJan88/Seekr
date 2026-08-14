@@ -19,48 +19,22 @@ Seekr is a personal application tracker and career dashboard engineered specific
 
 ## Tech Stack
 
-*   **Frontend:** React, Vite, Tailwind CSS
+*   **Frontend:** React (Vite), Tailwind CSS, Framer Motion
 *   **Backend & Auth:** Firebase (Firestore, Authentication)
 *   **AI Engine:** Google Gemini API (1.5 Flash)
+*   **Data Visualization:** Recharts (Analytics), D3 (Sankey diagrams)
 *   **Client-Side Parsing:** `pdfjs-dist` (Zero-server PDF extraction for privacy and cost-efficiency)
 *   **CI/CD:** Automated deployments via GitHub Actions
 
 ## Getting Started
 
-To run this project locally, clone the repository and install the dependencies:
-
-```bash
-git clone [https://github.com/YourUsername/Seekr.git](https://github.com/YourUsername/Seekr.git)
-cd Seekr
-npm install
-
 ### Prerequisites
-
-- Node.js
-- npm or yarn
+*   Node.js
+*   npm or yarn
 
 ### Installation
 
-1. Clone the repository
-2. Install dependencies:
+1. Clone the repository:
    ```bash
-   npm install
-   ```
-3. Set up your `.env` file with Firebase credentials.
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-## Technologies Used
-
-- React (Vite)
-- Tailwind CSS
-- Firebase (Auth & Firestore)
-- Framer Motion
-- Recharts (Analytics)
-- D3 (Sankey diagrams)
-
-## Acknowledgements
-
-- Built by [POFEI](https://pofeiportfolio.vercel.app/)
+   git clone [https://github.com/PatrickJan88/Seekr.git](https://github.com/PatrickJan88/Seekr.git)
+   cd Seekr
