@@ -25,8 +25,7 @@
 </clipPath>
 </defs>
 </svg>
-# Seekr <img width="151" height="40" alt="seekr logo 2" src="https://github.com/user-attachments/assets/15cc5fd0-6af0-40ad-b01f-08bd56a147e4" />
-
+<img width="151" height="40" alt="seekr logo 2" src="https://github.com/user-attachments/assets/15cc5fd0-6af0-40ad-b01f-08bd56a147e4" />
 
 > **Track, evaluate, and land your next tech role. Built in collaboration with AI agents.**
 
