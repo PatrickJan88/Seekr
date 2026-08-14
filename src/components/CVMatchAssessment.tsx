@@ -259,15 +259,6 @@ ${app.notes || 'No extra description provided.'}`;
 
   return (
     <div className="w-full space-y-6">
-      {isDemo && (
-        <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 text-xs text-amber-800 flex items-center justify-between gap-3 shadow-2xs">
-          <div className="flex items-center gap-2">
-            <Info size={16} className="text-amber-600 shrink-0" />
-            <span><strong>Demo Mode (Read-Only):</strong> AI Evaluator is in demonstration mode. Pre-loaded sample AI assessment displayed with strictly read-only permissions.</span>
-          </div>
-          <span className="font-semibold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full text-[11px] shrink-0">Read-Only</span>
-        </div>
-      )}
 
       {/* If Result exists, show Bento Grid Overview. Else show Step Guided Workflow */}
       {result ? (
