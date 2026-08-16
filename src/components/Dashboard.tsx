@@ -39,6 +39,12 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [locationFilter, setLocationFilter] = useState<string | null>(null);
+
+  const handleLocationSelect = (country: string | null) => {
+    setLocationFilter(country);
+    if (country) setView('kanban');
+  };
 
   useEffect(() => {
     if (isFormOpen || showClearConfirm || !!deleteConfirmId) {
@@ -516,7 +522,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
               className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all cursor-pointer ${view === 'sankey' ? 'bg-[#fbfaf7] text-[#121722] border border-[#efefef] shadow-2xs' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
             >
               <LayoutDashboard size={16} />
-              Flow Chart
+              Overview
             </button>
             <button
               onClick={() => setView('kanban')}
@@ -581,9 +587,9 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
         ) : view === 'sankey' ? (
           <SankeyChart applications={applications} isDemo={isDemo} />
         ) : view === 'kanban' ? (
-          <Kanban applications={applications} onEdit={(app) => { setEditingApp(app); setIsFormOpen(true); }} onStatusChange={handleStatusChange} onDelete={handleDelete} />
+          <Kanban applications={applications} onEdit={(app) => { setEditingApp(app); setIsFormOpen(true); }} onStatusChange={handleStatusChange} onDelete={handleDelete} locationFilter={locationFilter} onLocationSelect={handleLocationSelect} />
         ) : (
-          <Analytics applications={applications} isDemo={isDemo} />
+          <Analytics applications={applications} isDemo={isDemo} onLocationSelect={handleLocationSelect} />
         )}
       </main>
 

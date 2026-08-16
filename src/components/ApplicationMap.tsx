@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 interface ApplicationMapProps {
   applications: JobApplication[];
   isDemo?: boolean;
+  onLocationSelect?: (country: string) => void;
 }
 
 export interface GeoLocationMatch {
@@ -421,7 +422,7 @@ const GEOJSON_URLS = [
   'https://raw.githubusercontent.com/apache/echarts/master/test/data/map/json/world.json'
 ];
 
-export function ApplicationMap({ applications, isDemo = false }: ApplicationMapProps) {
+export function ApplicationMap({ applications, isDemo = false, onLocationSelect }: ApplicationMapProps) {
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -711,6 +712,29 @@ export function ApplicationMap({ applications, isDemo = false }: ApplicationMapP
               option={option} 
               style={{ height: '100%', width: '100%' }} 
               notMerge={true} 
+              onEvents={{
+                'click': (params: any) => {
+                  if (params.seriesType === 'scatter' || params.seriesType === 'effectScatter') {
+                    const country = params.value && params.value[4];
+                    if (country) onLocationSelect?.(country);
+                  } else if (params.componentType === 'geo' || params.seriesType === 'map') {
+                    const echartsName = params.name;
+                    let ourCountry = echartsName;
+                    
+                    // Map ECharts name back to our known country if needed
+                    for (const [key, names] of Object.entries(ECHARTS_COUNTRY_NAMES)) {
+                       if (names.includes(echartsName)) {
+                         const exists = locationGroups.find(g => g.country === key);
+                         if (exists) {
+                           ourCountry = key;
+                           break;
+                         }
+                       }
+                    }
+                    if (ourCountry) onLocationSelect?.(ourCountry);
+                  }
+                }
+              }}
             />
           </div>
         )}
@@ -721,16 +745,17 @@ export function ApplicationMap({ applications, isDemo = false }: ApplicationMapP
             <div className="text-[11px] font-medium text-[#777c86] mb-2">Locations</div>
             <div className="flex flex-wrap gap-2 max-h-28 overflow-y-auto pr-1">
               {locationGroups.map((g, idx) => (
-                <div 
+                <button 
                   key={idx}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#faf9f7] hover:bg-white border border-[#efefef] rounded-full text-xs font-medium text-[#121722] transition-colors"
+                  onClick={() => onLocationSelect?.(g.country)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#faf9f7] hover:bg-white border border-[#efefef] rounded-full text-xs font-medium text-[#121722] transition-colors cursor-pointer"
                 >
                   <span>{getCountryFlagEmoji(g.country)}</span>
                   <span>{g.city}, {g.country}</span>
                   <span className="ml-1 px-1.5 py-0.2 bg-[#0068f9]/10 text-[#0068f9] rounded-full text-[10px] font-semibold">
                     {g.count}
                   </span>
-                </div>
+                </button>
               ))}
             </div>
           </div>

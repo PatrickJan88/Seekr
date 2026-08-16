@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { JobApplication, JobStatus, getWorkTypeBadgeStyle } from '../types';
-import { Calendar, Building, MoreVertical, LayoutDashboard, List } from 'lucide-react';
+import { Calendar, Building, MoreVertical, LayoutDashboard, List, MapPin } from 'lucide-react';
 import { ListView } from './ListView';
+import { matchLocation } from './ApplicationMap';
+import { Dropdown } from './ui/Dropdown';
 
 const STATUSES: JobStatus[] = ['Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
 
@@ -10,54 +12,89 @@ interface KanbanProps {
   onEdit: (app: JobApplication) => void;
   onStatusChange: (appId: string, status: JobStatus) => void;
   onDelete: (appId: string) => void;
+  locationFilter?: string | null;
+  onLocationSelect?: (country: string | null) => void;
 }
 
-export function Kanban({ applications, onEdit, onStatusChange, onDelete }: KanbanProps) {
+export function Kanban({ applications, onEdit, onStatusChange, onDelete, locationFilter = null, onLocationSelect }: KanbanProps) {
   const [activeTab, setActiveTab] = useState<'active' | 'inactive'>('active');
   const [layoutMode, setLayoutMode] = useState<'kanban' | 'list'>('kanban');
   const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'weekly' | 'monthly' | 'yearly' | 'custom'>('all');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
 
-  const filteredApplications = applications.filter(app => {
-    if (timeFilter === 'all') return true;
-    if (!app.appliedDate) return false;
-    
-    const appliedTime = new Date(app.appliedDate).getTime();
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    
-    if (timeFilter === 'today') {
-      return appliedTime >= today;
+  const uniqueCountries = useMemo(() => {
+    const countries = new Set<string>();
+    applications.forEach(app => {
+      const match = matchLocation(app.location, `${app.company || ''} ${app.notes || ''}`);
+      if (match) countries.add(match.country);
+    });
+    return Array.from(countries).sort();
+  }, [applications]);
+
+  const filteredApplications = useMemo(() => {
+    return applications.filter(app => {
+      // 1. Time Filter
+      let passTime = true;
+      if (timeFilter !== 'all') {
+        if (!app.appliedDate) {
+          passTime = false;
+        } else {
+          const appliedTime = new Date(app.appliedDate).getTime();
+          const now = new Date();
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+          
+          if (timeFilter === 'today') passTime = appliedTime >= today;
+          else if (timeFilter === 'weekly') passTime = appliedTime >= new Date(today - 7 * 24 * 60 * 60 * 1000).getTime();
+          else if (timeFilter === 'monthly') passTime = appliedTime >= new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()).getTime();
+          else if (timeFilter === 'yearly') passTime = appliedTime >= new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()).getTime();
+          else if (timeFilter === 'custom') {
+            const start = customStartDate ? new Date(customStartDate).getTime() : 0;
+            const end = customEndDate ? new Date(customEndDate).getTime() + 24 * 60 * 60 * 1000 - 1 : Infinity;
+            passTime = appliedTime >= start && appliedTime <= end;
+          }
+        }
+      }
+      
+      // 2. Location Filter
+      let passLocation = true;
+      if (locationFilter) {
+        const match = matchLocation(app.location, `${app.company || ''} ${app.notes || ''}`);
+        if (!match || match.country !== locationFilter) {
+          passLocation = false;
+        }
+      }
+      
+      return passTime && passLocation;
+    });
+  }, [applications, timeFilter, customStartDate, customEndDate, locationFilter]);
+
+  const ACTIVE_STATUSES: JobStatus[] = ['Applied', 'Screening', 'Technical', 'Final', 'Offer'];
+  const INACTIVE_STATUSES: JobStatus[] = ['Rejected', 'Ghosted'];
+
+  const prevLocationFilter = React.useRef<string | null | undefined>(undefined);
+
+  React.useEffect(() => {
+    if (locationFilter && locationFilter !== prevLocationFilter.current) {
+      setLayoutMode('list');
+      
+      const activeCount = filteredApplications.filter(app => ACTIVE_STATUSES.includes(app.status)).length;
+      const inactiveCount = filteredApplications.filter(app => INACTIVE_STATUSES.includes(app.status)).length;
+      
+      if (activeCount === 0 && inactiveCount > 0) {
+        setActiveTab('inactive');
+      } else if (activeCount > 0) {
+        setActiveTab('active');
+      }
     }
-    if (timeFilter === 'weekly') {
-      const lastWeek = new Date(today - 7 * 24 * 60 * 60 * 1000).getTime();
-      return appliedTime >= lastWeek;
-    }
-    if (timeFilter === 'monthly') {
-      const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()).getTime();
-      return appliedTime >= lastMonth;
-    }
-    if (timeFilter === 'yearly') {
-      const lastYear = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()).getTime();
-      return appliedTime >= lastYear;
-    }
-    if (timeFilter === 'custom') {
-      const start = customStartDate ? new Date(customStartDate).getTime() : 0;
-      const end = customEndDate ? new Date(customEndDate).getTime() + 24 * 60 * 60 * 1000 - 1 : Infinity;
-      return appliedTime >= start && appliedTime <= end;
-    }
-    return true;
-  });
+    prevLocationFilter.current = locationFilter;
+  }, [locationFilter, filteredApplications]);
 
   const grouped = filteredApplications.reduce((acc, app) => {
     if (!acc[app.status]) acc[app.status] = [];
     acc[app.status].push(app);
     return acc;
   }, {} as Record<JobStatus, JobApplication[]>);
-
-  const ACTIVE_STATUSES: JobStatus[] = ['Applied', 'Screening', 'Technical', 'Final', 'Offer'];
-  const INACTIVE_STATUSES: JobStatus[] = ['Rejected', 'Ghosted'];
   
   const displayStatuses = activeTab === 'active' ? ACTIVE_STATUSES : INACTIVE_STATUSES;
 
@@ -79,55 +116,66 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete }: Kanba
           </button>
         </div>
         
-        <div className="flex items-center gap-2">
-        <div className="flex items-center gap-4 bg-white border border-[#efefef] rounded-2xl p-1.5 shadow-2xs overflow-x-auto whitespace-nowrap scrollbar-thin">
-          <div className="flex gap-1 items-center">
-            <Calendar size={14} className="text-[#777c86] ml-2 mr-1" />
-            <span className="text-xs font-semibold text-[#121722] mr-2">Time:</span>
-            {['all', 'today', 'weekly', 'monthly', 'yearly', 'custom'].map((tf) => (
-              <button
-                key={tf}
-                onClick={() => setTimeFilter(tf as any)}
-                className={`px-3 py-1.5 rounded-full font-medium text-xs transition-all cursor-pointer ${timeFilter === tf ? 'bg-[#faf9f7] text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
-              >
-                {tf.charAt(0).toUpperCase() + tf.slice(1)}
-              </button>
-            ))}
-          </div>
+        <div className="flex items-center gap-2 ml-auto">
+          <Dropdown
+            icon={<Calendar size={14} />}
+            labelPrefix="Time:"
+            value={timeFilter}
+            onChange={(val) => setTimeFilter(val as any)}
+            options={[
+              { value: 'all', label: 'All' },
+              { value: 'today', label: 'Today' },
+              { value: 'weekly', label: 'Weekly' },
+              { value: 'monthly', label: 'Monthly' },
+              { value: 'yearly', label: 'Yearly' },
+              { value: 'custom', label: 'Custom' }
+            ]}
+          />
           
           {timeFilter === 'custom' && (
-            <div className="flex items-center gap-2 border-l border-[#efefef] pl-3 ml-1 mr-1">
+            <div className="flex items-center gap-2 bg-white border border-[#efefef] rounded-2xl p-1.5 px-3 shadow-2xs h-[34px]">
               <input
                 type="date"
                 value={customStartDate}
                 onChange={(e) => setCustomStartDate(e.target.value)}
-                className="text-xs border border-[#efefef] rounded-full px-3 py-1 bg-[#faf9f7] focus:outline-none focus:ring-1 focus:ring-[#0068f9] text-[#121722]"
+                className="text-xs font-medium bg-transparent border-none focus:outline-none text-[#121722]"
               />
               <span className="text-[#777c86] text-xs">to</span>
               <input
                 type="date"
                 value={customEndDate}
                 onChange={(e) => setCustomEndDate(e.target.value)}
-                className="text-xs border border-[#efefef] rounded-full px-3 py-1 bg-[#faf9f7] focus:outline-none focus:ring-1 focus:ring-[#0068f9] text-[#121722]"
+                className="text-xs font-medium bg-transparent border-none focus:outline-none text-[#121722]"
               />
             </div>
           )}
-        
-        </div>
-          <div className="flex items-center gap-1 bg-white border border-[#efefef] rounded-2xl p-1.5 shadow-2xs">
+
+          {uniqueCountries.length > 0 && (
+            <Dropdown
+              icon={<MapPin size={14} />}
+              value={locationFilter || ''}
+              onChange={(val) => onLocationSelect?.(val || null)}
+              options={[
+                { value: '', label: 'All Locations' },
+                ...uniqueCountries.map(c => ({ value: c, label: c }))
+              ]}
+            />
+          )}
+
+          <div className="flex items-center gap-1 bg-white border border-[#efefef] rounded-2xl p-1 shadow-2xs h-[34px]">
             <button
               onClick={() => setLayoutMode('kanban')}
-              className={`p-1.5 rounded-full transition-all cursor-pointer ${layoutMode === 'kanban' ? 'bg-[#faf9f7] text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
+              className={`p-1 px-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center h-full ${layoutMode === 'kanban' ? 'bg-[#faf9f7] text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
               title="Kanban View"
             >
-              <LayoutDashboard size={16} />
+              <LayoutDashboard size={14} />
             </button>
             <button
               onClick={() => setLayoutMode('list')}
-              className={`p-1.5 rounded-full transition-all cursor-pointer ${layoutMode === 'list' ? 'bg-[#faf9f7] text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
+              className={`p-1 px-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center h-full ${layoutMode === 'list' ? 'bg-[#faf9f7] text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
               title="List View"
             >
-              <List size={16} />
+              <List size={14} />
             </button>
           </div>
         </div>

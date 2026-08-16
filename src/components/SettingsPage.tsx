@@ -118,6 +118,9 @@ export function SettingsPage({ onBack, onClearData, isSyncing }: SettingsPagePro
             </div>
           </div>
         </div>
+        <div className="mt-8 text-center text-xs text-[#777c86] font-medium">
+          Version 2.0.0
+        </div>
       </div>
     </div>
   );

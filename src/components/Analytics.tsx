@@ -9,9 +9,10 @@ import {
 interface AnalyticsProps {
   applications: JobApplication[];
   isDemo?: boolean;
+  onLocationSelect?: (country: string | null) => void;
 }
 
-export function Analytics({ applications, isDemo = false }: AnalyticsProps) {
+export function Analytics({ applications, isDemo = false, onLocationSelect }: AnalyticsProps) {
   const [linkedinViews, setLinkedinViews] = useState('');
   const [linkedinSearches, setLinkedinSearches] = useState('');
   const [savedInsights, setSavedInsights] = useState<{views: number, searches: number} | null>(null);
@@ -71,7 +72,7 @@ export function Analytics({ applications, isDemo = false }: AnalyticsProps) {
   return (
     <div className="grid grid-cols-12 gap-6">
       <div className="col-span-12">
-        <ApplicationMap applications={applications} isDemo={isDemo} />
+        <ApplicationMap applications={applications} isDemo={isDemo} onLocationSelect={onLocationSelect} />
       </div>
 
       <div className="col-span-12 md:col-span-8 bg-white border border-[#efefef] rounded-2xl p-6 shadow-2xs flex flex-col">

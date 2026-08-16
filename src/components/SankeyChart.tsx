@@ -14,7 +14,7 @@ export function SankeyChart({ applications, isDemo = false }: SankeyChartProps) 
   const total = applications.length;
 
   if (total === 0) {
-    return <div className="flex justify-center items-center h-[500px] text-[#777c86] font-medium bg-white rounded-2xl border border-[#efefef]">No data available for flow chart.</div>;
+    return <div className="flex justify-center items-center h-[500px] text-[#777c86] font-medium bg-white rounded-2xl border border-[#efefef]">No data available for the overview.</div>;
   }
   
   const counts: Record<string, number> = {
@@ -162,7 +162,7 @@ export function SankeyChart({ applications, isDemo = false }: SankeyChartProps) 
       <div className={`bg-white p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full ${isFullscreen ? 'max-w-7xl h-[92vh] overflow-hidden' : 'h-[600px]'} flex flex-col relative`}>
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h3 className="text-lg font-bold text-[#121722] mb-1">Application Process Flow</h3>
+            <h3 className="text-lg font-bold text-[#121722] mb-1">Application Process Overview</h3>
             <p className="text-sm text-[#777c86]">Visualize your application pipeline from submission to outcome.</p>
           </div>
           <button 
