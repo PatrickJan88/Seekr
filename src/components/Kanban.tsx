@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { JobApplication, JobStatus, getWorkTypeBadgeStyle } from '../types';
-import { Calendar, Building, MoreVertical, LayoutDashboard, List, MapPin } from 'lucide-react';
+import { Calendar, Building, MoreVertical, LayoutDashboard, List, MapPin, X } from 'lucide-react';
 import { ListView } from './ListView';
 import { matchLocation } from './ApplicationMap';
 import { Dropdown } from './ui/Dropdown';
@@ -117,6 +117,21 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
         </div>
         
         <div className="flex items-center gap-2 ml-auto">
+          {uniqueCountries.length > 0 && (
+            <Dropdown
+              icon={<MapPin size={14} />}
+              value={locationFilter || ''}
+              onChange={(val) => onLocationSelect?.(val || null)}
+              isActive={!!locationFilter}
+              activeClassName="bg-[#e8f1ff] text-[#0068f9] border border-[#0068f9]/30"
+              onClear={() => onLocationSelect?.(null)}
+              options={[
+                { value: '', label: 'All Locations' },
+                ...uniqueCountries.map(c => ({ value: c, label: c }))
+              ]}
+            />
+          )}
+
           <Dropdown
             icon={<Calendar size={14} />}
             labelPrefix="Time:"
@@ -148,18 +163,6 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
                 className="text-xs font-medium bg-transparent border-none focus:outline-none text-[#121722]"
               />
             </div>
-          )}
-
-          {uniqueCountries.length > 0 && (
-            <Dropdown
-              icon={<MapPin size={14} />}
-              value={locationFilter || ''}
-              onChange={(val) => onLocationSelect?.(val || null)}
-              options={[
-                { value: '', label: 'All Locations' },
-                ...uniqueCountries.map(c => ({ value: c, label: c }))
-              ]}
-            />
           )}
 
           <div className="flex items-center gap-1 bg-white border border-[#efefef] rounded-2xl p-1 shadow-2xs h-[34px]">

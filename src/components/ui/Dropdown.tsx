@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 
 const __TRANSITION_STYLES = `
 :root {
@@ -71,9 +71,12 @@ interface DropdownProps {
   onChange: (value: string) => void;
   icon?: React.ReactNode;
   labelPrefix?: string;
+  isActive?: boolean;
+  activeClassName?: string;
+  onClear?: (e: React.MouseEvent) => void;
 }
 
-export function Dropdown({ options, value, onChange, icon, labelPrefix }: DropdownProps) {
+export function Dropdown({ options, value, onChange, icon, labelPrefix, isActive, activeClassName, onClear }: DropdownProps) {
   const [state, setState] = useState<"closed" | "open" | "closing">("closed");
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -103,14 +106,23 @@ export function Dropdown({ options, value, onChange, icon, labelPrefix }: Dropdo
       <button 
         type="button" 
         onClick={toggle}
-        className="flex items-center gap-2 bg-white border border-[#efefef] rounded-2xl p-2 px-3 shadow-2xs hover:bg-[#faf9f7] transition-colors h-[34px] cursor-pointer"
+        className={`flex items-center gap-2 rounded-2xl p-2 px-3 shadow-2xs transition-colors h-[34px] cursor-pointer ${isActive && activeClassName ? activeClassName : 'bg-white border border-[#efefef] hover:bg-[#faf9f7]'}`}
       >
-        {icon && <span className="text-[#777c86]">{icon}</span>}
-        <span className="text-xs font-medium text-[#121722] whitespace-nowrap">
-          {labelPrefix && <span className="text-[#777c86] font-normal mr-1">{labelPrefix}</span>}
+        {icon && <span className={isActive ? "" : "text-[#777c86]"}>{icon}</span>}
+        <span className={`text-xs font-medium whitespace-nowrap ${isActive ? "" : "text-[#121722]"}`}>
+          {labelPrefix && <span className={isActive ? "" : "text-[#777c86] font-normal mr-1"}>{labelPrefix}</span>}
           {selectedOption?.label}
         </span>
-        <ChevronDown size={14} className="text-[#777c86]" />
+        {isActive && onClear ? (
+          <div 
+            onClick={(e) => { e.stopPropagation(); onClear(e); }}
+            className="hover:bg-black/10 rounded-full p-0.5 -mr-1 transition-colors"
+          >
+            <X size={14} />
+          </div>
+        ) : (
+          <ChevronDown size={14} className={isActive ? "" : "text-[#777c86]"} />
+        )}
       </button>
 
       {(state === "open" || state === "closing") && (
