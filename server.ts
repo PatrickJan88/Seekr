@@ -119,17 +119,19 @@ async function startServer() {
       const prompt = `
         You are an expert job description data extraction assistant.
         Extract the job application information from this text carefully.
+        IMPORTANT: The text might be a messy copy-paste from a job board (like LinkedIn or Indeed) and may contain UI artifacts (e.g., "company logo", "star rating", foreign language UI text like "Ansökan har skickats" or "recensioner"). 
+        You MUST STILL identify the core job details and NOT just dump everything into the notes field. Do your best to find the role and company from the text.
 
         Guidelines:
-        - "position": Clean job title. Omit gender/diversity suffixes such as (m/w/d), (f/m/d), (m/f/x), (d/f/m), (all genders), etc.
-        - "company": The company, team, or department name. If a line lists "Company/Team · Location (Mode)", e.g. "Spiele-Palast GmbH" or "Delta Consulting Company · Luxembourg (Hybrid)", extract ONLY the company name ("Spiele-Palast GmbH", "Delta Consulting Company"). Strip locations, work modes, and posting metadata from the company name.
-        - "location": The physical geographic job location ONLY (city, region, country), e.g. "Berlin, Germany", "Luxembourg", "San Francisco, CA", "London, UK".
+        - "position": Clean job title. Omit gender/diversity suffixes such as (m/w/d), (f/m/d), (m/f/x), (d/f/m), (all genders), etc. If you see something like "Student Worker Part Time", the position is "Student Worker" or "Student Worker Part Time".
+        - "company": The company, team, or department name (e.g. "Bosch Group"). If a line lists "Company/Team · Location (Mode)" or "Company - Location", extract ONLY the company name. Strip locations, work modes, and posting metadata from the company name.
+        - "location": The physical geographic job location ONLY (city, region, country), e.g. "Berlin, Germany", "Luxembourg", "San Francisco, CA", "London, UK", "Lund, Skåne län".
           STRICT REQUIREMENTS FOR LOCATION:
           1. Extract ONLY valid physical geographic locations (city, region, country).
           2. You MUST strictly exclude and strip non-location metadata such as posting dates/times ("2 days ago", "1 week ago", "Posted yesterday"), applicant counts ("Over 100 applicants", "50+ applicants", "23 applicants"), or work mode tags ("On-site", "Hybrid", "Remote").
           3. Example: If the text is "Berlin, Germany · 2 days ago · Over 100 applicants", extract ONLY "Berlin, Germany" as "location", and put posting metadata ("Posted 2 days ago · Over 100 applicants") into "notes".
         - "workType": Workplace model policy if mentioned in text e.g. "On-site", "Hybrid", or "Remote". Must strictly be one of: "On-site", "Hybrid", "Remote", or null if not mentioned.
-        - "notes": Summary of key details, responsibilities, job post metadata (such as "2 days ago", "Over 100 applicants"), or salary if mentioned.
+        - "notes": Summary of key details, responsibilities, job post metadata (such as "2 days ago", "Over 100 applicants"), or salary if mentioned. Do NOT put the company or position in here if they can be identified.
 
         Return ONLY a JSON object with this schema:
         {

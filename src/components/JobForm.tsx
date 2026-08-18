@@ -225,7 +225,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
 
     // 3. Multi-line pattern check (e.g. Line 1: "Spiele-Palast GmbH", Line 2: "UI/UX Designer Games (m/f/d)", Line 3: "Berlin, Germany · 2 days ago · Over 100 applicants")
     if ((!position || !company) && lines.length >= 1) {
-      const roleRegex = /(?:Senior|Junior|Staff|Lead|Principal|Head of|VP of|UX\/UI|UI\/UX)?\s*([A-Za-z0-9\s\/&]+(?:Engineer|Developer|Manager|Designer|Analyst|Architect|Specialist|Director|Consultant|Coordinator|Intern|Associate|Officer|Executive|Scientist|Administrator|Representative))/i;
+      const roleRegex = /(?:Senior|Junior|Staff|Lead|Principal|Head of|VP of|UX\/UI|UI\/UX)?\s*([A-Za-z0-9\s\/&]+(?:Engineer|Developer|Manager|Designer|Analyst|Architect|Specialist|Director|Consultant|Coordinator|Intern|Associate|Officer|Executive|Scientist|Administrator|Representative|Worker|Student|Assistant|Clerk|Trainee|Technician))/i;
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
@@ -280,7 +280,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
       if (firstLine.includes('-') || firstLine.includes('|') || firstLine.includes(':')) {
         const parts = firstLine.split(/[\-\|:]/).map(p => p.trim()).filter(Boolean);
         if (parts.length >= 2) {
-          const roleRegex = /(Engineer|Developer|Manager|Designer|Analyst|Lead|Architect|Specialist|Director|Consultant|Coordinator|Intern|Associate|Officer|Executive|Scientist|Administrator|Representative)/i;
+          const roleRegex = /(Engineer|Developer|Manager|Designer|Analyst|Lead|Architect|Specialist|Director|Consultant|Coordinator|Intern|Associate|Officer|Executive|Scientist|Administrator|Representative|Worker|Student|Assistant|Clerk|Trainee|Technician)/i;
           if (roleRegex.test(parts[0])) {
             if (!position) position = cleanPositionStr(parts[0]);
             if (!company) company = cleanCompanyStr(parts[1]);
