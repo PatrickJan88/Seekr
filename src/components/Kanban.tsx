@@ -5,7 +5,7 @@ import { ListView } from './ListView';
 import { matchLocation } from './ApplicationMap';
 import { Dropdown } from './ui/Dropdown';
 
-const STATUSES: JobStatus[] = ['Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
+const STATUSES: JobStatus[] = ['Wishlist', 'Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
 
 interface KanbanProps {
   applications: JobApplication[];
@@ -17,7 +17,7 @@ interface KanbanProps {
 }
 
 export function Kanban({ applications, onEdit, onStatusChange, onDelete, locationFilter = null, onLocationSelect }: KanbanProps) {
-  const [activeTab, setActiveTab] = useState<'active' | 'inactive'>('active');
+  const [activeTab, setActiveTab] = useState<'wishlist' | 'active' | 'inactive'>('active');
   const [layoutMode, setLayoutMode] = useState<'kanban' | 'list'>('kanban');
   const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'weekly' | 'monthly' | 'yearly' | 'custom'>('all');
   const [customStartDate, setCustomStartDate] = useState('');
@@ -69,6 +69,7 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
     });
   }, [applications, timeFilter, customStartDate, customEndDate, locationFilter]);
 
+  const WISHLIST_STATUSES: JobStatus[] = ['Wishlist'];
   const ACTIVE_STATUSES: JobStatus[] = ['Applied', 'Screening', 'Technical', 'Final', 'Offer'];
   const INACTIVE_STATUSES: JobStatus[] = ['Rejected', 'Ghosted'];
 
@@ -80,8 +81,11 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
       
       const activeCount = filteredApplications.filter(app => ACTIVE_STATUSES.includes(app.status)).length;
       const inactiveCount = filteredApplications.filter(app => INACTIVE_STATUSES.includes(app.status)).length;
+      const wishlistCount = filteredApplications.filter(app => WISHLIST_STATUSES.includes(app.status)).length;
       
-      if (activeCount === 0 && inactiveCount > 0) {
+      if (activeCount === 0 && inactiveCount === 0 && wishlistCount > 0) {
+        setActiveTab('wishlist');
+      } else if (activeCount === 0 && inactiveCount > 0) {
         setActiveTab('inactive');
       } else if (activeCount > 0) {
         setActiveTab('active');
@@ -96,7 +100,7 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
     return acc;
   }, {} as Record<JobStatus, JobApplication[]>);
   
-  const displayStatuses = activeTab === 'active' ? ACTIVE_STATUSES : INACTIVE_STATUSES;
+  const displayStatuses = activeTab === 'wishlist' ? WISHLIST_STATUSES : activeTab === 'active' ? ACTIVE_STATUSES : INACTIVE_STATUSES;
 
   return (
     <div className="flex flex-col gap-4 h-full">
@@ -113,6 +117,12 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
             className={`px-4 py-2 rounded-full font-medium text-sm transition-all cursor-pointer ${activeTab === 'inactive' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
           >
             Closed
+          </button>
+          <button 
+            onClick={() => setActiveTab('wishlist')}
+            className={`px-4 py-2 rounded-full font-medium text-sm transition-all cursor-pointer ${activeTab === 'wishlist' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
+          >
+            Wishlist
           </button>
         </div>
         

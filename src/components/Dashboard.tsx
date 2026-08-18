@@ -21,6 +21,7 @@ import { DEMO_APPLICATIONS } from '../data/seekrDemoData';
 import { NotificationsPage } from './NotificationsPage';
 import { SettingsPage } from './SettingsPage';
 import { CVMatchAssessment } from './CVMatchAssessment';
+import { EvaluateHistoryPage } from './EvaluateHistoryPage';
 import { Sparkles } from 'lucide-react';
 
 interface DashboardProps {
@@ -33,7 +34,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   const [isSyncing, setIsSyncing] = useState(false);
   const syncLockRef = useRef(false);
   const [syncError, setSyncError] = useState<string | null>(null);
-  const [view, setView] = useState<'sankey' | 'kanban' | 'analytics' | 'cv-match' | 'notifications' | 'settings'>('sankey');
+  const [view, setView] = useState<'sankey' | 'kanban' | 'analytics' | 'cv-match' | 'notifications' | 'settings' | 'eval-history'>('sankey');
   const [editingApp, setEditingApp] = useState<JobApplication | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -264,6 +265,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
       } else {
         const newApp = await addApplication({ ...appData, userId: auth.currentUser.uid } as any);
         setApplications(apps => [newApp, ...apps]);
+        toast.success('One new application adding success');
       }
       setIsFormOpen(false);
       setEditingApp(null);
@@ -487,7 +489,13 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
 
   if (view === 'settings') {
     return <SettingsPage onBack={() => setView('sankey')} onClearData={handleClearData} isSyncing={isSyncing} />;
-  }  return (
+  }
+
+  if (view === 'eval-history') {
+    return <EvaluateHistoryPage onBack={() => setView('cv-match')} applications={applications} onAddToWishlist={handleSave} />;
+  }
+
+  return (
     <div className="min-h-screen bg-[#faf9f7] text-[#121722] font-sans flex flex-col">
       <header className="h-16 bg-white border-b border-[#efefef] flex items-center justify-between px-6 md:px-8 shrink-0 sticky top-0 z-30">
         <div className="flex items-center gap-6">
@@ -571,7 +579,12 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
         </div>
 
         {view === 'cv-match' ? (
-          <CVMatchAssessment applications={applications} isDemo={isDemo} />
+          <CVMatchAssessment 
+            applications={applications} 
+            isDemo={isDemo} 
+            onAddToWishlist={handleSave}
+            onViewHistory={() => setView('eval-history')}
+          />
         ) : applications.length === 0 ? (
           <div className="flex-grow flex flex-col items-center justify-center bg-white border border-[#efefef] rounded-2xl p-12 shadow-2xs text-center">
              <h3 className="text-xl font-bold text-[#121722] mb-2">No applications yet</h3>

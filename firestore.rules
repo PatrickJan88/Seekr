@@ -11,5 +11,10 @@ service cloud.firestore {
       allow delete: if request.auth != null && (resource == null || !('userId' in resource.data) || request.auth.uid == resource.data.userId);
       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
     }
+    match /evaluations/{evaluationId} {
+      allow read, update: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow delete: if request.auth != null && (resource == null || !('userId' in resource.data) || request.auth.uid == resource.data.userId);
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
   }
 }

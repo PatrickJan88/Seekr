@@ -33,6 +33,7 @@ export function Analytics({ applications, isDemo = false, onLocationSelect }: An
   const pieData = Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
   
   const statusColors: Record<string, string> = {
+    'Wishlist': '#c7d2fe',
     'Applied': '#86efac',
     'Ghosted': '#cbd5e1',
     'Rejected': '#fca5a5',

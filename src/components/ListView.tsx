@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { JobApplication, JobStatus, getWorkTypeBadgeStyle } from '../types';
 import { Calendar, Building, MoreVertical, Eye, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
-const STATUSES: JobStatus[] = ['Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
+const STATUSES: JobStatus[] = ['Wishlist', 'Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
 
 interface ListViewProps {
   applications: JobApplication[];
@@ -12,6 +12,7 @@ interface ListViewProps {
 }
 
 const STATUS_COLORS: Record<JobStatus, string> = {
+  Wishlist: 'bg-indigo-100 text-indigo-700',
   Applied: 'bg-slate-100 text-slate-700',
   Screening: 'bg-blue-100 text-blue-700',
   Technical: 'bg-purple-100 text-purple-700',

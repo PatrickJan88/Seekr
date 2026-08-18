@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { JobApplication } from '../types';
 import { extractTextFromPDF, fileToBase64 } from '../lib/pdf';
+import { addEvaluation } from '../db/evaluations';
+import { auth } from '../lib/firebase';
 import AgentAvatar from './AgentAvatar';
 import PersonaOrbCarousel, { TECH_ROLES } from './PersonaOrbCarousel';
 import { InlineLoader } from 'generative-loaders';
@@ -39,9 +41,12 @@ import {
 interface CVMatchAssessmentProps {
   applications: JobApplication[];
   isDemo?: boolean;
+  onAddToWishlist?: (appData: Partial<JobApplication>) => void;
+  onViewHistory?: () => void;
 }
 
 export interface MatchResult {
+  company_name?: string;
   score: number;
   matchCategory: 'High Match' | 'Medium Match' | 'Low Match';
   strengths: string[];
@@ -50,8 +55,9 @@ export interface MatchResult {
   interview_questions: string[];
 }
 
-export function CVMatchAssessment({ applications, isDemo = false }: CVMatchAssessmentProps) {
+export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlist, onViewHistory }: CVMatchAssessmentProps) {
   const DEMO_RESULT: MatchResult = {
+    company_name: 'TechFlow Solutions',
     score: 88,
     matchCategory: 'High Match',
     strengths: [
@@ -207,6 +213,19 @@ ${app.notes || 'No extra description provided.'}`;
       const data: MatchResult = await res.json();
       setResult(data);
       toast.success('CV Match analysis completed!');
+      
+      if (auth.currentUser) {
+        try {
+          await addEvaluation({
+            userId: auth.currentUser.uid,
+            role: targetRole,
+            jobDescription,
+            result: data
+          });
+        } catch (e) {
+          console.error("Failed to save evaluation history", e);
+        }
+      }
     } catch (err: any) {
       console.error('CV Match Error:', err);
       toast.error(err.message || 'Error conducting AI analysis');
@@ -290,6 +309,23 @@ ${app.notes || 'No extra description provided.'}`;
                 <ArrowRight size={14} className="rotate-180" />
                 <span>Re-Evaluate</span>
               </button>
+              {onAddToWishlist && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onAddToWishlist({
+                      company: result.company_name || 'Unknown Company',
+                      position: targetRole,
+                      status: 'Wishlist',
+                      notes: `Added from CV Evaluation. Score: ${result.score}%`,
+                    });
+                  }}
+                  className="px-4 py-2 rounded-full border border-[#0068f9]/20 bg-[#e8f1ff] text-[#0068f9] hover:bg-[#d1e4ff] text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                >
+                  <Sparkles size={14} />
+                  <span>Add to Wishlist</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -518,13 +554,23 @@ ${app.notes || 'No extra description provided.'}`;
             {/* STEP 1: SELECT AI EVALUATOR */}
             <StepperContent value={1} className="h-full flex flex-col flex-1">
               <div className="bg-white border border-[#efefef] rounded-2xl p-5 sm:p-6 shadow-2xs h-full md:h-[520px] flex-1 flex flex-col justify-between animate-in fade-in duration-200">
-                <div className="shrink-0 pb-1">
-                  <h3 className="text-base font-bold text-[#121722]">
-                    Select AI Evaluator
-                  </h3>
-                  <p className="text-xs text-[#777c86] mt-0.5">
-                    Browse and select a specialized domain evaluator to review your resume against job criteria.
-                  </p>
+                <div className="shrink-0 pb-1 flex justify-between items-start">
+                  <div>
+                    <h3 className="text-base font-bold text-[#121722]">
+                      Select AI Evaluator
+                    </h3>
+                    <p className="text-xs text-[#777c86] mt-0.5">
+                      Browse and select a specialized domain evaluator to review your resume against job criteria.
+                    </p>
+                  </div>
+                  {onViewHistory && (
+                    <button
+                      onClick={onViewHistory}
+                      className="text-xs font-medium text-[#0068f9] hover:text-[#0052cc] transition-colors underline underline-offset-2 cursor-pointer"
+                    >
+                      Evaluate History
+                    </button>
+                  )}
                 </div>
 
                 <PersonaOrbCarousel

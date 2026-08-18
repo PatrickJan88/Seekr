@@ -33,8 +33,9 @@ async function generateContentWithRetry(
 ) {
   const modelsToTry = [
     params.preferredModel || "gemini-3.6-flash",
-    "gemini-3.1-flash-lite",
-    "gemini-flash-latest"
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-8b",
+    "gemini-1.5-pro"
   ];
 
   let lastError: any = null;
@@ -58,14 +59,24 @@ async function generateContentWithRetry(
           errMessage.includes("429") ||
           errMessage.includes("RESOURCE_EXHAUSTED") ||
           errMessage.includes("overloaded");
+          
+        const isNotFound = 
+          errMessage.includes("404") || 
+          errMessage.includes("NOT_FOUND") || 
+          errMessage.includes("no longer available");
 
         if (isUnavailable) {
-          console.warn(`Model '${model}' high demand / 503 error (attempt ${attempt + 1}). Retrying or attempting fallback...`);
+          console.warn(`Model '${model}' high demand / 503 error (attempt ${attempt + 1}). Retrying...`);
           await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
           continue;
         }
+        
+        if (isNotFound) {
+          console.warn(`Model '${model}' not found or deprecated. Falling back to next model...`);
+          break; // Break the attempt loop to immediately try the next model
+        }
 
-        // Non-transient error
+        // For other non-transient errors (like bad request), throw immediately
         throw err;
       }
     }
@@ -73,7 +84,7 @@ async function generateContentWithRetry(
 
   const finalMsg = lastError?.message || "";
   if (finalMsg.includes("503") || finalMsg.includes("high demand") || finalMsg.includes("UNAVAILABLE")) {
-    throw new Error("The AI service is currently experiencing high demand. Please wait a few seconds and try again.");
+    throw new Error("The AI service is currently experiencing high demand across all models. Please wait a few seconds and try again.");
   }
 
   throw lastError;
@@ -262,6 +273,7 @@ Methodology & Rules:
 
 You MUST return your analysis strictly as a JSON object with this exact structure:
 {
+  "company_name": "Extracted Company Name from Job Description (or 'Unknown Company' if not found)",
   "score": 85,
   "matchCategory": "High Match",
   "strengths": [
@@ -322,6 +334,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
       else if (rawScore < 60) computedCategory = "Low Match";
 
       res.json({
+        company_name: result.company_name || "Unknown Company",
         score: Math.min(100, Math.max(0, rawScore)),
         matchCategory: result.matchCategory || computedCategory,
         strengths: Array.isArray(result.strengths) ? result.strengths : ["Good background alignment"],

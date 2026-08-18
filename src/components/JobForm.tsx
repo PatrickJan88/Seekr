@@ -6,7 +6,7 @@ import { auth } from '../lib/firebase';
 import { toast } from 'sonner';
 import { LOCATION_DATA, parseLocationToGroup } from '../data/locationData';
 
-const STATUSES: JobStatus[] = ['Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
+const STATUSES: JobStatus[] = ['Wishlist', 'Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
 
 interface JobFormProps {
   initialData?: JobApplication;

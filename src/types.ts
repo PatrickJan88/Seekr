@@ -3,7 +3,7 @@ export interface Attachment {
   url: string;
 }
 
-export type JobStatus = 'Applied' | 'Screening' | 'Technical' | 'Final' | 'Offer' | 'Rejected' | 'Ghosted';
+export type JobStatus = 'Wishlist' | 'Applied' | 'Screening' | 'Technical' | 'Final' | 'Offer' | 'Rejected' | 'Ghosted';
 
 export type WorkType = 'On-site' | 'Hybrid' | 'Remote';
 
@@ -53,4 +53,13 @@ export interface AppNotification {
   message: string;
   timestamp: number;
   unread: boolean;
+}
+
+export interface CVEvaluation {
+  id: string;
+  userId: string;
+  role: string;
+  jobDescription: string;
+  result: any; // MatchResult
+  createdAt: number;
 }
