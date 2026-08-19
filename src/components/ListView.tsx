@@ -194,35 +194,94 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete }: Lis
       <ArrowDown size={12} className="ml-1 inline-block text-[#0068f9]" />;
   };
 
+  const [colWidths, setColWidths] = useState<Record<string, number>>({
+    position: 250,
+    company: 200,
+    appliedDate: 120,
+    nextInterview: 140,
+    notes: 250,
+    status: 150,
+    actions: 80
+  });
+
+  const [resizingCol, setResizingCol] = useState<string | null>(null);
+  const startXRef = useRef<number>(0);
+  const startWidthRef = useRef<number>(0);
+
+  const handleMouseDown = (e: React.MouseEvent, col: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setResizingCol(col);
+    startXRef.current = e.pageX;
+    startWidthRef.current = colWidths[col] || 150;
+  };
+
+  useEffect(() => {
+    if (!resizingCol) return;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      const delta = e.pageX - startXRef.current;
+      setColWidths(prev => ({
+        ...prev,
+        [resizingCol]: Math.max(50, startWidthRef.current + delta)
+      }));
+    };
+    
+    const handleMouseUp = () => {
+      setResizingCol(null);
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [resizingCol]);
+
   return (
-    <div className="w-full bg-white border border-[#efefef] rounded-2xl shadow-2xs overflow-hidden flex-grow flex flex-col h-[calc(100vh-270px)]">
+    <div className={`w-full bg-white border border-[#efefef] rounded-2xl shadow-2xs overflow-hidden flex-grow flex flex-col h-[calc(100vh-270px)] ${resizingCol ? 'select-none' : ''}`}>
       <div className="overflow-auto flex-grow scrollbar-thin outline-none focus:outline-none">
-        <table className="w-full text-left border-separate border-spacing-0 outline-none focus:outline-none">
+        <table className="w-full text-left border-separate border-spacing-0 outline-none focus:outline-none table-fixed" style={{ minWidth: Object.values(colWidths).reduce((a: number, b: number) => a + b, 0) }}>
           <thead className="bg-[#faf9f7] sticky top-0 z-10">
             <tr className="outline-none focus:outline-none border-0">
-              <th className="border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap cursor-pointer group hover:bg-[#efefef]/50 transition-colors select-none outline-none focus:outline-none ring-0 focus:ring-0"
-                onClick={() => requestSort('position')} onMouseDown={(e) => e.preventDefault()}
+              <th className="relative border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap cursor-pointer group hover:bg-[#efefef]/50 transition-colors select-none outline-none focus:outline-none ring-0 focus:ring-0"
+                style={{ width: colWidths.position }} onClick={() => requestSort('position')} onMouseDown={(e) => { if ((e.target as HTMLElement).tagName !== 'DIV' || !(e.target as HTMLElement).className.includes('cursor-col-resize')) e.preventDefault(); }}
               >
                 <div className="flex items-center">Position {getSortIcon('position')}</div>
+                <div className="absolute right-0 top-0 h-full w-2 cursor-col-resize hover:bg-[#0068f9] transition-colors z-20 group-hover:bg-[#efefef]" onMouseDown={(e) => handleMouseDown(e, 'position')} />
               </th>
-              <th className="border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap cursor-pointer group hover:bg-[#efefef]/50 transition-colors select-none outline-none focus:outline-none ring-0 focus:ring-0"
-                onClick={() => requestSort('company')} onMouseDown={(e) => e.preventDefault()}
+              <th className="relative border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap cursor-pointer group hover:bg-[#efefef]/50 transition-colors select-none outline-none focus:outline-none ring-0 focus:ring-0"
+                style={{ width: colWidths.company }} onClick={() => requestSort('company')} onMouseDown={(e) => { if ((e.target as HTMLElement).tagName !== 'DIV' || !(e.target as HTMLElement).className.includes('cursor-col-resize')) e.preventDefault(); }}
               >
                 <div className="flex items-center">Company {getSortIcon('company')}</div>
+                <div className="absolute right-0 top-0 h-full w-2 cursor-col-resize hover:bg-[#0068f9] transition-colors z-20 group-hover:bg-[#efefef]" onMouseDown={(e) => handleMouseDown(e, 'company')} />
               </th>
-              <th className="border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap cursor-pointer group hover:bg-[#efefef]/50 transition-colors select-none outline-none focus:outline-none ring-0 focus:ring-0"
-                onClick={() => requestSort('appliedDate')} onMouseDown={(e) => e.preventDefault()}
+              <th className="relative border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap cursor-pointer group hover:bg-[#efefef]/50 transition-colors select-none outline-none focus:outline-none ring-0 focus:ring-0"
+                style={{ width: colWidths.appliedDate }} onClick={() => requestSort('appliedDate')} onMouseDown={(e) => { if ((e.target as HTMLElement).tagName !== 'DIV' || !(e.target as HTMLElement).className.includes('cursor-col-resize')) e.preventDefault(); }}
               >
                 <div className="flex items-center">Applied Date {getSortIcon('appliedDate')}</div>
+                <div className="absolute right-0 top-0 h-full w-2 cursor-col-resize hover:bg-[#0068f9] transition-colors z-20 group-hover:bg-[#efefef]" onMouseDown={(e) => handleMouseDown(e, 'appliedDate')} />
               </th>
-              <th className="border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap">Next Interview</th>
-              <th className="border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86]">Notes</th>
-              <th className="border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap cursor-pointer group hover:bg-[#efefef]/50 transition-colors select-none outline-none focus:outline-none ring-0 focus:ring-0"
-                onClick={() => requestSort('status')} onMouseDown={(e) => e.preventDefault()}
+              <th className="relative border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap" style={{ width: colWidths.nextInterview }}>
+                Next Interview
+                <div className="absolute right-0 top-0 h-full w-2 cursor-col-resize hover:bg-[#0068f9] transition-colors z-20 hover:bg-opacity-50" onMouseDown={(e) => handleMouseDown(e, 'nextInterview')} />
+              </th>
+              <th className="relative border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86]" style={{ width: colWidths.notes }}>
+                Notes
+                <div className="absolute right-0 top-0 h-full w-2 cursor-col-resize hover:bg-[#0068f9] transition-colors z-20 hover:bg-opacity-50" onMouseDown={(e) => handleMouseDown(e, 'notes')} />
+              </th>
+              <th className="relative border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap cursor-pointer group hover:bg-[#efefef]/50 transition-colors select-none outline-none focus:outline-none ring-0 focus:ring-0"
+                style={{ width: colWidths.status }} onClick={() => requestSort('status')} onMouseDown={(e) => { if ((e.target as HTMLElement).tagName !== 'DIV' || !(e.target as HTMLElement).className.includes('cursor-col-resize')) e.preventDefault(); }}
               >
                 <div className="flex items-center">Status {getSortIcon('status')}</div>
+                <div className="absolute right-0 top-0 h-full w-2 cursor-col-resize hover:bg-[#0068f9] transition-colors z-20 group-hover:bg-[#efefef]" onMouseDown={(e) => handleMouseDown(e, 'status')} />
               </th>
-              <th className="border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap text-right">Actions</th>
+              <th className="relative border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap text-right" style={{ width: colWidths.actions }}>
+                Actions
+                <div className="absolute right-0 top-0 h-full w-2 cursor-col-resize hover:bg-[#0068f9] transition-colors z-20 hover:bg-opacity-50" onMouseDown={(e) => handleMouseDown(e, 'actions')} />
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -233,47 +292,47 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete }: Lis
                   onClick={() => onEdit(app)}
                   className="hover:bg-[#faf9f7] transition-colors cursor-pointer group"
                 >
-                  <td className="border-b border-[#efefef] px-6 py-4">
-                    <div className="font-bold text-sm text-[#121722] max-w-[180px] truncate" title={app.position}>{app.position}</div>
+                  <td className="border-b border-[#efefef] px-6 py-4 max-w-0" style={{ width: colWidths.position }}>
+                    <div className="font-bold text-sm text-[#121722] truncate block" title={app.position}>{app.position}</div>
                     {(app.location || app.workType) && (
-                      <div className="flex items-center gap-1.5 text-xs text-[#777c86] mt-0.5">
-                        {app.location && <span className="truncate max-w-[120px]">{app.location}</span>}
+                      <div className="flex items-center gap-1.5 text-xs text-[#777c86] mt-0.5 max-w-full">
+                        {app.location && <span className="truncate">{app.location}</span>}
                         {app.workType && (
-                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border whitespace-nowrap ${getWorkTypeBadgeStyle(app.workType)}`}>
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-shrink-0 ${getWorkTypeBadgeStyle(app.workType)}`}>
                             {app.workType}
                           </span>
                         )}
                       </div>
                     )}
                   </td>
-                  <td className="border-b border-[#efefef] px-6 py-4">
-                    <div className="text-sm text-[#777c86] max-w-[150px] truncate" title={app.company}>{app.company}</div>
+                  <td className="border-b border-[#efefef] px-6 py-4 max-w-0" style={{ width: colWidths.company }}>
+                    <div className="text-sm text-[#777c86] truncate block" title={app.company}>{app.company}</div>
                   </td>
-                  <td className="border-b border-[#efefef] px-6 py-4">
-                    <span className="text-sm text-[#777c86]">
+                  <td className="border-b border-[#efefef] px-6 py-4 max-w-0" style={{ width: colWidths.appliedDate }}>
+                    <span className="text-sm text-[#777c86] truncate block">
                       {app.appliedDate ? new Date(app.appliedDate).toLocaleDateString() : '-'}
                     </span>
                   </td>
-                  <td className="border-b border-[#efefef] px-6 py-4">
+                  <td className="border-b border-[#efefef] px-6 py-4 max-w-0" style={{ width: colWidths.nextInterview }}>
                     {app.nextInterviewDate ? (
-                      <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0068f9] bg-[#faf9f7] border border-[#efefef] px-2.5 py-1 rounded-full whitespace-nowrap">
-                        <Calendar size={12} />
-                        {new Date(app.nextInterviewDate).toLocaleDateString()}
+                      <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0068f9] bg-[#faf9f7] border border-[#efefef] px-2.5 py-1 rounded-full whitespace-nowrap truncate max-w-full">
+                        <Calendar size={12} className="flex-shrink-0" />
+                        <span className="truncate">{new Date(app.nextInterviewDate).toLocaleDateString()}</span>
                       </div>
                     ) : (
                       <span className="text-[#777c86]">-</span>
                     )}
                   </td>
-                  <td className="border-b border-[#efefef] px-6 py-4 w-full max-w-0 min-w-[200px]">
+                  <td className="border-b border-[#efefef] px-6 py-4 max-w-0" style={{ width: colWidths.notes }}>
                     <TruncatedNotes text={app.notes || ''} />
                   </td>
-                  <td className="border-b border-[#efefef] px-6 py-4">
+                  <td className="border-b border-[#efefef] px-6 py-4 max-w-0" style={{ width: colWidths.status }}>
                     <StatusDropdown 
                       status={app.status} 
                       onChange={(newStatus) => onStatusChange(app.id, newStatus)} 
                     />
                   </td>
-                  <td className="border-b border-[#efefef] px-6 py-4 text-right">
+                  <td className="border-b border-[#efefef] px-6 py-4 max-w-0 text-right" style={{ width: colWidths.actions }}>
                     <ActionDropdown onEdit={() => onEdit(app)} onDelete={() => onDelete(app.id)} />
                   </td>
                 </tr>
