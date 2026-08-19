@@ -178,6 +178,7 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete }: Lis
   }, [applications, sortConfig]);
 
   const requestSort = (key: string) => {
+    if (isDraggingRef.current) return;
     let direction = 'asc';
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
       direction = 'desc';
@@ -207,6 +208,7 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete }: Lis
   const [resizingCol, setResizingCol] = useState<string | null>(null);
   const startXRef = useRef<number>(0);
   const startWidthRef = useRef<number>(0);
+  const isDraggingRef = useRef<boolean>(false);
 
   const handleMouseDown = (e: React.MouseEvent, col: string) => {
     e.preventDefault();
@@ -220,6 +222,7 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete }: Lis
     if (!resizingCol) return;
     
     const handleMouseMove = (e: MouseEvent) => {
+      isDraggingRef.current = true;
       const delta = e.pageX - startXRef.current;
       setColWidths(prev => ({
         ...prev,
@@ -229,6 +232,10 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete }: Lis
     
     const handleMouseUp = () => {
       setResizingCol(null);
+      // use a short timeout to prevent click event triggering requestSort
+      setTimeout(() => {
+        isDraggingRef.current = false;
+      }, 50);
     };
     
     document.addEventListener('mousemove', handleMouseMove);
