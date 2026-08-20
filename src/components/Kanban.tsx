@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { JobApplication, JobStatus, getWorkTypeBadgeStyle } from '../types';
-import { Calendar, Building, MoreVertical, LayoutDashboard, List, MapPin, X } from 'lucide-react';
+import { Calendar, Building, MoreVertical, LayoutDashboard, List, MapPin, X, Info } from 'lucide-react';
 import { ListView } from './ListView';
 import { matchLocation } from './ApplicationMap';
 import { Dropdown } from './ui/Dropdown';
@@ -205,7 +205,18 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
           }}
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-[#121722]">{status}</h3>
+            <h3 className="text-sm font-bold text-[#121722] flex items-center gap-1.5">
+              {status}
+              {status === 'Ghosted' && (
+                <div className="group relative flex items-center">
+                  <Info size={14} className="text-[#777c86] cursor-pointer hover:text-[#121722] transition-colors" />
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 p-2.5 bg-[#121722] text-white text-xs font-medium leading-relaxed rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[100] text-center shadow-xl">
+                    Applications without updates for 60 days are automatically marked as Ghosted.
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-b-[#121722]"></div>
+                  </div>
+                </div>
+              )}
+            </h3>
             <span className="bg-[#faf9f7] text-[#121722] text-xs px-2.5 py-0.5 font-semibold rounded-full border border-[#efefef]">
               {(grouped[status] || []).length}
             </span>

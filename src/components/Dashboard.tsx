@@ -11,6 +11,7 @@ import * as XLSX from 'xlsx';
 import { exportCsv } from '../lib/csv';
 import { Footer } from './Footer';
 import { NotificationCenter } from './NotificationCenter';
+import { CommandSearch } from './CommandSearch';
 import { Plus, Download, Upload, LayoutDashboard, BarChart3, LogOut, Loader2, Calendar, Trash2, Settings, X, Twitter, Github, Linkedin } from 'lucide-react';
 import { auth, logout } from '../lib/firebase';
 import Papa from 'papaparse';
@@ -27,6 +28,9 @@ import { Sparkles } from 'lucide-react';
 interface DashboardProps {
   isDemo?: boolean;
 }
+
+// Keep track of which apps have already triggered an auto-ghosting notification in this session
+const recentlyGhostedIds = new Set<string>();
 
 export function Dashboard({ isDemo = false }: DashboardProps) {
   const [applications, setApplications] = useState<JobApplication[]>([]);
@@ -166,6 +170,58 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     return () => clearInterval(interval);
   }, [applications, isDemo]);
 
+  const applyAutoGhosting = async (data: JobApplication[]): Promise<JobApplication[]> => {
+    const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const activeStatuses = ['Wishlist', 'Applied', 'Screening', 'Technical', 'Final'];
+    
+    let changed = false;
+    let ghostedCount = 0;
+    
+    const updatedData = await Promise.all(data.map(async (app) => {
+      if (activeStatuses.includes(app.status)) {
+        // Use appliedDate if available, fallback to createdAt, or default to 0 if none exist
+        const startDate = app.appliedDate ? new Date(app.appliedDate).getTime() : 
+                          app.createdAt ? app.createdAt : 0;
+        const lastUpdate = app.updatedAt || startDate;
+        
+        if (lastUpdate > 0 && (now - lastUpdate > SIXTY_DAYS_MS)) {
+          changed = true;
+          
+          if (!recentlyGhostedIds.has(app.id)) {
+            ghostedCount++;
+            recentlyGhostedIds.add(app.id);
+          }
+
+          const ghostedApp = { ...app, status: 'Ghosted' as JobStatus };
+          if (auth.currentUser) {
+            try {
+              await updateApplication(app.id, { status: 'Ghosted' });
+            } catch (err) {
+              console.error('Failed to auto-update Ghosted status for app:', app.id, err);
+            }
+          }
+          return ghostedApp;
+        }
+      }
+      return app;
+    }));
+
+    if (ghostedCount > 0) {
+      const title = ghostedCount === 1 ? 'Application Ghosted' : `${ghostedCount} Applications Ghosted`;
+      const msg = ghostedCount === 1 
+        ? '1 application was automatically moved to Ghosted due to 60 days of inactivity.' 
+        : `${ghostedCount} applications were automatically moved to Ghosted due to 60 days of inactivity.`;
+      
+      if (auth.currentUser) {
+        await addNotification(auth.currentUser.uid, 'status_update', title, msg);
+      }
+      toast.info(msg);
+    }
+
+    return updatedData;
+  };
+
   const loadData = async () => {
     if (isDemo) {
       setLoading(true);
@@ -191,6 +247,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
         } else {
           data = DEMO_APPLICATIONS;
         }
+
         setApplications(data);
       } catch (err) {
         console.error('Failed to load demo applications', err);
@@ -207,7 +264,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
       const data = await getApplications(auth.currentUser.uid);
       console.log(`Loaded ${data.length} applications.`);
       
-      const validStatuses = ['Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
+      const validStatuses = ['Wishlist', 'Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
       const normalizedData = data.map(app => {
         let st: string = app.status;
         if (st) {
@@ -220,7 +277,8 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
         return { ...app, status: st as JobStatus };
       });
       
-      setApplications(normalizedData);
+      const updatedData = await applyAutoGhosting(normalizedData);
+      setApplications(updatedData);
     } catch (err) {
       console.error('Failed to load apps', err);
     } finally {
@@ -502,19 +560,25 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
           <div className="flex items-center gap-3">
             <img src="/assets/seekr%20logo%201.webp" alt="Seekr Logo" className="h-8" />
           </div>
-
           <div className="flex items-center gap-4 border-l border-[#efefef] pl-6">
             <button 
               onClick={isDemo ? () => toast.info('Demo Mode: Adding new applications is restricted in this portfolio preview.') : () => { setEditingApp(null); setIsFormOpen(true); }}
-              className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-all bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-9 px-5 py-2 gap-2 cursor-pointer"
+              className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-all bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-9 px-4 py-2 gap-2 cursor-pointer"
             >
               <Plus size={16} />
-              <span>New Application</span>
+              <span>New</span>
             </button>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
+          <CommandSearch 
+            applications={applications} 
+            onSelectApplication={(app) => {
+              setEditingApp(app);
+              setIsFormOpen(true);
+            }} 
+          />
           <NotificationCenter onViewAll={() => setView('notifications')} />
           <button onClick={() => setView('settings')} title="Settings" className="w-10 h-10 rounded-full bg-white border border-[#efefef] shadow-2xs flex items-center justify-center text-[#777c86] hover:text-[#121722] hover:bg-[#faf9f7] transition-all cursor-pointer">
             <Settings size={16} />

@@ -100,7 +100,7 @@ export function SettingsPage({ onBack, onClearData, isSyncing }: SettingsPagePro
           <div className="p-6">
             <SupportForm />
           </div>
-
+          
           <div className="p-6">
             <h3 className="text-sm font-semibold text-[#121722] mb-1">Delete Data</h3>
             <p className="text-xs text-[#777c86] mb-4">
