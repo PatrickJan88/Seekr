@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { JobApplication } from '../types';
 import { extractTextFromPDF, fileToBase64 } from '../lib/pdf';
 import { addEvaluation } from '../db/evaluations';
@@ -89,6 +89,25 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
   const [jobDescription, setJobDescription] = useState(isDemo ? 'Looking for a Senior Frontend Developer skilled in React 18, TypeScript, Tailwind CSS, and performance optimization.' : '');
 
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState('Agent thinking...');
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isLoading) {
+      setLoadingText('Agent thinking...');
+      let tick = 0;
+      interval = setInterval(() => {
+        tick++;
+        if (tick === 1) {
+          setLoadingText('Agent evaluating...');
+        } else if (tick === 2) {
+          setLoadingText('Agent shaping...');
+        }
+      }, 1500);
+    }
+    return () => clearInterval(interval);
+  }, [isLoading]);
+
   const [result, setResult] = useState<MatchResult | null>(null);
   const [copiedPolish, setCopiedPolish] = useState(false);
   const [showCvTextPreview, setShowCvTextPreview] = useState(false);
@@ -820,12 +839,12 @@ ${app.notes || 'No extra description provided.'}`;
                     type="button"
                     onClick={handleAnalyzeMatch}
                     disabled={isLoading || isExtractingPdf || !validateStep(3)}
-                    className="py-2.5 px-6 rounded-full bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium text-xs shadow-2xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                    className="h-11 w-[260px] px-6 rounded-full bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium text-xs shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
                     {isLoading ? (
                       <>
                         <InlineLoader variant="spark" size={24} />
-                        <span>Evaluating CV with AI...</span>
+                        <span>{loadingText}</span>
                       </>
                     ) : (
                       <>

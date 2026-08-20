@@ -203,8 +203,7 @@ const CommandMenuContent = React.forwardRef<
 
               {showShortcut && (
                 <div className="absolute right-12 top-3 flex items-center justify-center gap-1 h-6.5 text-[#777c86]">
-                  <Kbd size="xs">{getModifierKey().symbol}</Kbd>
-                  <Kbd size="xs">K</Kbd>
+                  <Kbd size="xs">ESC</Kbd>
                 </div>
               )}
             </CommandMenuProvider>
