@@ -748,7 +748,7 @@ ${app.notes || 'No extra description provided.'}`;
                   <button
                     type="button"
                     onClick={() => setCurrentStep(1)}
-                    className="py-2.5 px-5 rounded-full border border-[#efefef] bg-white hover:bg-[#faf9f7] text-[#121722] font-medium text-xs transition-all cursor-pointer"
+                    className="h-11 w-[100px] rounded-full border border-[#efefef] bg-white hover:bg-[#faf9f7] text-[#121722] font-medium text-xs transition-all flex items-center justify-center cursor-pointer"
                   >
                     Back
                   </button>
@@ -757,10 +757,9 @@ ${app.notes || 'No extra description provided.'}`;
                     type="button"
                     onClick={() => setCurrentStep(3)}
                     disabled={!validateStep(2)}
-                    className="py-2.5 px-6 rounded-full bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium text-xs shadow-2xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                    className="h-11 w-[260px] px-6 rounded-full bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium text-xs shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
                     <span>Continue to Job Description</span>
-                    <ArrowRight size={16} />
                   </button>
                 </div>
               </div>
@@ -830,7 +829,7 @@ ${app.notes || 'No extra description provided.'}`;
                   <button
                     type="button"
                     onClick={() => setCurrentStep(2)}
-                    className="py-2.5 px-5 rounded-full border border-[#efefef] bg-white hover:bg-[#faf9f7] text-[#121722] font-medium text-xs transition-all cursor-pointer"
+                    className="h-11 w-[100px] rounded-full border border-[#efefef] bg-white hover:bg-[#faf9f7] text-[#121722] font-medium text-xs transition-all flex items-center justify-center cursor-pointer"
                   >
                     Back
                   </button>

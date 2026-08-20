@@ -354,10 +354,9 @@ export function PersonaOrbCarousel({
         <button
           type="button"
           onClick={onContinue}
-          className="py-2.5 px-6 rounded-full bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium text-xs shadow-2xs transition-all flex items-center gap-2 cursor-pointer"
+          className="h-11 w-[260px] px-6 rounded-full bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium text-xs shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
           <span>Continue to Upload CV</span>
-          <ArrowRight size={16} />
         </button>
       </div>
 
