@@ -495,23 +495,21 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
   // In-memory cache for global market jobs to avoid rate limits
   let marketJobsCache: any[] = [];
   let marketJobsLastFetch = 0;
+  let isFetchingJobs = false;
   const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
-  app.get("/api/market-jobs", async (req, res) => {
+  
+  const refreshMarketJobsCache = async () => {
+    if (isFetchingJobs) return;
+    isFetchingJobs = true;
     try {
-      const now = Date.now();
-      if (marketJobsCache.length > 0 && (now - marketJobsLastFetch < CACHE_TTL)) {
-        return res.json({ jobs: marketJobsCache });
-      }
-
-      // Aggregate from multiple sources
       let allJobs: any[] = [];
       
       const fetchRemotive = async () => {
         try {
           const categories = ['software-dev', 'product', 'design', 'data'];
           await Promise.allSettled(categories.map(async (category) => {
-            const response = await fetch(`https://remotive.com/api/remote-jobs?category=${category}&limit=25`);
+            const response = await fetch(`https://remotive.com/api/remote-jobs?category=${category}&limit=25`, { signal: AbortSignal.timeout(5000) });
             if (response.ok) {
               
               const text = await response.text();
@@ -544,7 +542,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
 
       const fetchArbeitnow = async () => {
         try {
-          const response = await fetch('https://www.arbeitnow.com/api/job-board-api');
+          const response = await fetch('https://www.arbeitnow.com/api/job-board-api', { signal: AbortSignal.timeout(5000) });
           if (response.ok) {
             
               const text = await response.text();
@@ -582,7 +580,10 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
         try {
           const Parser = (await import('rss-parser')).default;
           const parser = new Parser();
-          const feed = await parser.parseURL('https://weworkremotely.com/categories/remote-programming-jobs.rss');
+          const feed = await Promise.race([
+            parser.parseURL('https://weworkremotely.com/categories/remote-programming-jobs.rss'),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('WWR Timeout')), 5000))
+          ]) as any;
           if (feed.items && Array.isArray(feed.items)) {
             allJobs = allJobs.concat(feed.items.map((item: any) => {
               const titleParts = item.title?.split(':') || [];
@@ -616,7 +617,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
           const queries = ['developer', 'software engineer', 'product manager', 'designer', 'data'];
           
           await Promise.allSettled(queries.map(async (query) => {
-            const response = await fetch(`https://jooble.org/api/${joobleKey}`, {
+            const response = await fetch(`https://jooble.org/api/${joobleKey}`, { signal: AbortSignal.timeout(5000), 
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ keywords: query, location: 'Europe' })
@@ -660,7 +661,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
       const fetchJobicy = async () => {
         try {
           // Fetch EMEA jobs
-          const response = await fetch('https://jobicy.com/api/v2/remote-jobs?geo=emea&count=50');
+          const response = await fetch('https://jobicy.com/api/v2/remote-jobs?geo=emea&count=50', { signal: AbortSignal.timeout(5000) });
           if (response.ok) {
             
               const text = await response.text();
@@ -702,7 +703,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
           const countries = ['gb', 'de', 'fr', 'nl', 'it', 'es', 'pl'];
           
           await Promise.allSettled(countries.map(async (country) => {
-            const response = await fetch(`https://api.adzuna.com/v1/api/jobs/${country}/search/1?app_id=${appId}&app_key=${appKey}&results_per_page=10&what=developer`);
+            const response = await fetch(`https://api.adzuna.com/v1/api/jobs/${country}/search/1?app_id=${appId}&app_key=${appKey}&results_per_page=10&what=developer`, { signal: AbortSignal.timeout(5000) });
             
             if (response.ok) {
               
@@ -747,7 +748,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
           // Reed requires basic auth with API key as username and empty password
           const authHeader = 'Basic ' + Buffer.from(reedKey + ':').toString('base64');
           
-          const response = await fetch('https://www.reed.co.uk/api/1.0/search?keywords=developer&resultsToTake=50', {
+          const response = await fetch('https://www.reed.co.uk/api/1.0/search?keywords=developer&resultsToTake=50', { signal: AbortSignal.timeout(5000), 
             headers: {
               'Authorization': authHeader
             }
@@ -788,7 +789,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
 
       const fetchHackerNews = async () => {
         try {
-          const response = await fetch('https://hacker-news.firebaseio.com/v0/jobstories.json');
+          const response = await fetch('https://hacker-news.firebaseio.com/v0/jobstories.json', { signal: AbortSignal.timeout(5000) });
           if (response.ok) {
             
             const text = await response.text();
@@ -800,7 +801,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
             if (Array.isArray(ids)) {
               const topIds = ids.slice(0, 30);
               const items = await Promise.all(topIds.map(async (id) => {
-                const itemRes = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
+                const itemRes = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`, { signal: AbortSignal.timeout(5000) });
                 
                 if (itemRes.ok) {
                   const itemText = await itemRes.text();
@@ -861,15 +862,46 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
       }
       
 // Update cache
-      marketJobsCache = uniqueJobs;
-      marketJobsLastFetch = now;
-
-      res.json({ jobs: marketJobsCache });
+            marketJobsCache = uniqueJobs;
+      marketJobsLastFetch = Date.now();
     } catch (error: any) {
       console.error("Market Jobs error:", error);
+    } finally {
+      isFetchingJobs = false;
+    }
+  };
+
+  // Pre-fetch on startup
+  refreshMarketJobsCache();
+
+  app.get("/api/market-jobs", async (req, res) => {
+    try {
+      const now = Date.now();
+      
+      // If cache is empty and we are fetching, wait up to 4 seconds for it to finish
+      if (marketJobsCache.length === 0 && isFetchingJobs) {
+         let waitTime = 0;
+         while (marketJobsCache.length === 0 && isFetchingJobs && waitTime < 4000) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            waitTime += 500;
+         }
+      }
+
+      if (marketJobsCache.length === 0) {
+        // Fallback: if still empty after waiting, return an empty array or a retry instruction
+        return res.json({ jobs: [], status: "fetching_in_progress" });
+      }
+
+      if (now - marketJobsLastFetch > CACHE_TTL) {
+        refreshMarketJobsCache(); // trigger background refresh
+      }
+
+      return res.json({ jobs: marketJobsCache });
+    } catch (error: any) {
       res.status(500).json({ error: error.message || "Failed to fetch market jobs" });
     }
   });
+
 
   app.post("/api/extract-drive", async (req, res) => {
     try {
