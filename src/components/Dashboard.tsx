@@ -3,6 +3,7 @@ import { JobApplication, JobStatus } from '../types';
 import { getApplications, addApplication, updateApplication, deleteApplication, addApplicationsBatch, deleteAllApplications } from '../db/applications';
 import { Kanban } from './Kanban';
 import { Analytics } from './Analytics';
+import { GlobalMarket } from './GlobalMarket';
 import { SankeyChart } from './SankeyChart';
 import { JobForm } from './JobForm';
 import { FileUpload } from './FileUpload';
@@ -12,7 +13,7 @@ import { exportCsv } from '../lib/csv';
 import { Footer } from './Footer';
 import { NotificationCenter } from './NotificationCenter';
 import { CommandSearch } from './CommandSearch';
-import { Plus, Download, Upload, LayoutDashboard, BarChart3, LogOut, Loader2, Calendar, Trash2, Settings, X, Twitter, Github, Linkedin } from 'lucide-react';
+import { Plus, Download, Upload, LayoutDashboard, BarChart3, LogOut, Loader2, Calendar, Trash2, Settings, X, Twitter, Github, Linkedin, Globe } from 'lucide-react';
 import { auth, logout } from '../lib/firebase';
 import Papa from 'papaparse';
 import { addNotification } from '../lib/notifications';
@@ -38,7 +39,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   const [isSyncing, setIsSyncing] = useState(false);
   const syncLockRef = useRef(false);
   const [syncError, setSyncError] = useState<string | null>(null);
-  const [view, setView] = useState<'sankey' | 'kanban' | 'analytics' | 'cv-match' | 'notifications' | 'settings' | 'eval-history'>('sankey');
+  const [view, setView] = useState<'sankey' | 'kanban' | 'analytics' | 'cv-match' | 'notifications' | 'settings' | 'eval-history' | 'global-market'>('sankey');
   const [editingApp, setEditingApp] = useState<JobApplication | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -304,6 +305,22 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
       setApplications(apps => apps.map(a => a.id === appId ? { ...a, status: newStatus as any } : a));
     } catch (err) {
       console.error('Error updating status', err);
+    }
+  };
+
+  const handleAddToWishlist = async (appData: Partial<JobApplication>) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Adding applications is restricted in this portfolio preview.');
+      return;
+    }
+    if (!auth.currentUser) return;
+    try {
+      const newApp = await addApplication({ ...appData, userId: auth.currentUser.uid } as any);
+      setApplications(apps => [newApp, ...apps]);
+      toast.success(`Added ${appData.company} to Wishlist`);
+    } catch (err) {
+      console.error('Error adding to wishlist', err);
+      toast.error('Failed to add to wishlist');
     }
   };
 
@@ -597,6 +614,13 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
               Overview
             </button>
             <button
+              onClick={() => setView('global-market')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all cursor-pointer ${view === 'global-market' ? 'bg-[#e8f1ff] text-[#0068f9] border border-[#0068f9]/30 shadow-2xs' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
+            >
+              <Globe size={16} className={view === 'global-market' ? 'text-[#0068f9]' : 'text-[#777c86]'} />
+              Job Market
+            </button>
+            <button
               onClick={() => setView('kanban')}
               className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all cursor-pointer ${view === 'kanban' ? 'bg-[#fbfaf7] text-[#121722] border border-[#efefef] shadow-2xs' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
             >
@@ -646,8 +670,13 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
           <CVMatchAssessment 
             applications={applications} 
             isDemo={isDemo} 
-            onAddToWishlist={handleSave}
+            onAddToWishlist={handleAddToWishlist}
             onViewHistory={() => setView('eval-history')}
+          />
+        ) : view === 'global-market' ? (
+          <GlobalMarket 
+            isDemo={isDemo} 
+            onAddToWishlist={handleAddToWishlist}
           />
         ) : applications.length === 0 ? (
           <div className="flex-grow flex flex-col items-center justify-center bg-white border border-[#efefef] rounded-2xl p-12 shadow-2xs text-center">
