@@ -109,11 +109,18 @@ export function GlobalMarket({ isDemo, onAddToWishlist }: GlobalMarketProps) {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/market-jobs');
+        const response = await fetch('/api/market-jobs?t=' + Date.now());
         if (!response.ok) {
           throw new Error('Failed to fetch global market jobs.');
         }
-        const data = await response.json();
+                const text = await response.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.error("Failed to parse market jobs. Server returned:", text.substring(0, 500));
+          throw new Error(`Failed to parse server response: ${text.substring(0, 50)}`);
+        }
         setJobs(data.jobs || []);
       } catch (err: any) {
         console.error(err);
