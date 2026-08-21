@@ -149,7 +149,7 @@ const getContinent = (countryName: string) => {
     if (americas.includes(cLower) || ['americas', 'north america', 'south america', 'latam', 'na', 'usa'].includes(cLower)) return 'Americas';
     if (africa.includes(cLower) || ['africa'].includes(cLower)) return 'Africa';
     if (oceania.includes(cLower) || ['oceania', 'australasia'].includes(cLower)) return 'Oceania';
-    if (cLower.includes('remote') || cLower.includes('global')) return 'Remote / Global';
+    if (cLower.includes('remote') || cLower.includes('global')) return 'Remote';
 
     return 'Other';
 };
@@ -159,13 +159,13 @@ const parseLocation = (loc: string) => {
     let lower = raw.toLowerCase();
     
     if (!raw || lower === 'remote' || lower === 'anywhere' || lower === 'worldwide' || lower === 'unknown' || lower === 'homeoffice' || lower.includes('remote job')) {
-      return { continent: 'Remote / Global', country: 'Remote / Global', city: '' };
+      return { continent: 'Remote', country: 'Remote', city: '' };
     }
     
     if (lower.includes('europe, emea, uk, germany, france')) return { continent: 'Europe', country: 'Multiple Locations', city: 'Europe (Multiple)' };
     if (lower.includes('northern america, europe, uk, france')) return { continent: 'Multiple Continents', country: 'Multiple Locations', city: 'US & Europe' };
     if (lower.includes('usa, canada, usa timezones')) return { continent: 'Americas', country: 'Multiple Locations', city: 'US & Canada' };
-    if (lower.includes('americas, europe, asia, africa, oceania')) return { continent: 'Remote / Global', country: 'Remote / Global', city: 'Worldwide' };
+    if (lower.includes('americas, europe, asia, africa, oceania')) return { continent: 'Remote', country: 'Remote', city: 'Worldwide' };
     if (lower.includes('americas, europe, israel')) return { continent: 'Multiple Continents', country: 'Multiple Locations', city: 'Americas, Europe, Israel' };
     if (lower.includes('mobiles arbeiten - deutschland') || lower.includes('deutschlandweit')) return { continent: 'Europe', country: 'Germany', city: 'Germany (Remote)' };
 
@@ -224,7 +224,7 @@ const parseLocation = (loc: string) => {
     if (['europe', 'emea', 'eu'].includes(singleLower)) return { continent: 'Europe', country: 'Europe', city: '' };
     if (['asia', 'apac'].includes(singleLower)) return { continent: 'Asia', country: 'Asia', city: '' };
     if (['americas'].includes(singleLower)) return { continent: 'Americas', country: 'Americas', city: '' };
-    if (singleLower.includes('remote')) return { continent: 'Remote / Global', country: 'Remote / Global', city: single };
+    if (singleLower.includes('remote')) return { continent: 'Remote', country: 'Remote', city: single };
 
     return { continent: getContinent(single), country: single, city: '' };
 };
@@ -513,7 +513,16 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
           for (const category of categories) {
             const response = await fetch(`https://remotive.com/api/remote-jobs?category=${category}&limit=25`);
             if (response.ok) {
-              const data = await response.json();
+              
+              const text = await response.text();
+              let data;
+              try {
+                data = JSON.parse(text);
+              } catch (e) {
+                console.error("Invalid JSON response:", text.substring(0, 100));
+                return;
+              }
+
               if (data.jobs && Array.isArray(data.jobs)) {
                 // Focus: Specifically for remote tech jobs in Europe or UK
                 const filteredJobs = data.jobs.filter((job: any) => {
@@ -537,7 +546,16 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
         try {
           const response = await fetch('https://www.arbeitnow.com/api/job-board-api');
           if (response.ok) {
-            const data = await response.json();
+            
+              const text = await response.text();
+              let data;
+              try {
+                data = JSON.parse(text);
+              } catch (e) {
+                console.error("Invalid JSON response:", text.substring(0, 100));
+                return;
+              }
+
             if (data.data && Array.isArray(data.data)) {
               allJobs = allJobs.concat(data.data.map((item: any) => ({
                 id: `arbeitnow-${item.slug || Date.now()}`,
@@ -605,7 +623,16 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
             });
             
             if (response.ok) {
-              const data = await response.json();
+              
+              const text = await response.text();
+              let data;
+              try {
+                data = JSON.parse(text);
+              } catch (e) {
+                console.error("Invalid JSON response:", text.substring(0, 100));
+                return;
+              }
+
               if (data.jobs && Array.isArray(data.jobs)) {
                 allJobs = allJobs.concat(data.jobs.map((job: any) => ({
                   id: `jooble-${job.id}`,
@@ -635,7 +662,16 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
           // Fetch EMEA jobs
           const response = await fetch('https://jobicy.com/api/v2/remote-jobs?geo=emea&count=50');
           if (response.ok) {
-            const data = await response.json();
+            
+              const text = await response.text();
+              let data;
+              try {
+                data = JSON.parse(text);
+              } catch (e) {
+                console.error("Invalid JSON response:", text.substring(0, 100));
+                return;
+              }
+
             if (data.jobs && Array.isArray(data.jobs)) {
               allJobs = allJobs.concat(data.jobs.map((job: any) => ({
                 id: `jobicy-${job.id}`,
@@ -669,7 +705,16 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
             const response = await fetch(`https://api.adzuna.com/v1/api/jobs/${country}/search/1?app_id=${appId}&app_key=${appKey}&results_per_page=10&what=developer`);
             
             if (response.ok) {
-              const data = await response.json();
+              
+              const text = await response.text();
+              let data;
+              try {
+                data = JSON.parse(text);
+              } catch (e) {
+                console.error("Invalid JSON response:", text.substring(0, 100));
+                return;
+              }
+
               if (data.results && Array.isArray(data.results)) {
                 allJobs = allJobs.concat(data.results.map((job: any) => ({
                   id: `adzuna-${job.id}`,
@@ -697,8 +742,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
       const fetchReed = async () => {
         try {
           // You must provide the reed API key via env var, defaults to empty to not break if missing
-          const reedKey = process.env.REED_API_KEY || "";
-          if (!reedKey) return;
+          const reedKey = process.env.REED_API_KEY || "b391d941-0228-4cec-a21a-e6578ff43abe";
 
           // Reed requires basic auth with API key as username and empty password
           const authHeader = 'Basic ' + Buffer.from(reedKey + ':').toString('base64');
@@ -710,7 +754,16 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
           });
           
           if (response.ok) {
-            const data = await response.json();
+            
+              const text = await response.text();
+              let data;
+              try {
+                data = JSON.parse(text);
+              } catch (e) {
+                console.error("Invalid JSON response:", text.substring(0, 100));
+                return;
+              }
+
             if (data.results && Array.isArray(data.results)) {
               allJobs = allJobs.concat(data.results.map((job: any) => ({
                 id: `reed-${job.jobId}`,
@@ -737,12 +790,25 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
         try {
           const response = await fetch('https://hacker-news.firebaseio.com/v0/jobstories.json');
           if (response.ok) {
-            const ids = await response.json();
+            
+            const text = await response.text();
+            let ids;
+            try {
+              ids = JSON.parse(text);
+            } catch(e) { return; }
+
             if (Array.isArray(ids)) {
               const topIds = ids.slice(0, 30);
               const items = await Promise.all(topIds.map(async (id) => {
                 const itemRes = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
-                if (itemRes.ok) return itemRes.json();
+                
+                if (itemRes.ok) {
+                  const itemText = await itemRes.text();
+                  try {
+                    return JSON.parse(itemText);
+                  } catch(e) { return null; }
+                }
+
                 return null;
               }));
               
