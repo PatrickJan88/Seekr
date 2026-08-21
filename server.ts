@@ -510,7 +510,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
       const fetchRemotive = async () => {
         try {
           const categories = ['software-dev', 'product', 'design', 'data'];
-          for (const category of categories) {
+          await Promise.allSettled(categories.map(async (category) => {
             const response = await fetch(`https://remotive.com/api/remote-jobs?category=${category}&limit=25`);
             if (response.ok) {
               
@@ -536,7 +536,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
                 })));
               }
             }
-          }
+          }));
         } catch (e) {
           console.error("Remotive fetch error:", e);
         }
@@ -615,7 +615,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
           const joobleKey = process.env.JOOBLE_API_KEY || "f5932433-ee6c-4433-bef6-10585e0b7606";
           const queries = ['developer', 'software engineer', 'product manager', 'designer', 'data'];
           
-          for (const query of queries) {
+          await Promise.allSettled(queries.map(async (query) => {
             const response = await fetch(`https://jooble.org/api/${joobleKey}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -650,7 +650,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
                 })));
               }
             }
-          }
+          }));
         } catch (e) {
           console.error("Jooble fetch error:", e);
         }
@@ -701,7 +701,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
           const appKey = process.env.ADZUNA_APP_KEY || "912639b735ecfa6e7699135fbc31a469";
           const countries = ['gb', 'de', 'fr', 'nl', 'it', 'es', 'pl'];
           
-          for (const country of countries) {
+          await Promise.allSettled(countries.map(async (country) => {
             const response = await fetch(`https://api.adzuna.com/v1/api/jobs/${country}/search/1?app_id=${appId}&app_key=${appKey}&results_per_page=10&what=developer`);
             
             if (response.ok) {
@@ -732,7 +732,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
                 })));
               }
             }
-          }
+          }));
         } catch (e) {
           console.error("Adzuna fetch error:", e);
         }
