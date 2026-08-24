@@ -93,6 +93,10 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   };
 
   useEffect(() => {
+    document.documentElement.style.setProperty('--sidebar-offset', isSidebarOpen ? '260px' : '0px');
+  }, [isSidebarOpen]);
+
+  useEffect(() => {
     if (isFormOpen || showClearConfirm || !!deleteConfirmId) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -602,14 +606,6 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     );
   }
 
-  if (view === 'notifications') {
-    return <NotificationsPage onBack={() => setView('sankey')} />;
-  }
-
-  
-
-  
-
   const viewTitles: Record<string, string> = {
     'sankey': 'Overview',
     'global-market': 'Job Market',
@@ -699,7 +695,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
       
       
       {showImportModal && (
-        <div className="fixed inset-0 bg-[#121722]/40 backdrop-blur-xs z-[100] flex items-center justify-center p-4">
+        <div className="fixed top-0 bottom-0 right-0 left-0 md:left-[var(--sidebar-offset,0px)] bg-[#121722]/40 backdrop-blur-xs z-[100] flex items-center justify-center p-4 transition-all duration-300">
           <div className="bg-white rounded-2xl border border-[#efefef] shadow-lg w-full max-w-md overflow-hidden flex flex-col p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-[#121722]">Import Data</h2>
@@ -738,7 +734,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
       )}
       
       {deleteConfirmId && (
-        <div className="fixed inset-0 bg-[#121722]/40 backdrop-blur-xs z-[100] flex items-center justify-center p-4">
+        <div className="fixed top-0 bottom-0 right-0 left-0 md:left-[var(--sidebar-offset,0px)] bg-[#121722]/40 backdrop-blur-xs z-[100] flex items-center justify-center p-4 transition-all duration-300">
           <div className="bg-white rounded-2xl border border-[#efefef] shadow-lg w-full max-w-md overflow-hidden">
             <div className="p-6">
               <h2 className="text-xl font-bold text-[#121722] mb-2">Delete Application?</h2>
@@ -768,7 +764,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
       )}
 
       {showClearConfirm && (
-        <div className="fixed inset-0 bg-[#121722]/40 backdrop-blur-xs z-[100] flex items-center justify-center p-4">
+        <div className="fixed top-0 bottom-0 right-0 left-0 md:left-[var(--sidebar-offset,0px)] bg-[#121722]/40 backdrop-blur-xs z-[100] flex items-center justify-center p-4 transition-all duration-300">
           <div className="bg-white rounded-2xl border border-[#efefef] shadow-lg w-full max-w-md overflow-hidden">
             <div className="p-6">
               <h2 className="text-xl font-bold text-[#121722] mb-2">Clear All Data?</h2>

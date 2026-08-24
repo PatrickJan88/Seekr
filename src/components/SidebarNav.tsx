@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { auth, logout } from '../lib/firebase';
+import { Kbd } from './ui/kbd';
 import { 
   Search, 
   LayoutDashboard, 
@@ -86,9 +87,9 @@ const NavItem: React.FC<{
         
         <div className="flex items-center gap-2">
           {item.shortcut && (
-             <kbd className="hidden group-hover:inline-flex items-center justify-center h-5 px-1.5 text-[10px] font-medium font-mono text-[#a5a5a5] bg-[#faf9f7] border border-[#efefef] rounded-[4px] shadow-xs">
-               {item.shortcut}
-             </kbd>
+            <Kbd size="xs" className="text-[#777c86] font-mono text-[10px] bg-white border border-[#efefef] shadow-2xs">
+              {item.shortcut}
+            </Kbd>
           )}
           {item.badge && (
             <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-medium rounded-full bg-[#e4e4e7] text-[#121722]">
@@ -140,15 +141,16 @@ export function SidebarNav({
   isDemo,
   onImport,
   onExport,
-  onNew, applicationCount
+  onNew,
+  applicationCount
 }: { 
-  className?: string,
-  activeId: string,
-  onSelect: (id: string) => void,
-  isDemo: boolean,
-  onImport: () => void,
-  onExport: () => void,
-  onNew, applicationCount: () => void,
+  className?: string;
+  activeId: string;
+  onSelect: (id: string) => void;
+  isDemo: boolean;
+  onImport: () => void;
+  onExport: () => void;
+  onNew: () => void;
   applicationCount?: number;
   trackingSystem?: 'industry' | 'academic';
   setTrackingSystem?: (sys: 'industry' | 'academic') => void;
@@ -167,7 +169,7 @@ export function SidebarNav({
     {
       heading: 'WORKSPACE',
       items: [
-        { id: 'new-app', title: 'New Application', icon: Plus, onClick: onNew, applicationCount },
+        { id: 'new-app', title: 'New Application', icon: Plus, onClick: onNew, shortcut: 'N' },
         { id: 'import', title: 'Import Applications', icon: Upload, onClick: onImport },
         { id: 'export', title: 'Export Applications', icon: Download, onClick: onExport },
       ]
@@ -188,7 +190,7 @@ export function SidebarNav({
       <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex flex-col gap-5">
         <div className="flex flex-col gap-1">
           <span className="px-2.5 mb-1 text-[11px] font-bold tracking-wider text-[#a5a5a5] uppercase">
-            ROLE
+            I AM
           </span>
           <div className="relative group">
             <div className="flex items-center justify-between px-2.5 py-[7px] text-[#525866] font-normal hover:bg-[#faf9f7] hover:text-[#121722] rounded-lg cursor-pointer transition-colors border border-transparent">

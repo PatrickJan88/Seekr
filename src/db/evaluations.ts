@@ -1,5 +1,5 @@
 import { db } from '../lib/firebase';
-import { collection, doc, setDoc, getDocs, query, where } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, query, where, deleteDoc } from 'firebase/firestore';
 import { CVEvaluation } from '../types';
 
 const COLLECTION_NAME = 'evaluations';
@@ -32,4 +32,8 @@ export const addEvaluation = async (evaluation: Omit<CVEvaluation, 'id' | 'creat
 
   await setDoc(newRef, newEval);
   return newEval;
+};
+
+export const deleteEvaluation = async (evalId: string): Promise<void> => {
+  await deleteDoc(doc(db, COLLECTION_NAME, evalId));
 };

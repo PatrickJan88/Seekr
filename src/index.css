@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  --sidebar-offset: 260px;
   --color-canvas-cream: #faf9f7;
   --color-surface-ivory: #fbfaf7;
   --color-pure-white: #ffffff;

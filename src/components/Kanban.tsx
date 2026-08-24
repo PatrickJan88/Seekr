@@ -17,7 +17,7 @@ interface KanbanProps {
   onLocationSelect?: (country: string | null) => void;
 }
 
-export function Kanban({ applications, onEdit, onStatusChange, onDelete, locationFilter = null, onLocationSelect }: KanbanProps) {
+export function Kanban({ applications, onEdit, onStatusChange, onDelete, locationFilter = null, onLocationSelect, trackingSystem = 'industry' }: KanbanProps) {
   const [activeTab, setActiveTab] = useState<'wishlist' | 'active' | 'inactive'>('active');
   const [layoutMode, setLayoutMode] = useState<'kanban' | 'list'>('kanban');
   const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'weekly' | 'monthly' | 'yearly' | 'custom'>('all');

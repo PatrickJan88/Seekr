@@ -109,21 +109,25 @@ interface PersonaOrbCarouselProps {
   selectedRoleId: string;
   onSelectRole: (roleId: string) => void;
   onContinue: () => void;
+  trackingSystem?: 'industry' | 'academic';
 }
 
 export function PersonaOrbCarousel({
   selectedRoleId,
   onSelectRole,
-  onContinue
+  onContinue,
+  trackingSystem = 'industry'
 }: PersonaOrbCarouselProps) {
   const [activeTab, setActiveTab] = useState<string>('all');
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
+  const roleList = trackingSystem === 'academic' ? ACADEMIC_ROLES : TECH_ROLES;
+
   // Filter roles based on selected category tab
   const filteredRoles = activeTab === 'all' 
-    ? TECH_ROLES 
-    : TECH_ROLES.filter(r => r.category === activeTab);
+    ? roleList 
+    : roleList.filter(r => r.category === activeTab);
 
   // Active index in filtered roles
   const activeIndex = Math.max(

@@ -33,10 +33,10 @@ async function generateContentWithRetry(
   }
 ) {
   const modelsToTry = [
-    params.preferredModel || "gemini-3.6-flash",
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-8b",
-    "gemini-1.5-pro"
+    params.preferredModel || "gemini-3.7-flash",
+    "gemini-2.5-flash",
+    "gemini-3.1-flash-lite",
+    "gemini-2.5-flash-lite"
   ];
 
   let lastError: any = null;
@@ -284,7 +284,7 @@ const app = express();
       `;
 
       const response = await generateContentWithRetry(ai, {
-        preferredModel: "gemini-3.6-flash",
+        preferredModel: "gemini-3.7-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json"
@@ -333,7 +333,7 @@ const app = express();
       `;
 
       const response = await generateContentWithRetry(ai, {
-        preferredModel: "gemini-3.6-flash",
+        preferredModel: "gemini-3.7-flash",
         contents: [
           {
             role: "user",
@@ -403,7 +403,7 @@ Instructions:
 `;
 
       const response = await generateContentWithRetry(ai, {
-        preferredModel: "gemini-3.6-flash",
+        preferredModel: "gemini-3.7-flash",
         contents: prompt
       });
 
@@ -415,7 +415,7 @@ Instructions:
   });
 
   
-  app.post("/api/generate-interview-guide", async (req, res) => {
+  app.post(["/api/generate-interview-guide", "/api/interview-prep"], async (req, res) => {
     try {
       const { cvText, pdfBase64, jobDescription, targetRole, gaps, strengths, companyName } = req.body;
       
@@ -464,7 +464,7 @@ Keep the tone encouraging, strategic, and highly professional. Return ONLY the t
 `;
 
       const response = await generateContentWithRetry(ai, {
-        preferredModel: "gemini-3.6-flash",
+        preferredModel: "gemini-3.7-flash",
         contents: prompt
       });
 
@@ -499,41 +499,49 @@ Keep the tone encouraging, strategic, and highly professional. Return ONLY the t
       });
 
       const role = targetRole || "Tech Hiring Manager";
-
-      
       const isAcademic = trackingSystem === 'academic';
       const evaluatorTitle = isAcademic 
         ? `Senior Faculty Search Committee Member, Postdoc Recruiter, and Academic Lead Evaluator`
         : `Senior Hiring Manager, Technical Recruiter, and Lead Evaluator`;
         
       const promptText = `
-You are a ${evaluatorTitle} specializing in the role/domain of: ${role}. specializing in the role of: ${role}.
+You are a ${evaluatorTitle} specializing in the role/domain of: ${role}.
 You will be given a candidate's CV (resume) and a Job Description (JD).
 Your task is to conduct a rigorous, intelligent evaluation of the candidate's CV against the Job Description specifically through the technical and domain lens of a ${role}.
 
 Methodology & Rules:
 1. Evaluate using ABDUCTIVE REASONING:
-   - Do NOT just perform basic keyword matching.
+   - Perform deep semantic matching and keyword extraction inspired by advanced ATS (Resume Matcher) engines.
    - If this is an academic evaluation, focus on publications, research methodology, grants, academic impact, and teaching experience.
-   - Observe the underlying evidence in the candidate's past projects, architecture, tools, metrics, leadership, and experience.
-   - Intelligently infer their true capability, technical depth, and potential to fulfill the required duties in the JD.
+   - Extract explicitly matched keywords found in BOTH the CV and JD, categorized by "Hard Skills", "Soft Skills", "Tools & Frameworks", and "Domain Knowledge".
+   - Extract crucial missing keywords that appear in the JD but are absent or under-represented in the CV, rated by importance ("Critical", "Recommended", or "Bonus").
 
-2. Score & Category Definition:
-   - 80 to 100: "High Match" (Strong alignment, fulfills key requirements with high technical evidence)
-   - 60 to 79: "Medium Match" (Solid baseline, but has notable competency gaps or framing issues)
-   - Below 60: "Low Match" (Significant missing technical or domain competencies)
+2. ATS Match Score as Single Source of Truth:
+   - Calculate the ATS keyword and competency match percentage (0 to 100) based on substantiated skills in the CV vs Job Description requirements.
+   - "score" and "keyword_score" MUST both represent this identical ATS match score.
+   - 80 to 100: "High Match" (Strong ATS alignment, fulfills core requirements)
+   - 60 to 79: "Medium Match" (Moderate ATS alignment, notable gaps)
+   - Below 60: "Low Match" (Low ATS alignment, missing critical competencies)
 
 3. Actionable Polish:
    - Provide concrete, strategic guidance on how to rewrite bullet points in the candidate's CV to elevate their experience, reframe basic work into high-impact accomplishments, and bridge missing gaps for this specific JD.
 
 4. Forecasted Interview Questions:
-   - Provide 3 realistic, high-probability interview questions that a top interviewer for this role would ask based on the candidate's CV and this JD.
+   - Provide 3 realistic, high-probability interview questions with answering frameworks.
 
 You MUST return your analysis strictly as a JSON object with this exact structure:
 {
   "company_name": "Extracted Company Name from Job Description (or 'Unknown Company' if not found)",
   "score": 85,
   "matchCategory": "High Match",
+  "keyword_score": 85,
+  "matched_keywords": [
+    { "keyword": "TypeScript", "category": "Hard Skills", "context": "Mentioned 4x in CV & core JD requirement" },
+    { "keyword": "React 18", "category": "Tools & Frameworks", "context": "Proven production experience" }
+  ],
+  "missing_keywords": [
+    { "keyword": "Playwright / E2E", "category": "Tools & Frameworks", "importance": "Critical", "suggestion": "Add an automated testing bullet to recent role" }
+  ],
   "strengths": [
     "Array of 2-3 strong alignment points based on evidence in CV"
   ],
@@ -575,7 +583,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
       }
 
       const response = await generateContentWithRetry(ai, {
-        preferredModel: "gemini-3.6-flash",
+        preferredModel: "gemini-3.7-flash",
         contents: contentsPayload,
         config: {
           responseMimeType: "application/json"
@@ -585,16 +593,35 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
       const responseText = response.text || "{}";
       const result = safeParseJSON(responseText, {});
 
-      // Calculate matchCategory if missing or out of sync
-      const rawScore = typeof result.score === "number" ? result.score : 70;
+      const matchedList = Array.isArray(result.matched_keywords) ? result.matched_keywords : [];
+      const missingList = Array.isArray(result.missing_keywords) ? result.missing_keywords : [];
+      const totalKeywords = matchedList.length + missingList.length;
+
+      // Use ATS match score as single source of truth
+      let atsMatchScore = typeof result.keyword_score === "number"
+        ? result.keyword_score
+        : (typeof result.score === "number" ? result.score : 75);
+
+      if (totalKeywords > 0 && typeof result.keyword_score !== "number" && typeof result.score !== "number") {
+        atsMatchScore = Math.round((matchedList.length / totalKeywords) * 100);
+      }
+      atsMatchScore = Math.min(100, Math.max(0, atsMatchScore));
+
       let computedCategory = "Medium Match";
-      if (rawScore >= 80) computedCategory = "High Match";
-      else if (rawScore < 60) computedCategory = "Low Match";
+      if (atsMatchScore >= 80) computedCategory = "High Match";
+      else if (atsMatchScore < 60) computedCategory = "Low Match";
 
       res.json({
         company_name: result.company_name || "Unknown Company",
-        score: Math.min(100, Math.max(0, rawScore)),
+        score: atsMatchScore,
         matchCategory: result.matchCategory || computedCategory,
+        keyword_score: atsMatchScore,
+        matched_keywords: Array.isArray(result.matched_keywords) ? result.matched_keywords : [
+          { keyword: "Core Technologies", category: "Hard Skills", context: "Strong background alignment" }
+        ],
+        missing_keywords: Array.isArray(result.missing_keywords) ? result.missing_keywords : [
+          { keyword: "Domain specifics", category: "Tools & Frameworks", importance: "Recommended", suggestion: "Align terminology with JD requirements" }
+        ],
         strengths: Array.isArray(result.strengths) ? result.strengths : ["Good background alignment"],
         gaps: Array.isArray(result.gaps) ? result.gaps : ["Ensure all key technical keywords from JD are explicitly documented"],
         actionable_polish: result.actionable_polish || "Reframe past bullet points with quantified metrics and explicit technical tools mentioned in the job description.",
@@ -607,6 +634,117 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
     } catch (error: any) {
       console.error("CV Match error:", error);
       res.status(500).json({ error: error.message || "Failed to analyze CV match" });
+    }
+  });
+
+  app.post("/api/tailor-resume", async (req, res) => {
+    try {
+      const { cvText, pdfBase64, jobDescription, targetRole, companyName, trackingSystem } = req.body;
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({ error: "GEMINI_API_KEY environment variable is missing on the server." });
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey: process.env.GEMINI_API_KEY,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build'
+          }
+        }
+      });
+
+      const isAcademic = trackingSystem === 'academic';
+      const prompt = `
+You are an executive resume writer and ATS optimization specialist (specializing in ${isAcademic ? 'academic CVs, research portfolios, and faculty applications' : 'industry tech CVs and ATS-compliance'}).
+Generate a structured, tailored resume data object based strictly on the candidate's existing CV and the target job/position description.
+Tailor the summary, skill categories, and bullet points to explicitly highlight keywords and accomplishments that match the target role (${targetRole || 'Target Role'}) at ${companyName || 'Target Organization'}.
+
+Return ONLY a JSON object with this exact schema:
+{
+  "fullName": "Candidate Full Name (or extract from CV)",
+  "title": "Target Role Title (e.g. ${targetRole || 'Senior Engineer'})",
+  "contact": {
+    "email": "candidate email extracted from CV or alex.morgan@email.com",
+    "phone": "candidate phone or placeholder",
+    "location": "City, Country",
+    "linkedin": "linkedin.com/in/username",
+    "github": "github.com/username",
+    "website": "portfolio.dev"
+  },
+  "summary": "Compelling 3-4 sentence professional summary tailored to the target JD with high-impact keywords.",
+  "skills": {
+    "technical": ["Array", "of", "relevant", "languages", "frameworks", "technologies"],
+    "tools": ["Array", "of", "developer", "tools", "platforms", "libraries"],
+    "domain": ["Array", "of", "domain", "methodologies", "competencies"]
+  },
+  "experience": [
+    {
+      "role": "Job Title",
+      "company": "Company Name",
+      "location": "City, Country",
+      "period": "2022 - Present",
+      "bullets": [
+        "High-impact metric achievement tailored to target JD criteria.",
+        "Engineered scalable systems using required stack with quantifiable business outcome."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "B.S. / M.S. / Ph.D. in Subject",
+      "institution": "University Name",
+      "year": "2020",
+      "details": "Honors / Relevant Specialization"
+    }
+  ],
+  "projects": [
+    {
+      "name": "Project / Publication Name",
+      "description": "Short 1-2 line description highlighting technologies used and problem solved.",
+      "link": "github.com/project"
+    }
+  ]
+}
+
+Target Position / Job Description:
+${jobDescription ? jobDescription.substring(0, 8000) : 'Not provided'}
+
+${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
+`;
+
+      let contentsPayload: any;
+      if (pdfBase64 && !cvText) {
+        contentsPayload = [
+          {
+            role: "user",
+            parts: [
+              {
+                inlineData: {
+                  data: pdfBase64,
+                  mimeType: "application/pdf"
+                }
+              },
+              { text: prompt }
+            ]
+          }
+        ];
+      } else {
+        contentsPayload = prompt;
+      }
+
+      const response = await generateContentWithRetry(ai, {
+        preferredModel: "gemini-3.7-flash",
+        contents: contentsPayload,
+        config: {
+          responseMimeType: "application/json"
+        }
+      });
+
+      const parsed = safeParseJSON(response.text || "{}", {});
+      res.json({ resume: parsed });
+    } catch (error: any) {
+      console.error("Tailor Resume error:", error);
+      res.status(500).json({ error: error.message || "Failed to tailor resume" });
     }
   });
 
@@ -1082,7 +1220,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
       `;
 
       const response = await generateContentWithRetry(ai, {
-        preferredModel: "gemini-3.6-flash",
+        preferredModel: "gemini-3.7-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json"

@@ -522,7 +522,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
   };
 
   return (
-    <div className="fixed inset-0 bg-[#121722]/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed top-0 bottom-0 right-0 left-0 md:left-[var(--sidebar-offset,0px)] bg-[#121722]/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-all duration-300">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-[#efefef]">
         <div className="flex items-center justify-between p-6 border-b border-[#efefef] shrink-0">
           <h2 className="text-xl font-extrabold text-[#121722] m-0">

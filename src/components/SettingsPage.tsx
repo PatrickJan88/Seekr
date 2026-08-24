@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Footer } from './Footer';
-import { Github, Linkedin } from 'lucide-react';
-import { ArrowLeft, Settings, Trash2, LogOut, CheckCircle } from 'lucide-react';
+import { Github, Linkedin, Briefcase, GraduationCap, Check, ChevronDown } from 'lucide-react';
 import { auth, logout } from '../lib/firebase';
 import { SupportForm } from './SupportForm';
+import { toast } from 'sonner';
 
 interface SettingsPageProps {
   trackingSystem?: 'industry' | 'academic';
@@ -87,7 +88,7 @@ export function SettingsPage({ onBack, onClearData, isSyncing, trackingSystem = 
               </div>
               <button
                 onClick={() => setShowLogoutConfirm(true)}
-                className="inline-flex items-center justify-center rounded-full text-xs font-medium transition-all border border-[#efefef] bg-white text-[#121722] shadow-2xs hover:bg-[#faf9f7] h-8 px-4 cursor-pointer self-start sm:self-center"
+                className="inline-flex items-center justify-center rounded-full text-xs font-semibold transition-all bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-9 px-6 py-2 cursor-pointer self-start sm:self-center"
               >
                 Log Out
               </button>
@@ -101,15 +102,78 @@ export function SettingsPage({ onBack, onClearData, isSyncing, trackingSystem = 
               Switch between Industry and Academic job markets. This changes the default database and job suggestions.
             </p>
             <div className="flex items-center gap-4">
-              <select 
-                value={trackingSystem} 
-                onChange={(e) => setTrackingSystem?.(e.target.value as any)}
-                className="w-full sm:w-64 px-3.5 py-2 border border-[#efefef] rounded-lg bg-white focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-[13px] text-[#121722] cursor-pointer"
-              >
-                <option value="industry">Industry Seekr</option>
-                <option value="academic">Academic Seekr</option>
-              </select>
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
+                  <button className="flex items-center justify-between w-full sm:w-64 h-11 bg-white border border-[#efefef] rounded-full text-xs sm:text-sm px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#faf9f7] transition-all cursor-pointer">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {trackingSystem === 'academic' ? (
+                        <GraduationCap className="text-[#0068f9] shrink-0" size={16} />
+                      ) : (
+                        <Briefcase className="text-[#0068f9] shrink-0" size={16} />
+                      )}
+                      <span className="text-[#121722] font-medium truncate">
+                        {trackingSystem === 'academic' ? 'Academic Seekr' : 'Industry Seekr'}
+                      </span>
+                    </div>
+                    <ChevronDown size={14} className="text-[#777c86] shrink-0 ml-2" />
+                  </button>
+                </DropdownMenu.Trigger>
+                
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content 
+                    className="z-[100] min-w-[240px] bg-white rounded-2xl border border-[#efefef] shadow-lg p-1.5 animate-in fade-in-80 zoom-in-95"
+                    sideOffset={6}
+                    align="start"
+                  >
+                    <DropdownMenu.Item 
+                      className="flex items-center gap-3 px-3.5 py-2.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none transition-colors"
+                      onClick={() => setTrackingSystem?.('industry')}
+                    >
+                      <Briefcase size={15} className="text-[#777c86] shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-[#121722]">Industry Seekr</p>
+                        <p className="text-[11px] text-[#777c86]">Tech, startups & corporate</p>
+                      </div>
+                      {trackingSystem === 'industry' && <Check size={16} className="ml-auto text-[#0068f9] shrink-0" />}
+                    </DropdownMenu.Item>
+                    
+                    <DropdownMenu.Item 
+                      className="flex items-center gap-3 px-3.5 py-2.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none transition-colors mt-0.5"
+                      onClick={() => setTrackingSystem?.('academic')}
+                    >
+                      <GraduationCap size={15} className="text-[#777c86] shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-[#121722]">Academic Seekr</p>
+                        <p className="text-[11px] text-[#777c86]">Universities & research labs</p>
+                      </div>
+                      {trackingSystem === 'academic' && <Check size={16} className="ml-auto text-[#0068f9] shrink-0" />}
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
             </div>
+          </div>
+
+          <div className="p-6">
+            <h3 className="text-sm font-semibold text-[#121722] mb-1">Interview Preparation Automation</h3>
+            <p className="text-[13px] text-[#777c86] mb-4">
+              Generate structured, resume-grounded interview prep for saved tailored resumes automatically.
+            </p>
+            <label className="flex items-center gap-3 cursor-pointer select-none bg-[#faf9f7] border border-[#efefef] p-4 rounded-xl max-w-md">
+              <input
+                type="checkbox"
+                defaultChecked={localStorage.getItem('auto_generate_interview_prep') !== 'false'}
+                onChange={(e) => {
+                  localStorage.setItem('auto_generate_interview_prep', e.target.checked ? 'true' : 'false');
+                  toast.success(e.target.checked ? 'Automatic interview prep generation enabled' : 'Automatic interview prep generation disabled');
+                }}
+                className="w-4 h-4 text-[#0068f9] rounded focus:ring-[#0068f9] accent-[#0068f9]"
+              />
+              <div className="text-xs">
+                <span className="font-semibold text-[#121722] block">Enable Automatic Generation</span>
+                <span className="text-[#777c86] text-[11px]">Auto-craft deep prep guide whenever match evaluation is completed</span>
+              </div>
+            </label>
           </div>
 
           <div className="p-6">
@@ -156,42 +220,42 @@ export function SettingsPage({ onBack, onClearData, isSyncing, trackingSystem = 
             </div>
           </div>
 
-        </div>
-        
-        <div className="mt-auto pt-12">
-          <div className="text-center text-xs text-[#777c86] font-medium mb-8">
-            Version 3.0.0
+          <div className="mt-auto pt-12">
+            <div className="text-center text-xs text-[#777c86] font-medium mb-8">
+              Version 3.0.0
+            </div>
+            <Footer
+              logo={<img src="/assets/seekr%20logo%201.webp" alt="Seekr Logo" className="h-6" />}
+              brandName=""
+              socialLinks={[
+                { icon: <Github size={18} />, href: "https://github.com/PatrickJan88/Seekr/blob/main/README.md", label: "GitHub" },
+                { icon: <Linkedin size={18} />, href: "https://www.linkedin.com/in/pofei-r-79586395", label: "LinkedIn" },
+                { icon: <img src="/assets/logo%20pofei.svg" alt="Pofei Logo" className="w-[18px] h-[18px]" />, href: "https://pofeiportfolio.vercel.app/", label: "Portfolio" }
+              ]}
+              mainLinks={[]}
+              legalLinks={[]}
+              copyright={{
+                text: "Disclaimer: This is an AI-generated coding project created solely for research and demonstration purposes. It is not a commercial product, and is not affiliated with any existing companies or trademarks utilizing the \"Seekr\" name.",
+              }}
+            />
           </div>
-          <Footer
-            logo={<img src="/assets/seekr%20logo%201.webp" alt="Seekr Logo" className="h-6" />}
-            brandName=""
-            socialLinks={[
-              { icon: <Github size={18} />, href: "https://github.com/PatrickJan88/Seekr/blob/main/README.md", label: "GitHub" },
-              { icon: <Linkedin size={18} />, href: "https://www.linkedin.com/in/pofei-r-79586395", label: "LinkedIn" },
-              { icon: <img src="/assets/logo%20pofei.svg" alt="Pofei Logo" className="w-[18px] h-[18px]" />, href: "https://pofeiportfolio.vercel.app/", label: "Portfolio" }
-            ]}
-            mainLinks={[]}
-            legalLinks={[]}
-            copyright={{
-              text: "Disclaimer: This is an AI-generated coding project created solely for research and demonstration purposes. It is not a commercial product, and is not affiliated with any existing companies or trademarks utilizing the \"Seekr\" name.",
-            }}
-          />
-    
+        </div>
+      
       {showLogoutConfirm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div className="fixed top-0 bottom-0 right-0 left-0 md:left-[var(--sidebar-offset,0px)] bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300 animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
-             <h3 className="text-lg font-bold text-[#121722] mb-2">Log Out</h3>
-             <p className="text-[13px] text-[#777c86] mb-6">Are you sure you want to log out of your account?</p>
-             <div className="flex justify-end gap-3">
-               <button onClick={() => setShowLogoutConfirm(false)} className="px-4 py-2 rounded-full font-medium text-[13px] text-[#777c86] hover:bg-[#faf9f7] transition-colors cursor-pointer">Cancel</button>
-               <button onClick={() => { setShowLogoutConfirm(false); logout(); }} className="px-4 py-2 rounded-full font-medium text-[13px] bg-[#121722] text-white hover:bg-black transition-colors cursor-pointer">Log Out</button>
-             </div>
+            <h3 className="text-lg font-bold text-[#121722] mb-2">Log Out</h3>
+            <p className="text-[13px] text-[#777c86] mb-6">Are you sure you want to log out of your account?</p>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setShowLogoutConfirm(false)} className="px-4 py-2 rounded-full font-medium text-[13px] text-[#777c86] hover:bg-[#faf9f7] transition-colors cursor-pointer">Cancel</button>
+              <button onClick={() => { setShowLogoutConfirm(false); logout(); }} className="px-5 py-2 rounded-full font-semibold text-xs bg-[#0068f9] text-white hover:bg-[#024bb1] transition-all shadow-2xs cursor-pointer">Log Out</button>
+            </div>
           </div>
         </div>
       )}
 
       {showDeleteAccountConfirm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div className="fixed top-0 bottom-0 right-0 left-0 md:left-[var(--sidebar-offset,0px)] bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300 animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
              <h3 className="text-lg font-bold text-[#121722] mb-2">Delete Account</h3>
              <p className="text-[13px] text-[#777c86] mb-6">This action cannot be undone. This will permanently delete your account and remove your data from our servers.</p>
@@ -202,7 +266,6 @@ export function SettingsPage({ onBack, onClearData, isSyncing, trackingSystem = 
           </div>
         </div>
       )}
-    </div>
     </div>
   );
 }

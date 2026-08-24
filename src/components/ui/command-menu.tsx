@@ -115,7 +115,7 @@ const CommandMenuOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-[#121722]/40 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed top-0 bottom-0 right-0 left-0 md:left-[var(--sidebar-offset,0px)] z-50 bg-[#121722]/40 backdrop-blur-[2px] transition-all duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
     {...props}
@@ -175,7 +175,7 @@ const CommandMenuContent = React.forwardRef<
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
             className={cn(
-              "fixed left-[50%] top-[30%] z-50 w-[95%] max-w-2xl translate-x-[-50%] translate-y-[-50%]",
+              "fixed left-[50%] md:left-[calc(50%+var(--sidebar-offset,0px)/2)] top-[30%] z-50 w-[95%] max-w-2xl translate-x-[-50%] translate-y-[-50%] transition-all duration-300",
               "bg-white border border-[#efefef] rounded-2xl shadow-xl",
               "overflow-hidden",
               className

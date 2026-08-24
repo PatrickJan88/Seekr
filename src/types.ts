@@ -63,4 +63,75 @@ export interface CVEvaluation {
   jobDescription: string;
   result: any; // MatchResult
   createdAt: number;
+  trackingSystem?: 'industry' | 'academic';
 }
+
+export type KeywordCategory = 'Hard Skills' | 'Soft Skills' | 'Tools & Frameworks' | 'Domain Knowledge';
+
+export interface MatchedKeyword {
+  keyword: string;
+  category: KeywordCategory;
+  context?: string;
+  countInCv?: number;
+  countInJd?: number;
+}
+
+export interface MissingKeyword {
+  keyword: string;
+  category: KeywordCategory;
+  importance: 'Critical' | 'Recommended' | 'Bonus';
+  suggestion?: string;
+}
+
+export interface TailoredResumeExperience {
+  role: string;
+  company: string;
+  location?: string;
+  period: string;
+  bullets: string[];
+}
+
+export interface TailoredResumeEducation {
+  degree: string;
+  institution: string;
+  year: string;
+  details?: string;
+}
+
+export interface TailoredResumeProject {
+  name: string;
+  description: string;
+  link?: string;
+}
+
+export interface TailoredResumeData {
+  fullName: string;
+  title: string;
+  contact: {
+    email: string;
+    phone: string;
+    location: string;
+    linkedin?: string;
+    github?: string;
+    website?: string;
+  };
+  summary: string;
+  skills: {
+    technical: string[];
+    tools: string[];
+    domain: string[];
+  };
+  experience: TailoredResumeExperience[];
+  education: TailoredResumeEducation[];
+  projects?: TailoredResumeProject[];
+}
+
+export type ResumeTemplateId = 'classic-single' | 'modern-single' | 'classic-two' | 'modern-two';
+
+export interface ResumeTemplateMeta {
+  id: ResumeTemplateId;
+  name: string;
+  previewLabel: string;
+  description: string;
+}
+

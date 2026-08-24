@@ -9,6 +9,7 @@ interface ListViewProps {
   onEdit: (app: JobApplication) => void;
   onStatusChange: (appId: string, status: JobStatus) => void;
   onDelete: (appId: string) => void;
+  trackingSystem?: 'industry' | 'academic';
 }
 
 const STATUS_COLORS: Record<JobStatus, string> = {
@@ -83,7 +84,7 @@ function TruncatedNotes({ text }: { text: string }) {
       </div>
 
       {showFull && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { e.stopPropagation(); setShowFull(false); }}>
+        <div className="fixed top-0 bottom-0 right-0 left-0 md:left-[var(--sidebar-offset,0px)] bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300" onClick={(e) => { e.stopPropagation(); setShowFull(false); }}>
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[80vh]" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-slate-200">
               <h3 className="font-bold text-lg">Application Notes</h3>
@@ -143,7 +144,7 @@ function ActionDropdown({ onEdit, onDelete }: { onEdit: () => void, onDelete: ()
   );
 }
 
-export function ListView({ applications, onEdit, onStatusChange, onDelete }: ListViewProps) {
+export function ListView({ applications, onEdit, onStatusChange, onDelete, trackingSystem = 'industry' }: ListViewProps) {
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
   const sortedApplications = useMemo(() => {

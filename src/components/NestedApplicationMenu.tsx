@@ -7,12 +7,14 @@ interface NestedApplicationMenuProps {
   applications: JobApplication[];
   selectedAppId: string;
   onSelectApplication: (id: string) => void;
+  trackingSystem?: 'industry' | 'academic';
 }
 
 export function NestedApplicationMenu({
   applications,
   selectedAppId,
   onSelectApplication,
+  trackingSystem = 'industry',
 }: NestedApplicationMenuProps) {
   const [searchTerm, setSearchTerm] = useState("");
 

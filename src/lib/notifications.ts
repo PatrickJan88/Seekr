@@ -71,3 +71,17 @@ export const deleteNotification = async (id: string) => {
     console.error('Failed to delete notification', err);
   }
 };
+
+export const clearAllNotifications = async (notifications: AppNotification[]) => {
+  if (!notifications.length) return;
+  try {
+    const batch = writeBatch(db);
+    notifications.forEach(n => {
+      const docRef = doc(db, 'notifications', n.id);
+      batch.delete(docRef);
+    });
+    await batch.commit();
+  } catch (err) {
+    console.error('Failed to clear all notifications', err);
+  }
+};
