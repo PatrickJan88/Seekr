@@ -9,6 +9,7 @@ import { LOCATION_DATA, parseLocationToGroup } from '../data/locationData';
 const STATUSES: JobStatus[] = ['Wishlist', 'Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
 
 interface JobFormProps {
+  trackingSystem?: 'industry' | 'academic';
   initialData?: JobApplication;
   onSave: (data: Partial<JobApplication>) => Promise<void>;
   onCancel: () => void;
@@ -16,9 +17,9 @@ interface JobFormProps {
   isDemo?: boolean;
 }
 
-export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = false }: JobFormProps) {
+export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = false, trackingSystem = 'industry' }: JobFormProps) {
   const [formData, setFormData] = useState<Partial<JobApplication>>(
-    initialData || { status: 'Applied', company: '', position: '', appliedDate: new Date().toISOString().split('T')[0] }
+    initialData || { status: 'Applied', company: '', position: '', appliedDate: new Date().toISOString().split('T')[0], trackingSystem }
   );
   const [isSaving, setIsSaving] = useState(false);
   const [pasteText, setPasteText] = useState('');

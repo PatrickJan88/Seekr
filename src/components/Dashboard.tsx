@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { JobApplication, JobStatus } from '../types';
 import { getApplications, addApplication, updateApplication, deleteApplication, addApplicationsBatch, deleteAllApplications } from '../db/applications';
 import { Kanban } from './Kanban';
@@ -24,6 +24,8 @@ import { NotificationsPage } from './NotificationsPage';
 import { SettingsPage } from './SettingsPage';
 import { CVMatchAssessment } from './CVMatchAssessment';
 import { EvaluateHistoryPage } from './EvaluateHistoryPage';
+import { SidebarNav } from './SidebarNav';
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Sparkles } from 'lucide-react';
 
 interface DashboardProps {
@@ -39,12 +41,24 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   const [isSyncing, setIsSyncing] = useState(false);
   const syncLockRef = useRef(false);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [view, setView] = useState<'sankey' | 'kanban' | 'analytics' | 'cv-match' | 'notifications' | 'settings' | 'eval-history' | 'global-market'>('sankey');
+  const [trackingSystem, setTrackingSystem] = useState<'industry' | 'academic'>('industry');
+
+  const filteredApplications = useMemo(() => {
+    return applications.filter(app => (app.trackingSystem || 'industry') === trackingSystem);
+  }, [applications, trackingSystem]);
   const [editingApp, setEditingApp] = useState<JobApplication | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [nestedBreadcrumb, setNestedBreadcrumb] = useState<{label: string; onBack: () => void} | null>(null);
+
+  useEffect(() => {
+    setNestedBreadcrumb(null);
+  }, [view]);
+
   const [locationFilter, setLocationFilter] = useState<string | null>(null);
 
   const handleLocationSelect = (country: string | null) => {
@@ -303,8 +317,10 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     try {
       await updateApplication(appId, { status: newStatus as any });
       setApplications(apps => apps.map(a => a.id === appId ? { ...a, status: newStatus as any } : a));
+      toast.success(`Application status updated successfully`);
     } catch (err) {
       console.error('Error updating status', err);
+      toast.error('Failed to update status');
     }
   };
 
@@ -337,15 +353,17 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
       if (editingApp) {
         await updateApplication(editingApp.id, appData);
         setApplications(apps => apps.map(a => a.id === editingApp.id ? { ...a, ...appData } as JobApplication : a));
+        toast.success('Application updated successfully');
       } else {
         const newApp = await addApplication({ ...appData, userId: auth.currentUser.uid } as any);
         setApplications(apps => [newApp, ...apps]);
-        toast.success('One new application adding success');
+        toast.success('Application saved successfully');
       }
       setIsFormOpen(false);
       setEditingApp(null);
     } catch (err) {
       console.error('Error saving', err);
+      toast.error('Failed to save application');
       throw err;
     }
   };
@@ -562,163 +580,90 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     return <NotificationsPage onBack={() => setView('sankey')} />;
   }
 
-  if (view === 'settings') {
-    return <SettingsPage onBack={() => setView('sankey')} onClearData={handleClearData} isSyncing={isSyncing} />;
-  }
+  
 
-  if (view === 'eval-history') {
-    return <EvaluateHistoryPage onBack={() => setView('cv-match')} applications={applications} onAddToWishlist={handleSave} />;
-  }
+  
 
+  const viewTitles: Record<string, string> = {
+    'sankey': 'Overview',
+    'global-market': 'Job Market',
+    'kanban': 'My Applications',
+    'analytics': 'Analytics',
+    'cv-match': 'AI Evaluator',
+    'settings': 'Settings',
+    'notifications': 'Notifications',
+    'eval-history': 'Evaluation History'
+  };
+  const displayTitle = viewTitles[view] || view.replace('-', ' ');
   return (
-    <div className="min-h-screen bg-[#faf9f7] text-[#121722] font-sans flex flex-col">
-      <header className="h-16 bg-white border-b border-[#efefef] flex items-center justify-between px-6 md:px-8 shrink-0 sticky top-0 z-30">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3">
-            <img src="/assets/seekr%20logo%201.webp" alt="Seekr Logo" className="h-8" />
-          </div>
-          <div className="flex items-center gap-4 border-l border-[#efefef] pl-6">
-            <button 
-              onClick={isDemo ? () => toast.info('Demo Mode: Adding new applications is restricted in this portfolio preview.') : () => { setEditingApp(null); setIsFormOpen(true); }}
-              className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-all bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-9 px-4 py-2 gap-2 cursor-pointer"
-            >
-              <Plus size={16} />
-              <span>New</span>
-            </button>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <CommandSearch 
-            applications={applications} 
-            onSelectApplication={(app) => {
-              setEditingApp(app);
-              setIsFormOpen(true);
-            }} 
-          />
-          <NotificationCenter onViewAll={() => setView('notifications')} />
-          <button onClick={() => setView('settings')} title="Settings" className="w-10 h-10 rounded-full bg-white border border-[#efefef] shadow-2xs flex items-center justify-center text-[#777c86] hover:text-[#121722] hover:bg-[#faf9f7] transition-all cursor-pointer">
-            <Settings size={16} />
-          </button>
-        </div>
-      </header>
-
-      <main className="p-6 md:p-8 w-full flex-1 flex flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-4 bg-white border border-[#efefef] rounded-2xl p-3 shadow-2xs">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <button
-              onClick={() => setView('sankey')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all cursor-pointer ${view === 'sankey' ? 'bg-[#fbfaf7] text-[#121722] border border-[#efefef] shadow-2xs' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
-            >
-              <LayoutDashboard size={16} />
-              Overview
-            </button>
-            <button
-              onClick={() => setView('global-market')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all cursor-pointer ${view === 'global-market' ? 'bg-[#e8f1ff] text-[#0068f9] border border-[#0068f9]/30 shadow-2xs' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
-            >
-              <Globe size={16} className={view === 'global-market' ? 'text-[#0068f9]' : 'text-[#777c86]'} />
-              Job Market
-            </button>
-            <button
-              onClick={() => setView('kanban')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all cursor-pointer ${view === 'kanban' ? 'bg-[#fbfaf7] text-[#121722] border border-[#efefef] shadow-2xs' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
-            >
-              <LayoutDashboard size={16} />
-              Kanban
-            </button>
-            <button
-              onClick={() => setView('analytics')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all cursor-pointer ${view === 'analytics' ? 'bg-[#fbfaf7] text-[#121722] border border-[#efefef] shadow-2xs' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
-            >
-              <BarChart3 size={16} />
-              Analytics
-            </button>
-            <button
-              onClick={() => setView('cv-match')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all cursor-pointer ${view === 'cv-match' ? 'bg-[#e8f1ff] text-[#0068f9] border border-[#0068f9]/30 shadow-2xs' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
-            >
-              <Sparkles size={16} className={view === 'cv-match' ? 'text-[#0068f9]' : 'text-[#777c86]'} />
-              AI Evaluator
-            </button>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap gap-2.5">
-              <button
-                onClick={isDemo ? () => toast.info('Demo Mode: Importing data is disabled in this portfolio preview.') : () => setShowImportModal(true)}
-                disabled={isSyncing}
-                className={`gap-2 inline-flex items-center justify-center rounded-full text-sm font-medium transition-all border border-[#efefef] bg-white text-[#121722] shadow-2xs hover:bg-[#faf9f7] h-9 px-5 py-2 cursor-pointer ${isSyncing ? "opacity-50 cursor-not-allowed" : ""}`}
-              >
-                {isSyncing ? <Loader2 size={16} className="animate-spin text-[#0068f9]" /> : <Upload size={16} />}
-                Import Data
-              </button>
-              <button
-                onClick={isDemo ? () => toast.info('Demo Mode: Exporting data is restricted in this portfolio preview.') : () => exportCsv(applications)}
-                disabled={applications.length === 0 || isSyncing}
-                className={`gap-2 inline-flex items-center justify-center rounded-full text-sm font-medium transition-all bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-9 px-5 py-2 cursor-pointer ${applications.length === 0 || isSyncing ? "opacity-50 cursor-not-allowed" : ""}`}
-              >
-                <Download size={16} />
-                Export
-              </button>
-            </div>
-            {syncError && <div className="text-red-500 text-xs font-medium">{syncError}</div>}
-          </div>
-        </div>
-
-        {view === 'cv-match' ? (
-          <CVMatchAssessment 
-            applications={applications} 
-            isDemo={isDemo} 
-            onAddToWishlist={handleAddToWishlist}
-            onViewHistory={() => setView('eval-history')}
-          />
-        ) : view === 'global-market' ? (
-          <GlobalMarket 
-            isDemo={isDemo} 
-            onAddToWishlist={handleAddToWishlist}
-          />
-        ) : applications.length === 0 ? (
-          <div className="flex-grow flex flex-col items-center justify-center bg-white border border-[#efefef] rounded-2xl p-12 shadow-2xs text-center">
-             <h3 className="text-xl font-bold text-[#121722] mb-2">No applications yet</h3>
-             <p className="text-[#777c86] max-w-md mb-6 text-sm">You haven't tracked any job applications. Start by adding one manually or import from a CSV or PDF file.</p>
-             <button
-               onClick={() => { setEditingApp(null); setIsFormOpen(true); }}
-               className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-all bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-9 px-5 py-2 gap-2 cursor-pointer"
-             >
-               <Plus size={20} />
-               <span>Add Your First Application</span>
-             </button>
-          </div>
-        ) : view === 'sankey' ? (
-          <SankeyChart applications={applications} isDemo={isDemo} />
-        ) : view === 'kanban' ? (
-          <Kanban applications={applications} onEdit={(app) => { setEditingApp(app); setIsFormOpen(true); }} onStatusChange={handleStatusChange} onDelete={handleDelete} locationFilter={locationFilter} onLocationSelect={handleLocationSelect} />
-        ) : (
-          <Analytics applications={applications} isDemo={isDemo} onLocationSelect={handleLocationSelect} />
-        )}
-      </main>
-
-      {!isDemo && (
-        <Footer
-          logo={<img src="/assets/seekr%20logo%201.webp" alt="Seekr Logo" className="h-6" />}
-          brandName=""
-          socialLinks={[
-            { icon: <Github size={18} />, href: "https://github.com/PatrickJan88/Seekr/blob/main/README.md", label: "GitHub" },
-            { icon: <Linkedin size={18} />, href: "https://www.linkedin.com/in/pofei-r-79586395", label: "LinkedIn" },
-            { icon: <img src="/assets/logo%20pofei.svg" alt="Pofei Logo" className="w-[18px] h-[18px]" />, href: "https://pofeiportfolio.vercel.app/", label: "Portfolio" }
-          ]}
-          mainLinks={[]}
-          legalLinks={[]}
-          copyright={{
-            text: "Disclaimer: This is an AI-generated coding project created solely for research and demonstration purposes. It is not a commercial product, and is not affiliated with any existing companies or trademarks utilizing the \"Seekr\" name.",
-          }}
+    <div className="flex w-full h-screen bg-[#faf9f7] overflow-hidden text-[#121722] font-sans">
+      {/* Sidebar */}
+      <div className={`h-full transition-all duration-300 ease-in-out shrink-0 overflow-hidden bg-white border-r border-[#efefef] z-20 ${isSidebarOpen ? 'w-[260px] opacity-100' : 'w-0 opacity-0 border-none'}`}>
+        <SidebarNav
+            trackingSystem={trackingSystem}
+            setTrackingSystem={setTrackingSystem}
+           className="w-[260px] border-none bg-transparent"
+           activeId={view}
+           onSelect={(id) => setView(id as any)}
+           isDemo={isDemo}
+           onImport={() => isDemo ? toast.info('Demo Mode: Importing data is disabled in this portfolio preview.') : setShowImportModal(true)}
+           onExport={() => exportCsv(applications)}
+           onNew={() => { setEditingApp(null); setIsFormOpen(true); }}
         />
-      )}
+      </div>
 
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 relative bg-[#faf9f7] z-10">
+         {/* Top Navbar */}
+         <header className="h-16 border-b border-[#efefef] flex items-center px-6 md:px-8 justify-between bg-white shrink-0 z-30 sticky top-0">
+           <div className="flex items-center gap-3">
+             <button 
+               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+               className="p-1.5 rounded-md text-[#a5a5a5] hover:bg-[#faf9f7] hover:text-[#121722] transition-colors cursor-pointer -ml-1.5"
+             >
+               {isSidebarOpen ? <PanelLeftClose className="w-[18px] h-[18px]" strokeWidth={1.5} /> : <PanelLeftOpen className="w-[18px] h-[18px]" strokeWidth={1.5} />}
+             </button>
+             <div className="flex items-center gap-2 text-[13px] text-[#777c86] ml-2 border-l border-transparent pl-2">
+               {nestedBreadcrumb ? (
+                 <>
+                   <span 
+                     className="hidden sm:inline-block hover:text-[#121722] cursor-pointer transition-colors"
+                     onClick={() => nestedBreadcrumb.onBack()}
+                   >
+                     {displayTitle}
+                   </span>
+                   <span className="hidden sm:inline-block text-[#d1d5db]">/</span>
+                   <span className="font-semibold text-[#121722] truncate capitalize">{nestedBreadcrumb.label}</span>
+                 </>
+               ) : (
+                 <span className="font-semibold text-[#121722] truncate capitalize">{displayTitle}</span>
+               )}
+             </div>
+           </div>
+           
+           <div className="flex items-center gap-3">
+             <CommandSearch applications={applications} onSelectApplication={(app) => { setEditingApp(app); setIsFormOpen(true); }} />
+             <NotificationCenter onViewAll={() => setView('notifications')} />
+           </div>
+         </header>
+
+         {/* Content Scrollable Area */}
+         <main className="flex-1 overflow-y-auto bg-[#faf9f7] p-6 md:p-8 w-full flex flex-col custom-scrollbar relative">
+            {view === 'sankey' && <SankeyChart applications={filteredApplications} onAdd={() => { setEditingApp(null); setIsFormOpen(true); }} />}
+            {view === 'global-market' && <GlobalMarket isDemo={isDemo} onAddToWishlist={handleSave} trackingSystem={trackingSystem} />}
+            {view === 'kanban' && <Kanban applications={filteredApplications} onEdit={(app) => { setEditingApp(app); setIsFormOpen(true); }} onStatusChange={handleStatusChange as any} onDelete={handleDelete} locationFilter={locationFilter} onLocationSelect={handleLocationSelect} />}
+            {view === 'analytics' && <Analytics applications={filteredApplications} onLocationSelect={handleLocationSelect} />}
+            {view === 'cv-match' && <CVMatchAssessment applications={filteredApplications} trackingSystem={trackingSystem} onAddToWishlist={handleSave} onViewHistory={() => setView('eval-history')} setNestedBreadcrumb={setNestedBreadcrumb} />}
+            {view === 'notifications' && <NotificationsPage onBack={() => setView('sankey')} />}
+            {view === 'settings' && <SettingsPage onBack={() => setView('sankey')} onClearData={handleClearData} isSyncing={isSyncing} trackingSystem={trackingSystem} setTrackingSystem={setTrackingSystem} />}
+            {view === 'eval-history' && <EvaluateHistoryPage onBack={() => setView('cv-match')} applications={filteredApplications} onAddToWishlist={handleSave} />}
+         </main>
+      </div>
+      
       {isFormOpen && (
         <JobForm
           initialData={editingApp || undefined}
+          trackingSystem={trackingSystem}
           onSave={handleSave}
           onCancel={() => { setIsFormOpen(false); setEditingApp(null); }}
           onDelete={handleDelete}

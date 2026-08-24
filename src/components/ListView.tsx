@@ -262,7 +262,7 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete }: Lis
               <th className="relative border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap cursor-pointer group hover:bg-[#efefef]/50 transition-colors select-none outline-none focus:outline-none ring-0 focus:ring-0"
                 style={{ width: colWidths.company }} onClick={() => requestSort('company')} onMouseDown={(e) => { if ((e.target as HTMLElement).tagName !== 'DIV' || !(e.target as HTMLElement).className.includes('cursor-col-resize')) e.preventDefault(); }}
               >
-                <div className="flex items-center">Company {getSortIcon('company')}</div>
+                <div className="flex items-center">{trackingSystem === 'academic' ? 'Institution' : 'Company'} {getSortIcon('company')}</div>
                 <div className="absolute right-0 top-0 h-full w-2 cursor-col-resize hover:bg-[#0068f9] transition-colors z-20 group-hover:bg-[#efefef]" onMouseDown={(e) => handleMouseDown(e, 'company')} />
               </th>
               <th className="relative border-b border-[#efefef] px-6 py-3.5 text-xs font-semibold text-[#777c86] whitespace-nowrap cursor-pointer group hover:bg-[#efefef]/50 transition-colors select-none outline-none focus:outline-none ring-0 focus:ring-0"

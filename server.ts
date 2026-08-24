@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import express from "express";
-import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 
@@ -364,9 +363,121 @@ const app = express();
     }
   });
 
+  
+  app.post("/api/generate-cover-letter", async (req, res) => {
+    try {
+      const { cvText, pdfBase64, jobDescription, strengths, companyName, trackingSystem } = req.body;
+      
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({ error: "GEMINI_API_KEY environment variable is missing on the server." });
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey: process.env.GEMINI_API_KEY,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build'
+          }
+        }
+      });
+      
+      const prompt = `
+You are an expert career coach and executive assistant.
+Write a highly professional, tailored cover letter for the candidate applying to ${companyName || (trackingSystem === 'academic' ? 'this institution' : 'this company')}.
+If trackingSystem is "academic", format this as an academic cover letter (focus on research, publications, teaching philosophy if applicable).
+
+Job Description:
+${jobDescription ? jobDescription.substring(0, 5000) : 'Not provided'}
+
+Candidate Resume/CV Data:
+${cvText ? cvText.substring(0, 5000) : (pdfBase64 ? 'PDF data provided (use best judgement based on strengths)' : 'Not provided')}
+
+Key Strengths to Highlight:
+${strengths ? strengths.join(', ') : 'Not provided'}
+
+Instructions:
+1. Use a standard professional cover letter format (exclude physical addresses, just use placeholders like [Your Name], [Date], [Hiring Manager], etc. at the top).
+2. Write in a confident, engaging tone. Avoid overly robotic or generic AI phrases (e.g., "I am writing to express my interest", "I am a highly motivated"). Open with a strong hook.
+3. Keep it to 3-4 concise paragraphs.
+4. Return ONLY the plain text of the cover letter. Do not include markdown formatting like \`\`\`text, just the raw string.
+`;
+
+      const response = await generateContentWithRetry(ai, {
+        preferredModel: "gemini-3.6-flash",
+        contents: prompt
+      });
+
+      res.json({ coverLetter: response.text.replace(/^\s*\`\`\`(text)?|\`\`\`\s*$/g, '').trim() });
+    } catch (error: any) {
+      console.error("Cover Letter error:", error);
+      res.status(500).json({ error: error.message || "Failed to generate cover letter" });
+    }
+  });
+
+  
+  app.post("/api/generate-interview-guide", async (req, res) => {
+    try {
+      const { cvText, pdfBase64, jobDescription, targetRole, gaps, strengths, companyName } = req.body;
+      
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({ error: "GEMINI_API_KEY environment variable is missing on the server." });
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey: process.env.GEMINI_API_KEY,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build'
+          }
+        }
+      });
+      
+      const prompt = `
+You are an expert technical interviewer and career coach.
+Generate a comprehensive Interview Preparation Guide for a candidate applying for the ${targetRole || 'target'} role at ${companyName || 'the target company'}.
+
+Job Description:
+${jobDescription ? jobDescription.substring(0, 5000) : 'Not provided'}
+
+Candidate CV/Resume Data:
+${cvText ? cvText.substring(0, 5000) : (pdfBase64 ? 'PDF data provided' : 'Not provided')}
+
+Identified Skill Gaps:
+${gaps ? gaps.join(', ') : 'None'}
+
+Key Strengths:
+${strengths ? strengths.join(', ') : 'None'}
+
+Instructions:
+Generate a plain text document (not markdown, just simple raw text, nicely formatted with standard line breaks and ALL CAPS headings or numbered lists) that covers:
+
+1. EXECUTIVE SUMMARY
+Brief overview of what the candidate should focus on in the interview based on their gaps.
+
+2. PIVOTING WEAKNESSES (The "Gaps")
+For each identified gap, explain how to address it if asked. Give a brief framework (e.g., "Acknowledge the gap, but highlight how your experience with X is transferable...").
+
+3. DEEP DIVE QUESTIONS (Behavioral & Technical)
+Provide 4-5 high-probability questions. For each, give a short STAR (Situation, Task, Action, Result) method framework tailored to their specific strengths to help them answer.
+
+Keep the tone encouraging, strategic, and highly professional. Return ONLY the text, no markdown code block formatting.
+`;
+
+      const response = await generateContentWithRetry(ai, {
+        preferredModel: "gemini-3.6-flash",
+        contents: prompt
+      });
+
+      res.json({ interviewGuide: response.text.replace(/^\s*\`\`\`(text)?|\`\`\`\s*$/g, '').trim() });
+    } catch (error: any) {
+      console.error("Interview Guide error:", error);
+      res.status(500).json({ error: error.message || "Failed to generate interview guide" });
+    }
+  });
+
   app.post("/api/cv-match", async (req, res) => {
     try {
-      const { targetRole, cvText, pdfBase64, jobDescription } = req.body;
+      const { targetRole, cvText, pdfBase64, jobDescription, trackingSystem } = req.body;
       if (!jobDescription) {
         return res.status(400).json({ error: "Job description is required" });
       }
@@ -389,14 +500,21 @@ const app = express();
 
       const role = targetRole || "Tech Hiring Manager";
 
+      
+      const isAcademic = trackingSystem === 'academic';
+      const evaluatorTitle = isAcademic 
+        ? `Senior Faculty Search Committee Member, Postdoc Recruiter, and Academic Lead Evaluator`
+        : `Senior Hiring Manager, Technical Recruiter, and Lead Evaluator`;
+        
       const promptText = `
-You are a Senior Hiring Manager, Technical Recruiter, and Lead Evaluator specializing in the role of: ${role}.
+You are a ${evaluatorTitle} specializing in the role/domain of: ${role}. specializing in the role of: ${role}.
 You will be given a candidate's CV (resume) and a Job Description (JD).
 Your task is to conduct a rigorous, intelligent evaluation of the candidate's CV against the Job Description specifically through the technical and domain lens of a ${role}.
 
 Methodology & Rules:
 1. Evaluate using ABDUCTIVE REASONING:
    - Do NOT just perform basic keyword matching.
+   - If this is an academic evaluation, focus on publications, research methodology, grants, academic impact, and teaching experience.
    - Observe the underlying evidence in the candidate's past projects, architecture, tools, metrics, leadership, and experience.
    - Intelligently infer their true capability, technical depth, and potential to fulfill the required duties in the JD.
 

@@ -22,9 +22,14 @@ import {
   ChevronDown,
   Info,
   LoaderCircleIcon,
-  Trash2
+  Trash2,
+  Play,
+  Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { CoverLetterStudio } from './CoverLetterStudio';
+import { InterviewPrepStudio } from './InterviewPrepStudio';
+import { NestedApplicationMenu } from './NestedApplicationMenu';
 import {
   Stepper,
   StepperContent,
@@ -43,6 +48,7 @@ interface CVMatchAssessmentProps {
   isDemo?: boolean;
   onAddToWishlist?: (appData: Partial<JobApplication>) => void;
   onViewHistory?: () => void;
+  setNestedBreadcrumb?: (crumb: {label: string, onBack: () => void} | null) => void;
 }
 
 export interface MatchResult {
@@ -55,7 +61,7 @@ export interface MatchResult {
   interview_questions: string[];
 }
 
-export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlist, onViewHistory }: CVMatchAssessmentProps) {
+export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlist, onViewHistory, setNestedBreadcrumb, trackingSystem = 'industry' }: CVMatchAssessmentProps & { trackingSystem?: 'industry' | 'academic' }) {
   const DEMO_RESULT: MatchResult = {
     company_name: 'TechFlow Solutions',
     score: 88,
@@ -109,8 +115,123 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
   }, [isLoading]);
 
   const [result, setResult] = useState<MatchResult | null>(null);
+
+  useEffect(() => {
+    if (setNestedBreadcrumb) {
+      if (result) {
+        setNestedBreadcrumb({
+          label: 'Match Analysis',
+          onBack: () => {
+            setResult(null);
+            setTargetRole('');
+            setTargetDescription('');
+            setTargetPastedDescription('');
+            setStep(1);
+            setCoverLetterText(null);
+            setInterviewGuideText(null);
+          }
+        });
+      } else {
+        setNestedBreadcrumb(null);
+      }
+    }
+  }, [result, setNestedBreadcrumb]);
   const [copiedPolish, setCopiedPolish] = useState(false);
   const [showCvTextPreview, setShowCvTextPreview] = useState(false);
+  
+  const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false);
+  const [coverLetterText, setCoverLetterText] = useState<string | null>(null);
+
+
+  const [isGeneratingInterviewGuide, setIsGeneratingInterviewGuide] = useState(false);
+  const [interviewGuideText, setInterviewGuideText] = useState<string | null>(null);
+
+  const handleGenerateInterviewGuide = async () => {
+    if (isDemo) {
+      setInterviewGuideText("1. EXECUTIVE SUMMARY\n\nFocus heavily on your React expertise to pivot away from any gaps in backend engineering...\n\n2. PIVOTING WEAKNESSES\n\nGap: Lack of E2E testing.\nAnswer Strategy: Acknowledge the gap but highlight that you are actively learning Cypress...\n\n3. DEEP DIVE QUESTIONS\n\nQ: How do you manage complex state?\nA (STAR): Situation: The app had prop drilling... Task: Migrate to Zustand... Action: Rewrote... Result: 50% faster renders.");
+      return;
+    }
+
+    if (!result) return;
+    setIsGeneratingInterviewGuide(true);
+    try {
+      let pdfBase64 = '';
+      if (cvFile && !cvText) {
+        pdfBase64 = await fileToBase64(cvFile).catch(() => '');
+      }
+      
+      const res = await fetch('/api/generate-interview-guide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetRole,
+          cvText,
+          pdfBase64,
+          jobDescription,
+          trackingSystem,
+          strengths: result.strengths,
+          gaps: result.gaps,
+          companyName: result.company_name
+        })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to generate interview guide');
+      }
+
+      const data = await res.json();
+      setInterviewGuideText(data.interviewGuide);
+    } catch (err: any) {
+      console.error('Interview Guide Error:', err);
+      toast.error(err.message || 'Error generating interview guide');
+    } finally {
+      setIsGeneratingInterviewGuide(false);
+    }
+  };
+
+  const handleGenerateCoverLetter = async () => {
+    if (isDemo) {
+      setCoverLetterText("Dear Hiring Manager,\n\nI am writing to apply for the position at TechFlow Solutions. With my strong background in React and TypeScript, I am confident in my ability to deliver high-quality frontend solutions.\n\nMy experience includes building design systems and state management solutions, as well as optimizing client-side performance and bundle sizes. I am particularly drawn to this role because it aligns perfectly with my track record of improving page load speeds and implementing scalable architectures.\n\nI would welcome the opportunity to discuss how my skills and experiences align with your needs. Thank you for your time and consideration.\n\nSincerely,\n\n[Your Name]");
+      return;
+    }
+
+    if (!result) return;
+    setIsGeneratingCoverLetter(true);
+    try {
+      let pdfBase64 = '';
+      if (cvFile && !cvText) {
+        pdfBase64 = await fileToBase64(cvFile).catch(() => '');
+      }
+      
+      const res = await fetch('/api/generate-cover-letter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetRole,
+          cvText,
+          pdfBase64,
+          jobDescription,
+          trackingSystem,
+          strengths: result.strengths,
+          companyName: result.company_name
+        })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to generate cover letter');
+      }
+
+      const data = await res.json();
+      setCoverLetterText(data.coverLetter);
+    } catch (err: any) {
+      console.error('Cover Letter Error:', err);
+      toast.error(err.message || 'Error generating cover letter');
+    } finally {
+      setIsGeneratingCoverLetter(false);
+    }
+  };
 
   // Handle PDF Upload
   const handleFileUpload = async (file: File) => {
@@ -181,7 +302,8 @@ ${app.notes || 'No extra description provided.'}`;
   const validateStep = (step: number) => {
     if (step === 1) return !!targetRole;
     if (step === 2) return !!cvText || !!cvFile;
-    if (step === 3) return !!jobDescription.trim();
+    if (step === 3) return !!jobDescription,
+          trackingSystem.trim();
     return false;
   };
 
@@ -196,7 +318,8 @@ ${app.notes || 'No extra description provided.'}`;
       }, 1200);
       return;
     }
-    if (!jobDescription.trim()) {
+    if (!jobDescription,
+          trackingSystem.trim()) {
       toast.error('Please provide or select a Job Description.');
       return;
     }
@@ -220,7 +343,8 @@ ${app.notes || 'No extra description provided.'}`;
           targetRole,
           cvText,
           pdfBase64,
-          jobDescription
+          jobDescription,
+          trackingSystem
         })
       });
 
@@ -239,6 +363,7 @@ ${app.notes || 'No extra description provided.'}`;
             userId: auth.currentUser.uid,
             role: targetRole,
             jobDescription,
+          trackingSystem,
             result: data
           });
         } catch (e) {
@@ -296,13 +421,14 @@ ${app.notes || 'No extra description provided.'}`;
   const selectedRoleObj = TECH_ROLES.find(r => r.id === targetRole);
 
   return (
-    <div className="w-full space-y-6">
+    <div className="relative w-full flex-1 flex flex-col min-h-[500px]">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col relative overflow-y-auto custom-scrollbar">
 
       {/* If Result exists, show Bento Grid Overview. Else show Step Guided Workflow */}
       {result ? (
         <div className="space-y-6 animate-in fade-in duration-300">
           {/* Top Bar Navigation in Results */}
-          <div className="bg-white border border-[#efefef] rounded-2xl p-4 shadow-2xs flex flex-wrap items-center justify-between gap-4">
+          <div className="bg-[#faf9f7] border border-[#efefef] rounded-2xl p-4 shadow-none flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <AgentAvatar seed={targetRole} size={38} animated={true} />
               <div>
@@ -352,7 +478,7 @@ ${app.notes || 'No extra description provided.'}`;
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
             
             {/* Bento Card 1: Score & Persona Overview (Col 4) */}
-            <div className="md:col-span-4 bg-white border border-[#efefef] rounded-2xl p-6 shadow-2xs flex flex-col items-center justify-between text-center relative overflow-hidden">
+            <div className="md:col-span-4 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 shadow-none flex flex-col items-center justify-between text-center relative overflow-hidden">
               <div className="w-full flex items-center justify-between border-b border-[#efefef] pb-3 mb-4">
                 <span className="text-xs font-bold text-[#777c86]">
                   Score overview
@@ -417,7 +543,7 @@ ${app.notes || 'No extra description provided.'}`;
             </div>
 
             {/* Bento Card 2: Strategic Bullet Point Polish (Col 8) */}
-            <div className="md:col-span-8 bg-white border border-[#efefef] rounded-2xl p-6 shadow-2xs flex flex-col justify-between relative overflow-hidden isolate space-y-4">
+            <div className="md:col-span-8 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 shadow-none flex flex-col justify-between relative overflow-hidden isolate space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-full bg-[#e8f1ff] border border-[#0068f9]/20 flex items-center justify-center text-[#0068f9]">
@@ -449,7 +575,7 @@ ${app.notes || 'No extra description provided.'}`;
             </div>
 
             {/* Bento Card 3: Strongest Alignments (Col 6) */}
-            <div className="md:col-span-6 bg-white border border-[#efefef] rounded-2xl p-6 shadow-2xs space-y-4">
+            <div className="md:col-span-6 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 shadow-none space-y-4">
               <div className="flex items-center gap-2 border-b border-[#efefef] pb-3">
                 <div className="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
                   <CheckCircle2 size={18} />
@@ -470,7 +596,7 @@ ${app.notes || 'No extra description provided.'}`;
             </div>
 
             {/* Bento Card 4: Competency & Evidence Gaps (Col 6) */}
-            <div className="md:col-span-6 bg-white border border-[#efefef] rounded-2xl p-6 shadow-2xs space-y-4">
+            <div className="md:col-span-6 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 shadow-none space-y-4">
               <div className="flex items-center gap-2 border-b border-[#efefef] pb-3">
                 <div className="w-7 h-7 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
                   <AlertTriangle size={18} />
@@ -491,7 +617,7 @@ ${app.notes || 'No extra description provided.'}`;
             </div>
 
             {/* Bento Card 5: Forecasted Role Interview Questions (Col 12) */}
-            <div className="md:col-span-12 bg-white border border-[#efefef] rounded-2xl p-6 shadow-2xs space-y-4">
+            <div className="md:col-span-12 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 shadow-none space-y-4">
               <div className="flex items-center justify-between border-b border-[#efefef] pb-3">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-full bg-[#f4f0ff] text-[#6736eb] flex items-center justify-center">
@@ -501,9 +627,14 @@ ${app.notes || 'No extra description provided.'}`;
                     Forecasted {targetRole} interview questions
                   </h4>
                 </div>
-                <span className="text-xs font-semibold text-[#777c86]">
-                  3 tailored scenario questions
-                </span>
+                <button 
+                  onClick={handleGenerateInterviewGuide}
+                  disabled={isGeneratingInterviewGuide}
+                  className="text-xs font-medium text-white bg-[#0068f9] hover:bg-[#024bb1] border border-transparent shadow-2xs px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-70"
+                >
+                  {isGeneratingInterviewGuide ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
+                  <span>Generate Deep Prep Guide</span>
+                </button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -539,7 +670,7 @@ ${app.notes || 'No extra description provided.'}`;
           className="flex flex-col md:flex-row gap-6 items-stretch w-full"
         >
           {/* STEPPER SIDEBAR NAV - LEFT SIDE */}
-          <div className="w-full md:w-60 lg:w-64 shrink-0 bg-white border border-[#efefef] rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col self-stretch justify-between min-h-[520px] md:h-[520px]">
+          <div className="w-full md:w-60 lg:w-64 shrink-0 bg-white border border-[#efefef] rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col self-stretch justify-between min-h-[400px]">
             <StepperNav className="w-full flex-1 flex flex-col justify-between py-2">
               {steps.map((step, index) => (
                 <React.Fragment key={index}>
@@ -569,10 +700,10 @@ ${app.notes || 'No extra description provided.'}`;
           </div>
 
           {/* RIGHT CONTENT AREA */}
-          <StepperPanel className="flex-1 w-full min-w-0 self-stretch flex flex-col min-h-[520px] md:h-[520px]">
+          <StepperPanel className="flex-1 w-full min-w-0 self-stretch flex flex-col min-h-[400px]">
             {/* STEP 1: SELECT AI EVALUATOR */}
             <StepperContent value={1} className="h-full flex flex-col flex-1">
-              <div className="bg-white border border-[#efefef] rounded-2xl p-5 sm:p-6 shadow-2xs h-full md:h-[520px] flex-1 flex flex-col justify-between animate-in fade-in duration-200">
+              <div className="bg-white border border-[#efefef] rounded-2xl p-5 sm:p-6 shadow-2xs h-full flex-1 min-h-0 flex flex-col justify-between animate-in fade-in duration-200">
                 <div className="shrink-0 pb-1 flex justify-between items-start">
                   <div>
                     <h3 className="text-base font-bold text-[#121722]">
@@ -596,13 +727,14 @@ ${app.notes || 'No extra description provided.'}`;
                   selectedRoleId={targetRole}
                   onSelectRole={(roleId) => setTargetRole(roleId)}
                   onContinue={() => setCurrentStep(2)}
+                  trackingSystem={trackingSystem}
                 />
               </div>
             </StepperContent>
 
             {/* STEP 2: UPLOAD CV */}
             <StepperContent value={2} className="h-full flex flex-col flex-1">
-              <div className="bg-white border border-[#efefef] rounded-2xl p-5 sm:p-6 shadow-2xs h-full md:h-[520px] flex-1 flex flex-col justify-between">
+              <div className="bg-white border border-[#efefef] rounded-2xl p-5 sm:p-6 shadow-2xs h-full flex-1 min-h-0 flex flex-col justify-between">
                 <div className="flex items-center justify-between border-b border-[#efefef] pb-3 shrink-0">
                     <div>
                       <h3 className="text-base font-bold text-[#121722]">
@@ -722,7 +854,21 @@ ${app.notes || 'No extra description provided.'}`;
                             <FileText size={12} />
                             <span>{showCvTextPreview ? 'Hide extracted CV text' : 'View extracted CV text'}</span>
                           </button>
-                          {showCvTextPreview && (
+                          {interviewGuideText && (
+        <InterviewPrepStudio
+          initialText={interviewGuideText}
+          companyName={result?.company_name}
+          onClose={() => setInterviewGuideText(null)}
+        />
+      )}
+      {coverLetterText && (
+        <CoverLetterStudio
+          initialText={coverLetterText}
+          companyName={result?.company_name}
+          onClose={() => setCoverLetterText(null)}
+        />
+      )}
+      {showCvTextPreview && (
                             <textarea
                               readOnly
                               value={cvText}
@@ -767,7 +913,7 @@ ${app.notes || 'No extra description provided.'}`;
 
             {/* STEP 3: JOB DESCRIPTION */}
             <StepperContent value={3} className="h-full flex flex-col flex-1">
-              <div className="bg-white border border-[#efefef] rounded-2xl p-5 sm:p-6 shadow-2xs h-full md:h-[520px] flex-1 flex flex-col justify-between">
+              <div className="bg-white border border-[#efefef] rounded-2xl p-5 sm:p-6 shadow-2xs h-full flex-1 min-h-0 flex flex-col justify-between">
                 <div className="flex items-center justify-between border-b border-[#efefef] pb-3 shrink-0">
                     <div>
                       <h3 className="text-base font-bold text-[#121722]">
@@ -798,27 +944,18 @@ ${app.notes || 'No extra description provided.'}`;
                   {jdSource === 'application' && (
                     <div className="space-y-1 my-2 shrink-0">
                       <label className="block text-xs font-medium text-[#777c86]">Choose from my tracked applications:</label>
-                      <div className="relative">
-                        <select
-                          value={selectedAppId}
-                          onChange={(e) => handleSelectApplication(e.target.value)}
-                          className="w-full pl-3.5 pr-9 py-2 text-xs bg-[#faf9f7] border border-[#efefef] rounded-2xl focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-[#121722] appearance-none cursor-pointer font-medium"
-                        >
-                          <option value="">-- Choose a tracked application --</option>
-                          {applications.map((app) => (
-                            <option key={app.id} value={app.id}>
-                              {app.position} at {app.company} ({app.status})
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#777c86] pointer-events-none" />
-                      </div>
+                      <NestedApplicationMenu trackingSystem={trackingSystem}
+                        applications={applications}
+                        selectedAppId={selectedAppId}
+                        onSelectApplication={handleSelectApplication}
+                      />
                     </div>
                   )}
 
                   <div className="flex-1 flex flex-col my-2 min-h-0">
                     <textarea
-                      value={jobDescription}
+                      value={jobDescription,
+          trackingSystem}
                       onChange={(e) => setJobDescription(e.target.value)}
                       placeholder="Paste the full job description, required skills, and key responsibilities here..."
                       className="w-full flex-1 min-h-[220px] p-3.5 text-xs bg-white border border-[#efefef] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0068f9] text-[#121722] placeholder:text-[#a5a5a5] resize-none"
@@ -858,6 +995,7 @@ ${app.notes || 'No extra description provided.'}`;
           </StepperPanel>
         </Stepper>
       )}
+      </div>
     </div>
   );
 }

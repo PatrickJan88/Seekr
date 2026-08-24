@@ -19,12 +19,12 @@ export function NestedRoleMenu({
   onSelectType,
 }: NestedRoleMenuProps) {
   const getDisplayText = () => {
-    if (!typeFilter) return "All Tech Roles";
+    if (!typeFilter) return "All Roles";
     for (const cat of Object.values(roleCategories)) {
       const found = cat.find(r => r.value === typeFilter);
       if (found) return found.label;
     }
-    return "All Tech Roles";
+    return "All Roles";
   };
 
   return (
@@ -48,7 +48,7 @@ export function NestedRoleMenu({
             className="flex items-center px-3 py-2 text-sm text-[#121722] rounded-lg cursor-pointer hover:bg-[#faf9f7] outline-none select-none"
             onClick={() => onSelectType("")}
           >
-            All Tech Roles
+            All Roles
             {!typeFilter && <Check size={16} className="ml-auto text-[#0068f9]" />}
           </DropdownMenu.Item>
           

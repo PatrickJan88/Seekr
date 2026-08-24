@@ -9,6 +9,20 @@ export interface TechRole {
   category: 'engineering' | 'ai_data' | 'product_design';
 }
 
+
+export const ACADEMIC_ROLES: TechRole[] = [
+  { id: 'Computer Science', label: 'Computer Science', desc: 'Focus: Algorithms, AI/ML, Systems & Theory', category: 'engineering' },
+  { id: 'Life Sciences', label: 'Life Sciences', desc: 'Focus: Biology, Genetics, Bioinformatics & Medical', category: 'ai_data' },
+  { id: 'Physics & Astronomy', label: 'Physics & Astronomy', desc: 'Focus: Quantum, Astrophysics, Mechanics & Particles', category: 'engineering' },
+  { id: 'Mathematics', label: 'Mathematics', desc: 'Focus: Pure Math, Applied Math, Statistics & Cryptography', category: 'ai_data' },
+  { id: 'Chemistry', label: 'Chemistry', desc: 'Focus: Organic, Inorganic, Physical & Materials', category: 'engineering' },
+  { id: 'Engineering', label: 'Engineering', desc: 'Focus: Mechanical, Electrical, Civil & Chemical', category: 'product_design' },
+  { id: 'Social Sciences', label: 'Social Sciences', desc: 'Focus: Psychology, Sociology, Economics & PoliSci', category: 'product_design' },
+  { id: 'Humanities', label: 'Humanities', desc: 'Focus: History, Philosophy, Literature & Languages', category: 'product_design' },
+  { id: 'Earth Sciences', label: 'Earth Sciences', desc: 'Focus: Geology, Climate, Oceanography & Env.', category: 'ai_data' },
+  { id: 'Business & Management', label: 'Business & Management', desc: 'Focus: Strategy, Operations, Finance & Marketing', category: 'product_design' }
+];
+
 export const TECH_ROLES: TechRole[] = [
   { 
     id: 'Product Manager', 
@@ -287,7 +301,7 @@ export function PersonaOrbCarousel({
               <div className="flex-1 px-2 min-w-0">
                 <h4 className="text-base font-bold text-[#121722] flex items-center justify-center gap-1">
                   <span>{currentRole.label}</span>
-                  <span className="text-xs text-[#777c86]">↗</span>
+                  
                 </h4>
                 <p className="text-xs text-[#777c86] mt-0.5 leading-snug max-w-md mx-auto truncate sm:whitespace-normal">
                   {currentRole.desc}

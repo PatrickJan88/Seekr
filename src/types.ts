@@ -43,6 +43,7 @@ export interface JobApplication {
   reminderSent?: boolean;
   createdAt: number;
   updatedAt: number;
+  trackingSystem?: 'industry' | 'academic';
 }
 
 export interface AppNotification {

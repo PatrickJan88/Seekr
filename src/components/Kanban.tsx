@@ -8,6 +8,7 @@ import { Dropdown } from './ui/Dropdown';
 const STATUSES: JobStatus[] = ['Wishlist', 'Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
 
 interface KanbanProps {
+  trackingSystem?: 'industry' | 'academic';
   applications: JobApplication[];
   onEdit: (app: JobApplication) => void;
   onStatusChange: (appId: string, status: JobStatus) => void;
@@ -103,7 +104,8 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
   const displayStatuses = activeTab === 'wishlist' ? WISHLIST_STATUSES : activeTab === 'active' ? ACTIVE_STATUSES : INACTIVE_STATUSES;
 
   return (
-    <div className="flex flex-col gap-4 h-full">
+    <div className="relative w-full flex-1 flex flex-col min-h-[500px]">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col relative overflow-hidden gap-4">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
         <div className="flex gap-2">
           <button 
@@ -194,7 +196,7 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
         </div>
       </div>
       {layoutMode === 'kanban' ? (
-      <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100vh-270px)] snap-x">
+      <div className="flex gap-4 overflow-x-auto pb-4 flex-1 min-h-0 snap-x">
         {displayStatuses.map(status => (
         <div key={status} className={`flex-shrink-0 w-[280px] lg:w-[calc(20%-13px)] xl:w-[calc(20%-13px)] lg:min-w-[150px] flex flex-col border rounded-2xl p-4 shadow-2xs snap-start ${status === 'Offer' ? 'bg-[#faf9f7] border-[#0068f9]/30' : 'bg-white border-[#efefef]'}`}
           onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
@@ -240,7 +242,7 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
                   </button>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-[#777c86] mb-3 flex-wrap">
-                  <span className="truncate">{app.company}</span>
+                  <span className="truncate" title={app.company}>{app.company}</span>
                   {app.location && (
                     <span className="text-[11px] text-[#777c86] font-medium truncate">
                       • {app.location}
@@ -265,8 +267,9 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
       ))}
           </div>
       ) : (
-        <ListView applications={filteredApplications.filter(app => displayStatuses.includes(app.status))} onEdit={onEdit} onStatusChange={onStatusChange} onDelete={onDelete} />
+        <ListView applications={filteredApplications.filter(app => displayStatuses.includes(app.status))} onEdit={onEdit} onStatusChange={onStatusChange} onDelete={onDelete} trackingSystem={trackingSystem} />
       )}
+      </div>
     </div>
   );
 }

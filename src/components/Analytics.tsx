@@ -71,12 +71,14 @@ export function Analytics({ applications, isDemo = false, onLocationSelect }: An
   };
 
   return (
-    <div className="grid grid-cols-12 gap-6">
+    <div className="relative w-full flex-1 flex flex-col min-h-[500px]">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col relative overflow-y-auto custom-scrollbar">
+        <div className="grid grid-cols-12 gap-6 w-full">
       <div className="col-span-12">
         <ApplicationMap applications={applications} isDemo={isDemo} onLocationSelect={onLocationSelect} />
       </div>
 
-      <div className="col-span-12 md:col-span-8 bg-white border border-[#efefef] rounded-2xl p-6 shadow-2xs flex flex-col">
+      <div className="col-span-12 md:col-span-8 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 shadow-none flex flex-col">
         <h3 className="text-sm font-bold text-[#121722] mb-4">Active Progress Summary</h3>
         <div className="h-72 flex-grow">
           <ResponsiveContainer width="100%" height="100%">
@@ -120,7 +122,7 @@ export function Analytics({ applications, isDemo = false, onLocationSelect }: An
         </div>
       </div>
 
-      <div className="col-span-12 bg-white border border-[#efefef] rounded-2xl p-6 shadow-2xs">
+      <div className="col-span-12 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 shadow-none">
         <h3 className="text-sm font-bold text-[#121722] mb-4">LinkedIn Premium Insights</h3>
         {!savedInsights ? (
           <form onSubmit={handleSaveInsights} className="flex flex-col md:flex-row gap-4 items-end">
@@ -151,6 +153,8 @@ export function Analytics({ applications, isDemo = false, onLocationSelect }: An
             </button>
           </div>
         )}
+      </div>
+        </div>
       </div>
     </div>
   );

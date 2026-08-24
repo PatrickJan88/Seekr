@@ -8,9 +8,10 @@ interface EvaluateHistoryPageProps {
   onBack: () => void;
   applications?: JobApplication[];
   onAddToWishlist?: (app: Partial<JobApplication>) => void;
+  setNestedBreadcrumb?: (crumb: {label: string, onBack: () => void} | null) => void;
 }
 
-export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist }: EvaluateHistoryPageProps) {
+export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist, setNestedBreadcrumb }: EvaluateHistoryPageProps) {
   const [evaluations, setEvaluations] = useState<CVEvaluation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEval, setSelectedEval] = useState<CVEvaluation | null>(null);
@@ -56,30 +57,9 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
   };
 
   return (
-    <div className="w-full h-full max-w-5xl mx-auto flex flex-col pt-6 pb-20 px-4 sm:px-6">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={handleBack}
-            className="p-2 hover:bg-white rounded-full transition-colors flex items-center gap-2 text-[#777c86] hover:text-[#121722] border border-transparent hover:border-[#efefef] cursor-pointer"
-          >
-            <ArrowLeft size={20} />
-            <span className="font-medium text-xs">{selectedEval ? 'Back to History' : 'Back to Dashboard'}</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-[#efefef] shadow-2xs overflow-hidden flex-1 flex flex-col divide-y divide-[#efefef]">
-        <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
-          <div>
-            <h1 className="text-2xl font-extrabold text-[#121722] flex items-center gap-3">
-              <Sparkles className="text-[#0068f9]" />
-              {selectedEval ? 'Evaluation Details' : 'Evaluation History'}
-            </h1>
-            <p className="text-[#777c86] text-xs mt-1">
-              {selectedEval ? `Reviewing assessment for ${selectedEval.role}` : 'Review your past AI assessments'}
-            </p>
-          </div>
+    <div className="relative w-full flex-1 flex flex-col min-h-[500px]">
+      <div className="bg-white rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col relative divide-y divide-[#efefef] overflow-y-auto custom-scrollbar">
+        <div className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-end gap-4 shrink-0">
           
           {selectedEval && onAddToWishlist && (
             <button
@@ -152,7 +132,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
               </div>
               
               <div className="space-y-6">
-                <div className="bg-white border border-[#efefef] rounded-2xl p-5 shadow-2xs">
+                <div className="bg-[#faf9f7] border border-[#efefef] rounded-2xl p-5 shadow-none">
                   <div className="flex items-center gap-2 border-b border-[#efefef] pb-3 mb-3">
                     <div className="w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
                       <CheckCircle2 size={14} />
@@ -169,7 +149,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                   </ul>
                 </div>
                 
-                <div className="bg-white border border-[#efefef] rounded-2xl p-5 shadow-2xs">
+                <div className="bg-[#faf9f7] border border-[#efefef] rounded-2xl p-5 shadow-none">
                   <div className="flex items-center gap-2 border-b border-[#efefef] pb-3 mb-3">
                     <div className="w-6 h-6 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
                       <AlertTriangle size={14} />

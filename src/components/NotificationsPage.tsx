@@ -59,8 +59,8 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
   const unreadCount = notifications.filter(n => n.unread).length;
 
   return (
-    <div className="min-h-screen bg-[#faf9f7] font-sans text-[#121722] pb-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="flex-1 flex flex-col font-sans text-[#121722] w-full min-h-0">
+      <div className="flex-1 max-w-4xl mx-auto w-full flex flex-col">
         
         {/* Breadcrumb / Header */}
         <div className="flex items-center justify-between mb-8">
