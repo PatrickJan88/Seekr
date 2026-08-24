@@ -32,63 +32,61 @@ async function generateContentWithRetry(
     preferredModel?: string;
   }
 ) {
-  const modelsToTry = [
-    params.preferredModel || "gemini-3.7-flash",
+  const preferred = params.preferredModel || "gemini-2.5-flash";
+  const modelCandidates = [
+    preferred,
     "gemini-2.5-flash",
+    "gemini-3.7-flash",
     "gemini-3.1-flash-lite",
-    "gemini-2.5-flash-lite"
+    "gemini-2.5-flash-lite",
+    "gemini-flash-latest"
   ];
+  const modelsToTry = Array.from(new Set(modelCandidates));
 
   let lastError: any = null;
 
   for (const model of modelsToTry) {
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        const response = await ai.models.generateContent({
-          model,
-          contents: params.contents,
-          config: params.config,
-        });
-        return response;
-      } catch (err: any) {
-        lastError = err;
-        const errMessage = err?.message || JSON.stringify(err) || "";
-        const isUnavailable =
-          errMessage.includes("503") ||
-          errMessage.includes("UNAVAILABLE") ||
-          errMessage.includes("high demand") ||
-          errMessage.includes("429") ||
-          errMessage.includes("RESOURCE_EXHAUSTED") ||
-          errMessage.includes("overloaded");
-          
-        const isNotFound = 
-          errMessage.includes("404") || 
-          errMessage.includes("NOT_FOUND") || 
-          errMessage.includes("no longer available");
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: params.contents,
+        config: params.config,
+      });
+      return response;
+    } catch (err: any) {
+      lastError = err;
+      const errMessage = err?.message || JSON.stringify(err) || "";
+      const isUnavailable =
+        errMessage.includes("503") ||
+        errMessage.includes("UNAVAILABLE") ||
+        errMessage.includes("high demand") ||
+        errMessage.includes("429") ||
+        errMessage.includes("RESOURCE_EXHAUSTED") ||
+        errMessage.includes("overloaded") ||
+        errMessage.includes("fetch failed") ||
+        errMessage.includes("ECONNRESET");
 
-        if (isUnavailable) {
-          console.warn(`Model '${model}' high demand / 503 error (attempt ${attempt + 1}). Retrying...`);
-          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
-          continue;
-        }
-        
-        if (isNotFound) {
-          console.warn(`Model '${model}' not found or deprecated. Falling back to next model...`);
-          break; // Break the attempt loop to immediately try the next model
-        }
+      const isNotFound = 
+        errMessage.includes("404") || 
+        errMessage.includes("NOT_FOUND") || 
+        errMessage.includes("no longer available");
 
-        // For other non-transient errors (like bad request), throw immediately
-        throw err;
+      if (isUnavailable || isNotFound) {
+        // Silently fall back to next model candidate
+        continue;
       }
+
+      // If other error, continue trying fallback models before giving up
+      continue;
     }
   }
 
   const finalMsg = lastError?.message || "";
-  if (finalMsg.includes("503") || finalMsg.includes("high demand") || finalMsg.includes("UNAVAILABLE")) {
-    throw new Error("The AI service is currently experiencing high demand across all models. Please wait a few seconds and try again.");
+  if (finalMsg.includes("503") || finalMsg.includes("high demand") || finalMsg.includes("UNAVAILABLE") || finalMsg.includes("429")) {
+    throw new Error("The AI service is currently experiencing high demand. Please try again in a few moments.");
   }
 
-  throw lastError;
+  throw lastError || new Error("Failed to generate AI response.");
 }
 
 async function startServer() {
@@ -284,7 +282,7 @@ const app = express();
       `;
 
       const response = await generateContentWithRetry(ai, {
-        preferredModel: "gemini-3.7-flash",
+        preferredModel: "gemini-2.5-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json"
@@ -333,7 +331,7 @@ const app = express();
       `;
 
       const response = await generateContentWithRetry(ai, {
-        preferredModel: "gemini-3.7-flash",
+        preferredModel: "gemini-2.5-flash",
         contents: [
           {
             role: "user",
@@ -403,7 +401,7 @@ Instructions:
 `;
 
       const response = await generateContentWithRetry(ai, {
-        preferredModel: "gemini-3.7-flash",
+        preferredModel: "gemini-2.5-flash",
         contents: prompt
       });
 
@@ -464,7 +462,7 @@ Keep the tone encouraging, strategic, and highly professional. Return ONLY the t
 `;
 
       const response = await generateContentWithRetry(ai, {
-        preferredModel: "gemini-3.7-flash",
+        preferredModel: "gemini-2.5-flash",
         contents: prompt
       });
 
@@ -583,7 +581,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
       }
 
       const response = await generateContentWithRetry(ai, {
-        preferredModel: "gemini-3.7-flash",
+        preferredModel: "gemini-2.5-flash",
         contents: contentsPayload,
         config: {
           responseMimeType: "application/json"
@@ -733,7 +731,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
       }
 
       const response = await generateContentWithRetry(ai, {
-        preferredModel: "gemini-3.7-flash",
+        preferredModel: "gemini-2.5-flash",
         contents: contentsPayload,
         config: {
           responseMimeType: "application/json"
@@ -1220,7 +1218,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
       `;
 
       const response = await generateContentWithRetry(ai, {
-        preferredModel: "gemini-3.7-flash",
+        preferredModel: "gemini-2.5-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json"

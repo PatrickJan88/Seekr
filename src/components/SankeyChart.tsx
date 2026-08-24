@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import ReactECharts from 'echarts-for-react';
 import { JobApplication } from '../types';
-import { Maximize2, Minimize2, Plus } from 'lucide-react';
-import { toast } from 'sonner';
+import { Plus } from 'lucide-react';
 
 interface SankeyChartProps {
   onAdd?: () => void;
@@ -11,7 +10,6 @@ interface SankeyChartProps {
 }
 
 export function SankeyChart({ applications, isDemo = false, onAdd }: SankeyChartProps) {
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const total = applications.length;
 
   if (total === 0) {
@@ -170,23 +168,8 @@ export function SankeyChart({ applications, isDemo = false, onAdd }: SankeyChart
   };
 
   return (
-    <div className={isFullscreen ? "fixed inset-0 z-50 bg-[#121722]/80 backdrop-blur-md p-4 sm:p-6 flex flex-col justify-center items-center overflow-auto" : "relative w-full flex-1 flex flex-col min-h-[500px]"}>
-      <div className={`bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full ${isFullscreen ? 'max-w-7xl h-[92vh] overflow-hidden' : 'flex-1 min-h-[500px] flex flex-col'} relative`}>
-        <div className="absolute top-6 right-6 z-10">
-          <button 
-            onClick={() => {
-              if (isDemo) {
-                toast.info('Demo Mode: Full screen view is disabled in this portfolio preview.');
-                return;
-              }
-              setIsFullscreen(!isFullscreen);
-            }}
-            className={`inline-flex items-center justify-center rounded-full text-sm font-medium transition-all border border-[#efefef] bg-white text-[#777c86] hover:bg-[#faf9f7] hover:text-[#121722] h-10 w-10 p-0 cursor-pointer shadow-2xs ${isDemo ? 'opacity-60 cursor-not-allowed' : ''}`}
-            title={isDemo ? "Full screen disabled in Demo Mode" : isFullscreen ? "Exit Full Screen" : "Full Screen"}
-          >
-            {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-          </button>
-        </div>
+    <div className="relative w-full flex-1 flex flex-col min-h-[500px]">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col relative">
         <div className="flex-1 w-full min-h-0 relative">
           <ReactECharts option={option} style={{ height: '100%', width: '100%' }} notMerge={true} />
         </div>

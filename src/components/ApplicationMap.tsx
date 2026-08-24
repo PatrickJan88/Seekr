@@ -2,8 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import * as echarts from 'echarts';
 import ReactECharts from 'echarts-for-react';
 import { JobApplication } from '../types';
-import { MapPin, Building2, Info, Loader2, Maximize2, Minimize2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { MapPin, Building2, Info, Loader2 } from 'lucide-react';
 
 interface ApplicationMapProps {
   applications: JobApplication[];
@@ -425,26 +424,6 @@ const GEOJSON_URLS = [
 export function ApplicationMap({ applications, isDemo = false, onLocationSelect }: ApplicationMapProps) {
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  // Handle ESC key to exit full screen and trigger chart resize
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isFullscreen) {
-        setIsFullscreen(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFullscreen]);
-
-  // Trigger chart resize when toggling full screen
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      window.dispatchEvent(new Event('resize'));
-    }, 150);
-    return () => clearTimeout(timer);
-  }, [isFullscreen]);
 
   // Parse applications into location groups
   const locationGroups = useMemo(() => {
@@ -661,8 +640,8 @@ export function ApplicationMap({ applications, isDemo = false, onLocationSelect 
   }, [isMapLoaded, scatterData, countryData]);
 
   return (
-    <div className={isFullscreen ? "fixed inset-0 z-50 bg-[#121722]/80 backdrop-blur-md p-4 sm:p-6 flex flex-col justify-center items-center overflow-auto" : "relative w-full"}>
-      <div className={`flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-2xs border border-[#efefef] w-full ${isFullscreen ? 'max-w-7xl h-[92vh] overflow-hidden' : ''}`}>
+    <div className="relative w-full">
+      <div className="flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-2xs border border-[#efefef] w-full">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-bold text-[#121722] m-0">Global Application Map</h3>
@@ -676,24 +655,11 @@ export function ApplicationMap({ applications, isDemo = false, onLocationSelect 
               <MapPin size={13} className="text-emerald-600" />
               {applications.length} Total Applications
             </span>
-            <button 
-              onClick={() => {
-                if (isDemo) {
-                  toast.info('Demo Mode: Full screen map view is disabled in this portfolio preview.');
-                  return;
-                }
-                setIsFullscreen(!isFullscreen);
-              }}
-              className={`inline-flex items-center justify-center rounded-full text-sm font-medium transition-all border border-[#efefef] bg-white text-[#777c86] hover:bg-[#faf9f7] hover:text-[#121722] h-10 w-10 p-0 cursor-pointer shadow-2xs ${isDemo ? 'opacity-60 cursor-not-allowed' : ''}`}
-              title={isDemo ? "Full screen disabled in Demo Mode" : isFullscreen ? "Exit Full Screen" : "Full Screen"}
-            >
-              {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-            </button>
           </div>
         </div>
 
         {!isMapLoaded && !mapError && (
-          <div className={`${isFullscreen ? 'flex-1 min-h-[500px]' : 'h-[600px]'} w-full flex flex-col items-center justify-center bg-[#faf9f7] rounded-2xl border border-dashed border-[#efefef] text-[#777c86] gap-2`}>
+          <div className="h-[600px] w-full flex flex-col items-center justify-center bg-[#faf9f7] rounded-2xl border border-dashed border-[#efefef] text-[#777c86] gap-2">
             <Loader2 size={24} className="animate-spin text-[#0068f9]" />
             <span className="text-xs font-medium">Loading World Map resources...</span>
           </div>
@@ -707,7 +673,7 @@ export function ApplicationMap({ applications, isDemo = false, onLocationSelect 
         )}
 
         {isMapLoaded && option && (
-          <div className={`relative w-full ${isFullscreen ? 'flex-1 min-h-0' : 'h-[600px]'}`}>
+          <div className="relative w-full h-[600px]">
             <ReactECharts 
               option={option} 
               style={{ height: '100%', width: '100%' }} 

@@ -590,11 +590,10 @@ ${app.notes || 'No extra description provided.'}`;
 
   return (
     <div className="relative w-full flex-1 flex flex-col min-h-[500px]">
-      <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col relative overflow-y-auto custom-scrollbar">
-
-      {/* If Result exists, show Bento Grid Overview. Else show Step Guided Workflow */}
+      {/* If Result exists, show Bento Grid Overview in standard card container. Else show Step Guided Workflow directly */}
       {result ? (
-        <div className="space-y-6 animate-in fade-in duration-300">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col relative overflow-y-auto custom-scrollbar">
+          <div className="space-y-6 animate-in fade-in duration-300">
           
           {/* Top Bar Navigation in Results */}
           <div className="bg-[#faf9f7] border border-[#efefef] rounded-2xl p-4 shadow-none flex flex-wrap items-center justify-between gap-4">
@@ -871,6 +870,7 @@ ${app.notes || 'No extra description provided.'}`;
             </div>
 
           </div>
+          </div>
         </div>
       ) : (
         /* STEPPER GUIDED FORM WORKFLOW */
@@ -886,11 +886,11 @@ ${app.notes || 'No extra description provided.'}`;
             completed: <Check className="size-3.5" />,
             loading: <LoaderCircleIcon className="size-3.5 animate-spin" />,
           }}
-          className="flex flex-col md:flex-row gap-6 items-stretch w-full"
+          className="flex flex-col md:flex-row gap-6 items-stretch w-full flex-1 min-h-[500px]"
         >
           {/* STEPPER SIDEBAR NAV - LEFT SIDE */}
-          <div className="w-full md:w-60 lg:w-64 shrink-0 bg-white border border-[#efefef] rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col self-stretch justify-between min-h-[400px]">
-            <StepperNav className="w-full flex-1 flex flex-col justify-between py-2">
+          <div className="w-full md:w-60 lg:w-64 shrink-0 bg-white border border-[#efefef] rounded-2xl p-4 sm:p-6 shadow-2xs flex flex-col self-stretch min-h-[500px]">
+            <StepperNav className="w-full flex-1 flex flex-col justify-between">
               {steps.map((step, index) => (
                 <React.Fragment key={index}>
                   <StepperItem step={index + 1} className="relative flex items-center w-full z-10">
@@ -910,7 +910,7 @@ ${app.notes || 'No extra description provided.'}`;
                   </StepperItem>
 
                   {index < steps.length - 1 && (
-                    <div className="ml-[23px] my-1.5 w-[2px] flex-1 bg-[#e5e7eb] min-h-[20px]" />
+                    <div className="ml-[23px] my-2 w-[2px] flex-1 bg-[#e5e7eb] min-h-[40px]" />
                   )}
                 </React.Fragment>
               ))}
@@ -918,10 +918,10 @@ ${app.notes || 'No extra description provided.'}`;
           </div>
 
           {/* RIGHT CONTENT AREA */}
-          <StepperPanel className="flex-1 w-full min-w-0 self-stretch flex flex-col min-h-[400px]">
+          <StepperPanel className="flex-1 w-full min-w-0 self-stretch flex flex-col min-h-[500px]">
             {/* STEP 1: SELECT AI EVALUATOR */}
-            <StepperContent value={1} className="h-full flex flex-col flex-1">
-              <div className="bg-white border border-[#efefef] rounded-2xl p-5 sm:p-6 shadow-2xs h-full flex-1 min-h-0 flex flex-col justify-between animate-in fade-in duration-200">
+            <StepperContent value={1} className="h-full flex flex-col flex-1 min-h-[500px]">
+              <div className="bg-white border border-[#efefef] rounded-2xl p-4 sm:p-6 shadow-2xs h-full flex-1 min-h-[500px] flex flex-col justify-between animate-in fade-in duration-200">
                 <div className="shrink-0 pb-1 flex justify-between items-start">
                   <div>
                     <h3 className="text-base font-bold text-[#121722]">
@@ -951,8 +951,8 @@ ${app.notes || 'No extra description provided.'}`;
             </StepperContent>
 
             {/* STEP 2: UPLOAD CV */}
-            <StepperContent value={2} className="h-full flex flex-col flex-1">
-              <div className="bg-white border border-[#efefef] rounded-2xl p-5 sm:p-6 shadow-2xs h-full flex-1 min-h-0 flex flex-col justify-between">
+            <StepperContent value={2} className="h-full flex flex-col flex-1 min-h-[500px]">
+              <div className="bg-white border border-[#efefef] rounded-2xl p-4 sm:p-6 shadow-2xs h-full flex-1 min-h-[500px] flex flex-col justify-between animate-in fade-in duration-200">
                 <div className="flex items-center justify-between border-b border-[#efefef] pb-3 shrink-0">
                     <div>
                       <h3 className="text-base font-bold text-[#121722]">
@@ -1116,8 +1116,8 @@ ${app.notes || 'No extra description provided.'}`;
             </StepperContent>
 
             {/* STEP 3: JOB DESCRIPTION */}
-            <StepperContent value={3} className="h-full flex flex-col flex-1">
-              <div className="bg-white border border-[#efefef] rounded-2xl p-5 sm:p-6 shadow-2xs h-full flex-1 min-h-0 flex flex-col justify-between">
+            <StepperContent value={3} className="h-full flex flex-col flex-1 min-h-[500px]">
+              <div className="bg-white border border-[#efefef] rounded-2xl p-4 sm:p-6 shadow-2xs h-full flex-1 min-h-[500px] flex flex-col justify-between animate-in fade-in duration-200">
                 <div className="flex items-center justify-between border-b border-[#efefef] pb-3 shrink-0">
                     <div>
                       <h3 className="text-base font-bold text-[#121722]">
@@ -1198,7 +1198,6 @@ ${app.notes || 'No extra description provided.'}`;
           </StepperPanel>
         </Stepper>
       )}
-      </div>
 
       {/* Global Modals for Cover Letter, Interview Prep, and Resume Templates */}
       {coverLetterText && (
