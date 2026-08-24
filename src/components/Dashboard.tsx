@@ -61,6 +61,32 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
 
   const [locationFilter, setLocationFilter] = useState<string | null>(null);
 
+  useEffect(() => {
+    const handleKeyDown = (e /*: KeyboardEvent*/) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement ||
+        (e.target && e.target.isContentEditable)
+      ) {
+        return;
+      }
+
+      // Check for Cmd+N (Mac), Ctrl+N (Windows), or just N
+      if ((e.metaKey && e.key.toLowerCase() === 'n') || 
+          (e.ctrlKey && e.key.toLowerCase() === 'n') ||
+          (e.key.toLowerCase() === 'n' && !e.metaKey && !e.ctrlKey && !e.altKey)) {
+        e.preventDefault();
+        setIsFormOpen(true);
+        setEditingApp(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown as any);
+    return () => window.removeEventListener('keydown', handleKeyDown as any);
+  }, []);
+
+
   const handleLocationSelect = (country: string | null) => {
     setLocationFilter(country);
     if (country) setView('kanban');

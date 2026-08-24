@@ -551,7 +551,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
           {!initialData && (
           <div className="mb-6 p-4 bg-[#faf9f7] rounded-2xl border border-[#efefef]">
             <label className="block text-xs font-semibold text-[#0068f9] mb-1">Smart Paste</label>
-            <p className="text-xs text-[#777c86] mb-3">Paste a job description here to automatically fill out the company, position, and notes.</p>
+            <p className="text-xs text-[#777c86] mb-3">Paste a job description here to automatically fill out the {trackingSystem === 'academic' ? 'institution, title' : 'company, position'}, and notes.</p>
             <div className="flex flex-col gap-2">
               <textarea 
                 value={pasteText} 
@@ -576,11 +576,11 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
         <form id="job-form" onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[#777c86] mb-1">Company *</label>
+              <label className="block text-xs font-medium text-[#777c86] mb-1">{trackingSystem === 'academic' ? 'Institution / University' : 'Company'} *</label>
               <input type="text" name="company" value={formData.company || ''} onChange={handleChange} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#777c86] mb-1">Position *</label>
+              <label className="block text-xs font-medium text-[#777c86] mb-1">{trackingSystem === 'academic' ? 'Academic Title / Position' : 'Position'} *</label>
               <input type="text" name="position" value={formData.position || ''} onChange={handleChange} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" />
             </div>
             {/* 2-Level Location Selection */}

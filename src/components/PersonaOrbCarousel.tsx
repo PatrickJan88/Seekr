@@ -25,6 +25,18 @@ export const ACADEMIC_ROLES: TechRole[] = [
 
 export const TECH_ROLES: TechRole[] = [
   { 
+    id: 'Game Developer', 
+    label: 'Game Developer', 
+    desc: 'Focus: Unity, Unreal Engine, Godot, Custom Engines & Graphics APIs',
+    category: 'engineering'
+  },
+  { 
+    id: 'Mobile Developer', 
+    label: 'Mobile Developer', 
+    desc: 'Focus: iOS (Swift), Android (Kotlin), Flutter & React Native',
+    category: 'engineering'
+  },
+  { 
     id: 'Product Manager', 
     label: 'Product Manager', 
     desc: 'Focus: Strategy, Roadmap, User Metrics & Agile Delivery',
