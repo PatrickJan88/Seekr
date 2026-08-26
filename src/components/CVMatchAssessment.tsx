@@ -164,21 +164,31 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
   
   const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false);
   const [coverLetterText, setCoverLetterText] = useState<string | null>(null);
+  const [showCoverLetterStudio, setShowCoverLetterStudio] = useState(false);
 
   const [isGeneratingInterviewGuide, setIsGeneratingInterviewGuide] = useState(false);
   const [interviewGuideText, setInterviewGuideText] = useState<string | null>(null);
+  const [showInterviewPrepStudio, setShowInterviewPrepStudio] = useState(false);
 
   const [isTailoringResume, setIsTailoringResume] = useState(false);
   const [tailoredResume, setTailoredResume] = useState<TailoredResumeData | null>(null);
+  const [showResumeStudio, setShowResumeStudio] = useState(false);
 
   const handleGenerateInterviewGuide = async () => {
+    if (interviewGuideText) {
+      setShowInterviewPrepStudio(true);
+      return;
+    }
+
     if (isDemo) {
       setInterviewGuideText("1. EXECUTIVE SUMMARY\n\nFocus heavily on your React & TypeScript expertise to pivot away from any gaps in backend engineering. Emphasize component architecture and modern design systems.\n\n2. PIVOTING WEAKNESSES\n\nGap: Lack of explicit Playwright / E2E testing.\nAnswer Strategy: Acknowledge the gap but highlight that you write robust unit tests with Jest and are actively implementing Playwright pipelines in current sprints.\n\n3. DEEP DIVE QUESTIONS & STAR FRAMEWORKS\n\nQ1: How do you manage complex application state?\nA (STAR):\n- Situation: The previous dashboard suffered from cascading re-renders across 15 subcomponents.\n- Task: Modernize state management without introducing heavy boilerplate.\n- Action: Designed a modular Zustand store with shallow selectors and atomic subscriptions.\n- Result: Reduced unnecessary re-renders by 60% and improved interaction response time to sub-16ms.\n\nQ2: Walk me through a challenging performance optimization project.\nA (STAR):\n- Situation: Bundle sizes were ballooning past 3.2MB on initial load.\n- Task: Optimize first contentful paint (FCP) and total blocking time (TBT).\n- Action: Implemented route-level dynamic code splitting, tree-shook unused third-party dependencies, and added virtualized scrolling for data grids.\n- Result: Shaved initial load by 48% and achieved 98/100 Lighthouse score.");
+      setShowInterviewPrepStudio(true);
       return;
     }
 
     if (!result) return;
     setIsGeneratingInterviewGuide(true);
+    toast.loading('Generating tailored interview strategy guide...', { id: 'interview-prep-load' });
     try {
       let pdfBase64 = '';
       if (cvFile && !cvText) {
@@ -207,6 +217,7 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
 
       const data = await res.json();
       setInterviewGuideText(data.interviewGuide);
+      setShowInterviewPrepStudio(true);
     } catch (err: any) {
       console.warn('Interview Guide API warning, falling back to local synthesis:', err);
       const company = result?.company_name || 'Target Company';
@@ -216,20 +227,30 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
         `Walk me through your most impactful achievement.`
       ]).map((q: string, i: number) => `### Question ${i + 1}: ${q}\n**Recommended Strategy:** Use the STAR method (Situation, Task, Action, Result) highlighting quantified business impact.\n`).join('\n');
 
-      setInterviewGuideText(`# Interview Preparation Master Guide: ${targetRole || 'Professional Role'}\nTarget Company: ${company}\n\n## 1. Key Alignment Summary\n${result?.actionable_polish || 'Focus on demonstrating mastery of required competencies and metrics.'}\n\n## 2. Forecasted Questions & Tactical Frameworks\n${questionsList}`);
+      const fallbackText = `# Interview Preparation Master Guide: ${targetRole || 'Professional Role'}\nTarget Company: ${company}\n\n## 1. Key Alignment Summary\n${result?.actionable_polish || 'Focus on demonstrating mastery of required competencies and metrics.'}\n\n## 2. Forecasted Questions & Tactical Frameworks\n${questionsList}`;
+      setInterviewGuideText(fallbackText);
+      setShowInterviewPrepStudio(true);
     } finally {
+      toast.dismiss('interview-prep-load');
       setIsGeneratingInterviewGuide(false);
     }
   };
 
   const handleGenerateCoverLetter = async () => {
+    if (coverLetterText) {
+      setShowCoverLetterStudio(true);
+      return;
+    }
+
     if (isDemo) {
       setCoverLetterText(`Dear Hiring Manager,\n\nI am writing to express my strong interest in the ${targetRole || 'Frontend Engineer'} position at ${result?.company_name || 'TechFlow Solutions'}. With a proven track record in React, TypeScript, and modern frontend architecture, I am enthusiastic about contributing to your engineering team.\n\nThroughout my career, I have focused on engineering scalable, performant user interfaces and modular design systems. In my previous roles, I led initiatives that streamlined client-side performance, reduced bundle sizes by over 35%, and established robust component standards. Your mission to build cutting-edge user experiences strongly resonates with my background in state architecture and frontend quality.\n\nI welcome the opportunity to discuss how my technical expertise and passion for high-impact software development can benefit ${result?.company_name || 'your organization'}. Thank you for your time and consideration.\n\nSincerely,\nAlex Morgan`);
+      setShowCoverLetterStudio(true);
       return;
     }
 
     if (!result) return;
     setIsGeneratingCoverLetter(true);
+    toast.loading('Generating tailored cover letter...', { id: 'cover-letter-load' });
     try {
       let pdfBase64 = '';
       if (cvFile && !cvText) {
@@ -257,17 +278,26 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
 
       const data = await res.json();
       setCoverLetterText(data.coverLetter);
+      setShowCoverLetterStudio(true);
     } catch (err: any) {
       console.warn('Cover Letter API warning, falling back to local synthesis:', err);
       const company = result?.company_name || 'Target Company';
       const matched = (result?.matched_keywords || []).map((k: any) => k.keyword).join(', ');
-      setCoverLetterText(`Dear Hiring Team at ${company},\n\nI am writing to express my strong enthusiasm for the ${targetRole || 'target position'} role. Having reviewed the job requirements in detail, I am confident that my technical background and problem-solving abilities align directly with ${company}'s current initiatives.\n\nThroughout my career, I have cultivated deep expertise across core areas including ${matched || 'software architecture, scalable engineering, and system design'}. In my recent work, I spearheaded high-impact deliverables, optimized operational workflows, and collaborated cross-functionally to drive measurable improvements.\n\nI would welcome the opportunity to discuss how my experience and skill set can support ${company}'s immediate and long-term milestones. Thank you for your consideration, and I look forward to speaking with you.\n\nSincerely,\nCandidate`);
+      const fallbackText = `Dear Hiring Team at ${company},\n\nI am writing to express my strong enthusiasm for the ${targetRole || 'target position'} role. Having reviewed the job requirements in detail, I am confident that my technical background and problem-solving abilities align directly with ${company}'s current initiatives.\n\nThroughout my career, I have cultivated deep expertise across core areas including ${matched || 'software architecture, scalable engineering, and system design'}. In my recent work, I spearheaded high-impact deliverables, optimized operational workflows, and collaborated cross-functionally to drive measurable improvements.\n\nI would welcome the opportunity to discuss how my experience and skill set can support ${company}'s immediate and long-term milestones. Thank you for your consideration, and I look forward to speaking with you.\n\nSincerely,\nCandidate`;
+      setCoverLetterText(fallbackText);
+      setShowCoverLetterStudio(true);
     } finally {
+      toast.dismiss('cover-letter-load');
       setIsGeneratingCoverLetter(false);
     }
   };
 
   const handleTailorResume = async () => {
+    if (tailoredResume) {
+      setShowResumeStudio(true);
+      return;
+    }
+
     if (isDemo) {
       setTailoredResume({
         fullName: "Alex Morgan",
@@ -317,10 +347,12 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
           }
         ]
       });
+      setShowResumeStudio(true);
       return;
     }
 
     setIsTailoringResume(true);
+    toast.loading('Crafting tailored resume with ATS templates...', { id: 'resume-studio-load' });
     try {
       let pdfBase64 = '';
       if (cvFile && !cvText) {
@@ -348,6 +380,7 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
       const data = await res.json();
       if (data.resume && data.resume.fullName) {
         setTailoredResume(data.resume);
+        setShowResumeStudio(true);
       } else {
         throw new Error('Invalid resume response structure');
       }
@@ -391,7 +424,9 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
           }
         ]
       });
+      setShowResumeStudio(true);
     } finally {
+      toast.dismiss('resume-studio-load');
       setIsTailoringResume(false);
     }
   };
@@ -560,23 +595,23 @@ ${app.notes || 'No extra description provided.'}`;
   const getCategoryStyles = (score: number) => {
     if (score >= 80) {
       return {
-        badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-        ringColor: '#10b981', // emerald-500
-        textColor: 'text-emerald-600',
+        badgeBg: 'bg-[#e8f1ff] text-[#0068f9] border-[#0068f9]/20',
+        ringColor: '#0068f9',
+        textColor: 'text-[#0068f9]',
         label: 'High Match'
       };
     } else if (score >= 60) {
       return {
-        badgeBg: 'bg-amber-50 text-amber-700 border-amber-200',
-        ringColor: '#f59e0b', // amber-500
-        textColor: 'text-amber-600',
+        badgeBg: 'bg-[#faf9f7] text-[#121722] border-[#efefef]',
+        ringColor: '#121722',
+        textColor: 'text-[#121722]',
         label: 'Medium Match'
       };
     } else {
       return {
-        badgeBg: 'bg-rose-50 text-rose-700 border-rose-200',
-        ringColor: '#f43f5e', // rose-500
-        textColor: 'text-rose-600',
+        badgeBg: 'bg-red-50 text-red-700 border-red-200',
+        ringColor: '#ef4444',
+        textColor: 'text-red-600',
         label: 'Low Match'
       };
     }
@@ -647,7 +682,7 @@ ${app.notes || 'No extra description provided.'}`;
             <div className="bg-[#faf9f7] border border-[#efefef] hover:border-[#0068f9]/50 rounded-2xl p-4.5 transition-all flex flex-col justify-between space-y-3">
               <div>
                 <h4 className="text-xs font-bold text-[#121722]">Cover Letter Generator</h4>
-                <p className="text-[11px] text-[#777c86]">One-click tailored to JD & CV</p>
+                <p className="text-xs text-[#777c86]">One-click tailored to JD & CV</p>
               </div>
               <button
                 onClick={handleGenerateCoverLetter}
@@ -663,7 +698,7 @@ ${app.notes || 'No extra description provided.'}`;
             <div className="bg-[#faf9f7] border border-[#efefef] hover:border-[#0068f9]/50 rounded-2xl p-4.5 transition-all flex flex-col justify-between space-y-3">
               <div>
                 <h4 className="text-xs font-bold text-[#121722]">Interview Preparation</h4>
-                <p className="text-[11px] text-[#777c86]">Resume-grounded STAR strategies</p>
+                <p className="text-xs text-[#777c86]">Resume-grounded STAR strategies</p>
               </div>
               <button
                 onClick={handleGenerateInterviewGuide}
@@ -679,7 +714,7 @@ ${app.notes || 'No extra description provided.'}`;
             <div className="bg-[#faf9f7] border border-[#efefef] hover:border-[#0068f9]/50 rounded-2xl p-4.5 transition-all flex flex-col justify-between space-y-3">
               <div>
                 <h4 className="text-xs font-bold text-[#121722]">4 Resume Templates</h4>
-                <p className="text-[11px] text-[#777c86]">Single / Two Column & PDF Export</p>
+                <p className="text-xs text-[#777c86]">Single / Two Column & PDF Export</p>
               </div>
               <button
                 onClick={handleTailorResume}
@@ -706,9 +741,9 @@ ${app.notes || 'No extra description provided.'}`;
             {/* Bento Card 1: Score & Persona Overview (Col 4) */}
             <div className="md:col-span-4 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 shadow-none flex flex-col items-center justify-between text-center relative overflow-hidden">
               <div className="w-full flex items-center justify-between border-b border-[#efefef] pb-3 mb-4">
-                <span className="text-xs font-bold text-[#777c86]">
+                <h4 className="text-xs font-bold text-[#121722]">
                   Score overview
-                </span>
+                </h4>
                 {(() => {
                   const styles = getCategoryStyles(result.score);
                   return (
@@ -772,10 +807,10 @@ ${app.notes || 'No extra description provided.'}`;
             <div className="md:col-span-8 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 shadow-none flex flex-col justify-between relative overflow-hidden isolate space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-[#e8f1ff] border border-[#0068f9]/20 flex items-center justify-center text-[#0068f9]">
-                    <Sparkles size={16} />
+                  <div className="w-7 h-7 rounded-full bg-[#e8f1ff] text-[#0068f9] flex items-center justify-center">
+                    <Sparkles size={18} />
                   </div>
-                  <h4 className="text-sm font-bold tracking-tight text-[#121722]">
+                  <h4 className="text-xs font-bold text-[#121722]">
                     Actionable bullet-point polish
                   </h4>
                 </div>
@@ -785,7 +820,7 @@ ${app.notes || 'No extra description provided.'}`;
                   onClick={copyPolishToClipboard}
                   className="text-xs font-medium text-[#121722] bg-white hover:bg-[#faf9f7] border border-[#efefef] shadow-2xs px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 cursor-pointer"
                 >
-                  {copiedPolish ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+                  {copiedPolish ? <Check size={14} className="text-[#0068f9]" /> : <Copy size={14} />}
                   <span>{copiedPolish ? 'Copied' : 'Copy guidelines'}</span>
                 </button>
               </div>
@@ -803,7 +838,7 @@ ${app.notes || 'No extra description provided.'}`;
             {/* Bento Card 3: Strongest Alignments (Col 6) */}
             <div className="md:col-span-6 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 shadow-none space-y-4">
               <div className="flex items-center gap-2 border-b border-[#efefef] pb-3">
-                <div className="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-full bg-[#e8f1ff] text-[#0068f9] flex items-center justify-center">
                   <CheckCircle2 size={18} />
                 </div>
                 <h4 className="text-xs font-bold text-[#121722]">
@@ -814,17 +849,17 @@ ${app.notes || 'No extra description provided.'}`;
               <ul className="space-y-2.5">
                 {result.strengths.map((item, idx) => (
                   <li key={idx} className="text-xs text-[#121722] bg-[#faf9f7] border border-[#efefef] rounded-xl p-3 flex items-start gap-2.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 mt-1.5"></span>
-                    <span className="leading-relaxed font-medium">{item}</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#0068f9] shrink-0 mt-1.5"></span>
+                    <span className="leading-relaxed font-medium text-xs">{item}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* Bento Card 4: Competency & Evidence Gaps (Col 6) */}
-            <div className="md:col-span-6 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 shadow-none space-y-4">
-              <div className="flex items-center gap-2 border-b border-[#efefef] pb-3">
-                <div className="w-7 h-7 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+            {/* Bento Card 4: Competency & Evidence Gaps (Col 6) - Minimal Red Reminder Box */}
+            <div className="md:col-span-6 bg-[#faf9f7] border border-red-200/60 rounded-2xl p-6 shadow-none space-y-4">
+              <div className="flex items-center gap-2 border-b border-red-100 pb-3">
+                <div className="w-7 h-7 rounded-full bg-red-50 text-red-600 flex items-center justify-center">
                   <AlertTriangle size={18} />
                 </div>
                 <h4 className="text-xs font-bold text-[#121722]">
@@ -834,9 +869,9 @@ ${app.notes || 'No extra description provided.'}`;
 
               <ul className="space-y-2.5">
                 {result.gaps.map((item, idx) => (
-                  <li key={idx} className="text-xs text-[#121722] bg-[#faf9f7] border border-[#efefef] rounded-xl p-3 flex items-start gap-2.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 mt-1.5"></span>
-                    <span className="leading-relaxed font-medium">{item}</span>
+                  <li key={idx} className="text-xs text-[#121722] bg-[#faf9f7] border border-red-100 rounded-xl p-3 flex items-start gap-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0 mt-1.5"></span>
+                    <span className="leading-relaxed font-medium text-xs">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -846,7 +881,7 @@ ${app.notes || 'No extra description provided.'}`;
             <div className="md:col-span-12 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 shadow-none space-y-4">
               <div className="flex items-center justify-between border-b border-[#efefef] pb-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-[#f4f0ff] text-[#6736eb] flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-full bg-[#e8f1ff] text-[#0068f9] flex items-center justify-center">
                     <HelpCircle size={18} />
                   </div>
                   <h4 className="text-xs font-bold text-[#121722]">
@@ -988,7 +1023,7 @@ ${app.notes || 'No extra description provided.'}`;
                         onDragOver={handleDragOver}
                         onDrop={handleDrop}
                         className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer flex-1 flex flex-col items-center justify-center min-h-[220px] ${
-                          cvFile ? 'border-emerald-400 bg-emerald-50/20' : 'border-[#efefef] hover:border-[#0068f9] bg-[#faf9f7]'
+                          cvFile ? 'border-[#0068f9] bg-[#e8f1ff]/20' : 'border-[#efefef] hover:border-[#0068f9] bg-[#faf9f7]'
                         }`}
                       >
                         <input
@@ -1010,7 +1045,7 @@ ${app.notes || 'No extra description provided.'}`;
                           {cvFile ? (
                             <div className="space-y-2">
                               <p className="text-sm font-bold text-[#121722] flex items-center justify-center gap-1.5 max-w-full px-2">
-                                <FileCheck size={18} className="text-emerald-600 shrink-0" />
+                                <FileCheck size={18} className="text-[#0068f9] shrink-0" />
                                 <span className="truncate max-w-[260px] sm:max-w-[320px]">{cvFile.name}</span>
                               </p>
                               <p className="text-xs text-[#777c86]">
@@ -1200,30 +1235,30 @@ ${app.notes || 'No extra description provided.'}`;
       )}
 
       {/* Global Modals for Cover Letter, Interview Prep, and Resume Templates */}
-      {coverLetterText && (
+      {showCoverLetterStudio && coverLetterText && (
         <CoverLetterStudio
           initialText={coverLetterText}
           companyName={result?.company_name}
           targetRole={targetRole}
-          onClose={() => setCoverLetterText(null)}
+          onClose={() => setShowCoverLetterStudio(false)}
         />
       )}
 
-      {interviewGuideText && (
+      {showInterviewPrepStudio && interviewGuideText && (
         <InterviewPrepStudio
           initialText={interviewGuideText}
           companyName={result?.company_name}
           targetRole={targetRole}
-          onClose={() => setInterviewGuideText(null)}
+          onClose={() => setShowInterviewPrepStudio(false)}
         />
       )}
 
-      {tailoredResume && (
+      {showResumeStudio && tailoredResume && (
         <ResumeTemplateStudio
           initialData={tailoredResume}
           targetRole={targetRole}
           companyName={result?.company_name}
-          onClose={() => setTailoredResume(null)}
+          onClose={() => setShowResumeStudio(false)}
         />
       )}
     </div>

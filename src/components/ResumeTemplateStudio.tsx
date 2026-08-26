@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Printer, 
@@ -57,6 +57,59 @@ interface ResumeTemplateStudioProps {
   onClose: () => void;
 }
 
+function normalizeResumeData(data: Partial<TailoredResumeData> | null | undefined, fallbackRole?: string, fallbackCompany?: string): TailoredResumeData {
+  return {
+    fullName: data?.fullName || 'Candidate Profile',
+    title: data?.title || fallbackRole || 'Professional Role',
+    contact: {
+      email: data?.contact?.email || 'candidate@example.com',
+      phone: data?.contact?.phone || '+1 (555) 019-2834',
+      location: data?.contact?.location || 'San Francisco, CA',
+      linkedin: data?.contact?.linkedin || '',
+      github: data?.contact?.github || '',
+      website: data?.contact?.website || ''
+    },
+    summary: data?.summary || `Accomplished professional with demonstrated expertise in delivering high-impact solutions for ${fallbackCompany || 'leading organizations'}.`,
+    skills: {
+      technical: Array.isArray(data?.skills?.technical) ? data!.skills!.technical : ['System Architecture', 'Modern Frameworks', 'Core Development'],
+      tools: Array.isArray(data?.skills?.tools) ? data!.skills!.tools : ['Git', 'CI/CD Pipelines', 'Cloud Deployments'],
+      domain: Array.isArray(data?.skills?.domain) ? data!.skills!.domain : ['Engineering Lifecycle', 'Agile Delivery', 'Quality Assurance']
+    },
+    experience: Array.isArray(data?.experience) && data!.experience.length > 0 ? data!.experience.map(exp => ({
+      role: exp.role || fallbackRole || 'Senior Engineer',
+      company: exp.company || fallbackCompany || 'Enterprise Solutions',
+      location: exp.location || '',
+      period: exp.period || '2022 - Present',
+      bullets: Array.isArray(exp.bullets) && exp.bullets.length > 0 ? exp.bullets : ['Drove strategic execution of high-priority milestones delivering quantifiable impact.']
+    })) : [
+      {
+        role: fallbackRole || 'Specialist',
+        company: fallbackCompany || 'Tech Enterprise',
+        location: 'Remote',
+        period: '2022 - Present',
+        bullets: [
+          'Spearheaded key initiatives reducing deployment cycle times by 30%.',
+          'Architected reliable components scaled across cross-functional teams.'
+        ]
+      }
+    ],
+    education: Array.isArray(data?.education) && data!.education.length > 0 ? data!.education.map(edu => ({
+      degree: edu.degree || 'B.S. in Computer Science',
+      institution: edu.institution || 'University',
+      year: edu.year || '2021',
+      details: edu.details || ''
+    })) : [
+      {
+        degree: 'B.S. in Computer Science',
+        institution: 'University of Technology',
+        year: '2021',
+        details: 'Honors'
+      }
+    ],
+    projects: Array.isArray(data?.projects) ? data!.projects : []
+  };
+}
+
 export function ResumeTemplateStudio({
   initialData,
   targetRole,
@@ -64,9 +117,15 @@ export function ResumeTemplateStudio({
   onClose
 }: ResumeTemplateStudioProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<ResumeTemplateId>('modern-single');
-  const [resumeData, setResumeData] = useState<TailoredResumeData>(initialData);
+  const [resumeData, setResumeData] = useState<TailoredResumeData>(() => normalizeResumeData(initialData, targetRole, companyName));
   const [activeTab, setActiveTab] = useState<'preview' | 'edit'>('preview');
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (initialData) {
+      setResumeData(normalizeResumeData(initialData, targetRole, companyName));
+    }
+  }, [initialData, targetRole, companyName]);
 
   // Experience Handlers
   const handleUpdateExperience = (index: number, field: keyof TailoredResumeExperience, value: any) => {
@@ -714,7 +773,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
   };
 
   return (
-    <div className="fixed top-0 bottom-0 right-0 left-0 md:left-[var(--sidebar-offset,0px)] bg-[#121722]/50 backdrop-blur-xs z-[210] flex items-center justify-center p-3 sm:p-6 transition-all duration-300 animate-in fade-in duration-200">
+    <div className="fixed inset-0 bg-[#121722]/50 backdrop-blur-xs z-[300] flex items-center justify-center p-3 sm:p-6 transition-all duration-300 animate-in fade-in duration-200">
       <div className="bg-[#faf9f7] rounded-2xl w-full max-w-6xl h-[92vh] flex flex-col shadow-2xl overflow-hidden border border-[#efefef]">
         
         {/* Top Header */}
@@ -1187,7 +1246,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                         <h3 className="font-bold text-xs uppercase border-b border-gray-500 pb-1 mb-1.5 tracking-wide">Education</h3>
                         {resumeData.education.map((edu, i) => (
                           <div key={i} className="flex justify-between text-gray-900 mb-1">
-                            <div><strong>${edu.institution}</strong> — ${edu.degree} {edu.details ? `(${edu.details})` : ''}</div>
+                            <div><strong>{edu.institution}</strong> — {edu.degree} {edu.details ? `(${edu.details})` : ''}</div>
                             <div>{edu.year}</div>
                           </div>
                         ))}

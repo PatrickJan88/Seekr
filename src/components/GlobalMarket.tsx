@@ -260,6 +260,30 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
     return 0;
   };
 
+  // Helper to parse dates reliably across formats (ISO, timestamps, DD/MM/YYYY)
+  const parseJobDate = (dateStr: string | number | undefined): number => {
+    if (!dateStr) return NaN;
+    if (typeof dateStr === 'number') {
+      return dateStr < 10000000000 ? dateStr * 1000 : dateStr;
+    }
+    const str = String(dateStr).trim();
+    // Check for UK/European DD/MM/YYYY or DD/MM/YYYY HH:mm:ss
+    const ddmmyyyy = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?$/);
+    if (ddmmyyyy) {
+      const [_, day, month, year, hours = '0', minutes = '0', seconds = '0'] = ddmmyyyy;
+      return Date.UTC(
+        parseInt(year, 10),
+        parseInt(month, 10) - 1,
+        parseInt(day, 10),
+        parseInt(hours, 10),
+        parseInt(minutes, 10),
+        parseInt(seconds, 10)
+      );
+    }
+    const parsed = new Date(str).getTime();
+    return isNaN(parsed) ? NaN : parsed;
+  };
+
   const processedJobs = React.useMemo(() => {
     let baseJobs = trackingSystem === 'academic' ? ACADEMIC_JOBS : jobs;
     let result = baseJobs.filter((job) => {
@@ -272,15 +296,31 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
       
       // Date match
       let matchesDate = true;
-      if (dateFilter && job.publication_date) {
-        const jobDate = new Date(job.publication_date).getTime();
-        const now = Date.now();
-        const diffHours = (now - jobDate) / (1000 * 60 * 60);
-        
-        if (dateFilter === '24h' && diffHours > 24) matchesDate = false;
-        if (dateFilter === '7d' && diffHours > 24 * 7) matchesDate = false;
-        if (dateFilter === '15d' && diffHours > 24 * 15) matchesDate = false;
-        if (dateFilter === '30d' && diffHours > 24 * 30) matchesDate = false;
+      if (dateFilter) {
+        if (!job.publication_date) {
+          matchesDate = false;
+        } else {
+          const jobTimestamp = parseJobDate(job.publication_date);
+          if (isNaN(jobTimestamp)) {
+            matchesDate = false;
+          } else {
+            const now = Date.now();
+            const diffHours = (now - jobTimestamp) / (1000 * 60 * 60);
+            
+            // Exclude erroneous future dates (> 24h into future)
+            if (diffHours < -24) {
+              matchesDate = false;
+            } else if (dateFilter === '24h') {
+              matchesDate = diffHours <= 24;
+            } else if (dateFilter === '7d') {
+              matchesDate = diffHours <= 24 * 7;
+            } else if (dateFilter === '15d') {
+              matchesDate = diffHours <= 24 * 15;
+            } else if (dateFilter === '30d') {
+              matchesDate = diffHours <= 24 * 30;
+            }
+          }
+        }
       }
 
       // 2. Type match
@@ -426,7 +466,10 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs text-[#777c86]">
                       <Clock size={14} className="shrink-0" />
-                      <span>{new Date(job.publication_date).toLocaleDateString()}</span>
+                      <span>{(() => {
+                        const ts = parseJobDate(job.publication_date);
+                        return isNaN(ts) ? 'Recently' : new Date(ts).toLocaleDateString();
+                      })()}</span>
                     </div>
                     {job.salary && (
                       <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full truncate max-w-[120px]">

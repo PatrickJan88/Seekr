@@ -60,7 +60,7 @@ export function KeywordHighlightPanel({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#efefef] pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-[#f0fdf4] text-[#16a34a] flex items-center justify-center">
+            <div className="w-7 h-7 rounded-full bg-[#e8f1ff] text-[#0068f9] flex items-center justify-center">
               <Tag size={16} />
             </div>
             <h4 className="text-sm font-bold text-[#121722]">
@@ -75,9 +75,9 @@ export function KeywordHighlightPanel({
         {/* Score Pill Breakdown */}
         <div className="flex items-center gap-3">
           <div className="px-3.5 py-1.5 rounded-xl bg-[#faf9f7] border border-[#efefef] flex items-center gap-2">
-            <span className="text-[11px] font-semibold text-[#777c86]">Keywords Matched:</span>
-            <span className="text-xs font-bold text-[#16a34a]">{totalMatched}</span>
-            <span className="text-[11px] text-[#777c86]">/ {totalKeywords}</span>
+            <span className="text-xs font-semibold text-[#777c86]">Keywords Matched:</span>
+            <span className="text-xs font-bold text-[#0068f9]">{totalMatched}</span>
+            <span className="text-xs text-[#777c86]">/ {totalKeywords}</span>
           </div>
         </div>
       </div>
@@ -117,19 +117,19 @@ export function KeywordHighlightPanel({
           <div className="flex items-center gap-1 bg-[#faf9f7] p-0.5 border border-[#efefef] rounded-full text-xs">
             <button
               onClick={() => setActiveTab('all')}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${activeTab === 'all' ? 'bg-white text-[#121722] shadow-2xs' : 'text-[#777c86]'}`}
+              className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${activeTab === 'all' ? 'bg-white text-[#121722] shadow-2xs' : 'text-[#777c86]'}`}
             >
               All
             </button>
             <button
               onClick={() => setActiveTab('matched')}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${activeTab === 'matched' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-[#777c86]'}`}
+              className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${activeTab === 'matched' ? 'bg-white text-[#0068f9] shadow-2xs' : 'text-[#777c86]'}`}
             >
               Matched ({totalMatched})
             </button>
             <button
               onClick={() => setActiveTab('missing')}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${activeTab === 'missing' ? 'bg-white text-rose-700 shadow-2xs' : 'text-[#777c86]'}`}
+              className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${activeTab === 'missing' ? 'bg-white text-red-600 shadow-2xs' : 'text-[#777c86]'}`}
             >
               Missing ({totalMissing})
             </button>
@@ -142,15 +142,15 @@ export function KeywordHighlightPanel({
         
         {/* Matched Keywords Box */}
         {(activeTab === 'all' || activeTab === 'matched') && (
-          <div className="bg-[#faf9f7] border border-emerald-200/70 rounded-2xl p-4.5 space-y-3">
+          <div className="bg-[#faf9f7] border border-[#0068f9]/20 rounded-2xl p-4.5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <CheckCircle2 size={16} className="text-emerald-600" />
+                <CheckCircle2 size={16} className="text-[#0068f9]" />
                 <h5 className="text-xs font-bold text-[#121722]">
                   Matched in Resume ({filteredMatched.length})
                 </h5>
               </div>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100/70 text-emerald-800">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#e8f1ff] text-[#0068f9]">
                 Verified
               </span>
             </div>
@@ -164,10 +164,10 @@ export function KeywordHighlightPanel({
                     key={idx}
                     onClick={() => copyKeyword(kw.keyword)}
                     title={kw.context || 'Matched keyword in CV'}
-                    className="group px-2.5 py-1.5 bg-white border border-emerald-200 text-[#121722] rounded-xl text-xs flex items-center gap-1.5 hover:border-emerald-500 hover:shadow-2xs transition-all cursor-pointer"
+                    className="group px-2.5 py-1.5 bg-white border border-[#0068f9]/20 text-[#121722] rounded-xl text-xs flex items-center gap-1.5 hover:border-[#0068f9] hover:shadow-2xs transition-all cursor-pointer"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
-                    <span className="font-semibold">{kw.keyword}</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#0068f9] shrink-0"></span>
+                    <span className="font-semibold text-xs">{kw.keyword}</span>
                     <span className="text-[10px] text-[#777c86] bg-[#f4f4f4] px-1.5 py-0.2 rounded font-medium">
                       {kw.category}
                     </span>
@@ -181,15 +181,15 @@ export function KeywordHighlightPanel({
 
         {/* Missing Keywords Box */}
         {(activeTab === 'all' || activeTab === 'missing') && (
-          <div className="bg-[#faf9f7] border border-rose-200/70 rounded-2xl p-4.5 space-y-3">
+          <div className="bg-[#faf9f7] border border-red-200/70 rounded-2xl p-4.5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <AlertTriangle size={16} className="text-rose-600" />
+                <AlertTriangle size={16} className="text-red-500" />
                 <h5 className="text-xs font-bold text-[#121722]">
                   Missing / Recommended Keywords ({filteredMissing.length})
                 </h5>
               </div>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-100/70 text-rose-800">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100">
                 Add to Resume
               </span>
             </div>
@@ -201,29 +201,27 @@ export function KeywordHighlightPanel({
                 {filteredMissing.map((kw, idx) => (
                   <div
                     key={idx}
-                    className="p-2.5 bg-white border border-rose-200/80 rounded-xl text-xs flex flex-col gap-1 hover:border-rose-400 transition-all"
+                    className="p-2.5 bg-white border border-red-100 rounded-xl text-xs flex flex-col gap-1 hover:border-red-300 transition-all"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
-                        <span className="font-bold text-[#121722]">{kw.keyword}</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0"></span>
+                        <span className="font-bold text-xs text-[#121722]">{kw.keyword}</span>
                         <span className="text-[10px] text-[#777c86] bg-[#f4f4f4] px-1.5 py-0.2 rounded font-medium">
                           {kw.category}
                         </span>
                       </div>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                         kw.importance === 'Critical'
-                          ? 'bg-rose-100 text-rose-700'
-                          : kw.importance === 'Recommended'
-                          ? 'bg-amber-100 text-amber-800'
-                          : 'bg-sky-100 text-sky-800'
+                          ? 'bg-red-50 text-red-700 border border-red-200/60'
+                          : 'bg-[#f4f4f4] text-[#555] border border-[#e5e5e5]'
                       }`}>
                         {kw.importance}
                       </span>
                     </div>
                     {kw.suggestion && (
-                      <p className="text-[11px] text-[#777c86] pl-3.5 leading-relaxed">
-                        💡 {kw.suggestion}
+                      <p className="text-xs text-[#555] pl-3.5 leading-relaxed">
+                        {kw.suggestion}
                       </p>
                     )}
                   </div>

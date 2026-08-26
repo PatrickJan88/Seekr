@@ -49,10 +49,13 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
   const [studioTargetRole, setStudioTargetRole] = useState('');
   const [studioCompanyName, setStudioCompanyName] = useState('');
 
-  // Generation loading states
-  const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false);
-  const [isGeneratingInterviewGuide, setIsGeneratingInterviewGuide] = useState(false);
-  const [isTailoringResume, setIsTailoringResume] = useState(false);
+  // Cached studios per evaluation ID
+  const [cachedCoverLetters, setCachedCoverLetters] = useState<Record<string, string>>({});
+  const [cachedInterviewGuides, setCachedInterviewGuides] = useState<Record<string, string>>({});
+  const [cachedResumes, setCachedResumes] = useState<Record<string, TailoredResumeData>>({});
+
+  // Active loading state per eval & action
+  const [loadingAction, setLoadingAction] = useState<{ evalId: string; type: 'cover' | 'interview' | 'resume' } | null>(null);
 
   useEffect(() => {
     loadEvaluations();
@@ -102,21 +105,21 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
 
   const getCategoryStyles = (score: number) => {
     if (score >= 80) return {
-      badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      ringColor: '#10b981',
-      textColor: 'text-emerald-700',
+      badgeBg: 'bg-[#e8f1ff] text-[#0068f9] border-[#0068f9]/20',
+      ringColor: '#0068f9',
+      textColor: 'text-[#0068f9]',
       label: 'High Match'
     };
     if (score >= 60) return {
-      badgeBg: 'bg-amber-50 text-amber-700 border-amber-200',
-      ringColor: '#f59e0b',
-      textColor: 'text-amber-700',
+      badgeBg: 'bg-[#faf9f7] text-[#121722] border-[#efefef]',
+      ringColor: '#121722',
+      textColor: 'text-[#121722]',
       label: 'Medium Match'
     };
     return {
-      badgeBg: 'bg-rose-50 text-rose-700 border-rose-200',
-      ringColor: '#f43f5e',
-      textColor: 'text-rose-700',
+      badgeBg: 'bg-red-50 text-red-700 border-red-200',
+      ringColor: '#ef4444',
+      textColor: 'text-red-600',
       label: 'Low Match'
     };
   };
@@ -133,151 +136,173 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
   const handleOpenCoverLetter = async (ev: CVEvaluation) => {
     const targetRole = ev.role || 'Professional Role';
     const company = ev.result?.company_name || 'Target Company';
+    const evalKey = ev.id || `${targetRole}-${company}`;
+
     setStudioTargetRole(targetRole);
     setStudioCompanyName(company);
 
-    setIsGeneratingCoverLetter(true);
-    try {
-      const res = await fetch('/api/generate-cover-letter', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          targetRole,
-          cvText: '',
-          jobDescription: ev.jobDescription || '',
-          trackingSystem: ev.trackingSystem || 'industry',
-          strengths: ev.result?.strengths || [],
-          companyName: company
-        })
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to generate cover letter');
-      }
-
-      const data = await res.json();
-      setCoverLetterText(data.coverLetter);
-    } catch {
-      // Fallback template
-      setCoverLetterText(`Dear Hiring Team at ${company},\n\nI am writing to express my strong enthusiasm for the ${targetRole} position. With my background aligning directly with your requirements, I am confident in my ability to deliver immediate value.\n\nThroughout my career, I have cultivated deep expertise in ${ev.result?.matched_keywords?.slice(0, 3).map((k: any) => k.keyword).join(', ') || 'key engineering domains'}. I welcome the opportunity to discuss how my contributions will advance ${company}'s goals.\n\nSincerely,\nCandidate`);
-    } finally {
-      setIsGeneratingCoverLetter(false);
+    // If already generated and cached, open immediately
+    if (cachedCoverLetters[evalKey]) {
+      setCoverLetterText(cachedCoverLetters[evalKey]);
+      return;
     }
+
+    // Generate immediate high quality cover letter
+    const matchedStr = ev.result?.matched_keywords?.slice(0, 3).map((k: any) => k.keyword).join(', ') || 'modern industry standards and domain expertise';
+    const initialText = `Dear Hiring Team at ${company},\n\nI am writing to express my strong enthusiasm for the ${targetRole} position. With my extensive background aligning directly with your requirements, I am confident in my ability to deliver immediate, measurable value to your team.\n\nThroughout my career, I have cultivated deep expertise in ${matchedStr}. My track record demonstrates a consistent commitment to engineering excellence, scalable execution, and collaborative problem-solving. I welcome the opportunity to discuss how my background and skills will advance ${company}'s key objectives.\n\nThank you for your time and consideration.\n\nSincerely,\nCandidate`;
+
+    setCoverLetterText(initialText);
+    setCachedCoverLetters(prev => ({ ...prev, [evalKey]: initialText }));
+
+    // Refine asynchronously in background without blocking modal
+    fetch('/api/generate-cover-letter', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        targetRole,
+        cvText: '',
+        jobDescription: ev.jobDescription || '',
+        trackingSystem: ev.trackingSystem || 'industry',
+        strengths: ev.result?.strengths || [],
+        companyName: company
+      })
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.coverLetter) {
+          setCachedCoverLetters(prev => ({ ...prev, [evalKey]: data.coverLetter }));
+          setCoverLetterText(data.coverLetter);
+        }
+      })
+      .catch(() => {});
   };
 
   const handleOpenInterviewGuide = async (ev: CVEvaluation) => {
     const targetRole = ev.role || 'Professional Role';
     const company = ev.result?.company_name || 'Target Company';
+    const evalKey = ev.id || `${targetRole}-${company}`;
+
     setStudioTargetRole(targetRole);
     setStudioCompanyName(company);
 
-    setIsGeneratingInterviewGuide(true);
-    try {
-      const res = await fetch('/api/interview-prep', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          targetRole,
-          cvText: '',
-          jobDescription: ev.jobDescription || '',
-          trackingSystem: ev.trackingSystem || 'industry',
-          interviewQuestions: ev.result?.interview_questions || [],
-          strengths: ev.result?.strengths || [],
-          gaps: ev.result?.gaps || []
-        })
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to generate guide');
-      }
-
-      const data = await res.json();
-      setInterviewGuideText(data.interviewGuide);
-    } catch {
-      // Fallback interview preparation guide
-      const questionsList = (ev.result?.interview_questions || [
-        `Describe a key challenge you overcame in ${targetRole}.`,
-        `How do you prioritize technical trade-offs?`,
-        `Walk me through your most impactful achievement.`
-      ]).map((q: string, i: number) => `### Question ${i + 1}: ${q}\n**Recommended Strategy:** Use the STAR method (Situation, Task, Action, Result) highlighting quantified business impact.\n`).join('\n');
-
-      setInterviewGuideText(`# Interview Preparation Master Guide: ${targetRole}\nTarget Company: ${company}\n\n## 1. Key Alignment Summary\n${ev.result?.actionable_polish || 'Focus on demonstrating mastery of required competencies.'}\n\n## 2. Forecasted Questions & Tactical Frameworks\n${questionsList}`);
-    } finally {
-      setIsGeneratingInterviewGuide(false);
+    // If already generated and cached, open immediately
+    if (cachedInterviewGuides[evalKey]) {
+      setInterviewGuideText(cachedInterviewGuides[evalKey]);
+      return;
     }
+
+    // Instant interview guide
+    const questionsList = (ev.result?.interview_questions || [
+      `Describe a key challenge you overcame in ${targetRole}.`,
+      `How do you prioritize technical trade-offs?`,
+      `Walk me through your most impactful achievement.`
+    ]).map((q: string, i: number) => `### Question ${i + 1}: ${q}\n**Recommended Strategy:** Use the STAR method (Situation, Task, Action, Result) highlighting quantified business impact.\n`).join('\n');
+
+    const initialText = `# Interview Preparation Master Guide: ${targetRole}\nTarget Company: ${company}\n\n## 1. Key Alignment Summary\n${ev.result?.actionable_polish || 'Focus on demonstrating mastery of required competencies and alignment with organizational goals.'}\n\n## 2. Forecasted Questions & Tactical Frameworks\n${questionsList}`;
+
+    setInterviewGuideText(initialText);
+    setCachedInterviewGuides(prev => ({ ...prev, [evalKey]: initialText }));
+
+    // Refine asynchronously in background
+    fetch('/api/interview-prep', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        targetRole,
+        cvText: '',
+        jobDescription: ev.jobDescription || '',
+        trackingSystem: ev.trackingSystem || 'industry',
+        interviewQuestions: ev.result?.interview_questions || [],
+        strengths: ev.result?.strengths || [],
+        gaps: ev.result?.gaps || []
+      })
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.interviewGuide) {
+          setCachedInterviewGuides(prev => ({ ...prev, [evalKey]: data.interviewGuide }));
+          setInterviewGuideText(data.interviewGuide);
+        }
+      })
+      .catch(() => {});
   };
 
   const handleOpenResumeStudio = async (ev: CVEvaluation) => {
     const targetRole = ev.role || 'Target Role';
     const company = ev.result?.company_name || 'Target Company';
+    const evalKey = ev.id || `${targetRole}-${company}`;
+
     setStudioTargetRole(targetRole);
     setStudioCompanyName(company);
 
-    setIsTailoringResume(true);
-    try {
-      const res = await fetch('/api/tailor-resume', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          targetRole,
-          cvText: '',
-          jobDescription: ev.jobDescription || '',
-          companyName: company,
-          trackingSystem: ev.trackingSystem || 'industry'
-        })
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to tailor resume');
-      }
-
-      const data = await res.json();
-      if (data.resume && data.resume.fullName) {
-        setTailoredResume(data.resume);
-      } else {
-        throw new Error('Invalid structure');
-      }
-    } catch {
-      const matched = (ev.result?.matched_keywords || []).map((k: any) => k.keyword);
-      setTailoredResume({
-        fullName: "Alex Morgan",
-        title: targetRole,
-        contact: {
-          email: "alex.morgan@example.com",
-          phone: "+1 (555) 234-5678",
-          location: "San Francisco, CA",
-          linkedin: "linkedin.com/in/alexmorgan"
-        },
-        summary: `Accomplished ${targetRole} with proven background in driving high-impact initiatives and applying modern standards for ${company}.`,
-        skills: {
-          technical: matched.length > 0 ? matched.slice(0, 5) : ["Core Architecture", "TypeScript", "React", "System Design"],
-          tools: ["Git", "Docker", "CI/CD", "Vite", "Cloud Platforms"],
-          domain: ["Full Lifecycle Delivery", "Performance Optimization", "Scalable Systems"]
-        },
-        experience: [
-          {
-            role: targetRole,
-            company: company !== 'Unknown Company' ? company : 'Tech Enterprise Inc.',
-            period: "2022 - Present",
-            bullets: [
-              `Spearheaded critical engineering roadmap, accelerating key release velocity by 35%.`,
-              `Architected scalable core modules adopted across distributed engineering squads.`,
-              `Enhanced performance metrics and eliminated major workflow bottlenecks.`
-            ]
-          }
-        ],
-        education: [
-          {
-            degree: "B.S. in Computer Science",
-            institution: "University of California",
-            year: "2020",
-            details: "Honors Graduate"
-          }
-        ]
-      });
-    } finally {
-      setIsTailoringResume(false);
+    // If already generated and cached, open immediately
+    if (cachedResumes[evalKey]) {
+      setTailoredResume(cachedResumes[evalKey]);
+      return;
     }
+
+    const matched = (ev.result?.matched_keywords || []).map((k: any) => k.keyword);
+    const initialResume: TailoredResumeData = {
+      fullName: "Alex Morgan",
+      title: targetRole,
+      contact: {
+        email: "alex.morgan@example.com",
+        phone: "+1 (555) 234-5678",
+        location: "San Francisco, CA",
+        linkedin: "linkedin.com/in/alexmorgan"
+      },
+      summary: `Accomplished ${targetRole} with proven background in driving high-impact initiatives and applying modern standards for ${company}.`,
+      skills: {
+        technical: matched.length > 0 ? matched.slice(0, 6) : ["Core Architecture", "TypeScript", "React", "System Design"],
+        tools: ["Git", "Docker", "CI/CD", "Vite", "Cloud Platforms"],
+        domain: ["Full Lifecycle Delivery", "Performance Optimization", "Scalable Systems"]
+      },
+      experience: [
+        {
+          role: targetRole,
+          company: company !== 'Unknown Company' ? company : 'Tech Enterprise Inc.',
+          period: "2022 - Present",
+          bullets: [
+            `Spearheaded critical engineering roadmap, accelerating key release velocity by 35%.`,
+            `Architected scalable core modules adopted across distributed engineering squads.`,
+            `Enhanced performance metrics and eliminated major workflow bottlenecks.`
+          ]
+        }
+      ],
+      education: [
+        {
+          degree: "B.S. in Computer Science",
+          institution: "University of California",
+          year: "2020",
+          details: "Honors Graduate"
+        }
+      ]
+    };
+
+    // Open immediately without blocking modal view
+    setCachedResumes(prev => ({ ...prev, [evalKey]: initialResume }));
+    setTailoredResume(initialResume);
+
+    // Asynchronously enhance via backend LLM if available
+    fetch('/api/tailor-resume', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        targetRole,
+        cvText: '',
+        jobDescription: ev.jobDescription || '',
+        companyName: company,
+        trackingSystem: ev.trackingSystem || 'industry'
+      })
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.resume && data.resume.fullName) {
+          setCachedResumes(prev => ({ ...prev, [evalKey]: data.resume }));
+          setTailoredResume(data.resume);
+        }
+      })
+      .catch(() => {});
   };
 
   return (
@@ -406,13 +431,16 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
               <div className="bg-[#faf9f7] border border-[#efefef] hover:border-[#0068f9]/50 rounded-2xl p-4 transition-all flex flex-col justify-between space-y-3">
                 <div>
                   <h4 className="text-xs font-bold text-[#121722]">Cover Letter Generator</h4>
-                  <p className="text-[11px] text-[#777c86]">Tailored to role & competencies</p>
+                  <p className="text-xs text-[#777c86]">Tailored to role & competencies</p>
                 </div>
                 <button
                   onClick={() => handleOpenCoverLetter(selectedEval)}
-                  disabled={isGeneratingCoverLetter}
-                  className="w-full py-2 px-3 bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-semibold rounded-full transition-all flex items-center justify-center shadow-2xs cursor-pointer disabled:opacity-70"
+                  disabled={loadingAction?.evalId === (selectedEval.id || `${selectedEval.role}-${selectedEval.result?.company_name}`)}
+                  className="w-full py-2 px-3 bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-semibold rounded-full transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
                 >
+                  {loadingAction?.evalId === (selectedEval.id || `${selectedEval.role}-${selectedEval.result?.company_name}`) && loadingAction.type === 'cover' && (
+                    <Loader2 size={13} className="animate-spin" />
+                  )}
                   <span>Open Cover Letter Studio</span>
                 </button>
               </div>
@@ -420,13 +448,16 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
               <div className="bg-[#faf9f7] border border-[#efefef] hover:border-[#0068f9]/50 rounded-2xl p-4 transition-all flex flex-col justify-between space-y-3">
                 <div>
                   <h4 className="text-xs font-bold text-[#121722]">Interview Preparation</h4>
-                  <p className="text-[11px] text-[#777c86]">STAR-framework tactical guide</p>
+                  <p className="text-xs text-[#777c86]">STAR-framework tactical guide</p>
                 </div>
                 <button
                   onClick={() => handleOpenInterviewGuide(selectedEval)}
-                  disabled={isGeneratingInterviewGuide}
-                  className="w-full py-2 px-3 bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-semibold rounded-full transition-all flex items-center justify-center shadow-2xs cursor-pointer disabled:opacity-70"
+                  disabled={loadingAction?.evalId === (selectedEval.id || `${selectedEval.role}-${selectedEval.result?.company_name}`)}
+                  className="w-full py-2 px-3 bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-semibold rounded-full transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
                 >
+                  {loadingAction?.evalId === (selectedEval.id || `${selectedEval.role}-${selectedEval.result?.company_name}`) && loadingAction.type === 'interview' && (
+                    <Loader2 size={13} className="animate-spin" />
+                  )}
                   <span>Open Prep Studio</span>
                 </button>
               </div>
@@ -434,13 +465,16 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
               <div className="bg-[#faf9f7] border border-[#efefef] hover:border-[#0068f9]/50 rounded-2xl p-4 transition-all flex flex-col justify-between space-y-3">
                 <div>
                   <h4 className="text-xs font-bold text-[#121722]">4 Resume Templates</h4>
-                  <p className="text-[11px] text-[#777c86]">ATS-optimized & PDF Export</p>
+                  <p className="text-xs text-[#777c86]">ATS-optimized & PDF Export</p>
                 </div>
                 <button
                   onClick={() => handleOpenResumeStudio(selectedEval)}
-                  disabled={isTailoringResume}
-                  className="w-full py-2 px-3 bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-semibold rounded-full transition-all flex items-center justify-center shadow-2xs cursor-pointer disabled:opacity-70"
+                  disabled={loadingAction?.evalId === (selectedEval.id || `${selectedEval.role}-${selectedEval.result?.company_name}`)}
+                  className="w-full py-2 px-3 bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-semibold rounded-full transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
                 >
+                  {loadingAction?.evalId === (selectedEval.id || `${selectedEval.role}-${selectedEval.result?.company_name}`) && loadingAction.type === 'resume' && (
+                    <Loader2 size={13} className="animate-spin" />
+                  )}
                   <span>Tailor & Export Resume</span>
                 </button>
               </div>
@@ -460,7 +494,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
               {/* Score Ring (Col 4) */}
               <div className="md:col-span-4 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 flex flex-col items-center justify-between text-center">
                 <div className="w-full flex items-center justify-between border-b border-[#efefef] pb-3 mb-4">
-                  <span className="text-xs font-bold text-[#777c86]">Score overview</span>
+                  <h4 className="text-xs font-bold text-[#121722]">Score overview</h4>
                   <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${getCategoryStyles(selectedEval.result?.keyword_score ?? selectedEval.result?.score ?? 0).badgeBg}`}>
                     {selectedEval.result?.matchCategory || getCategoryStyles(selectedEval.result?.keyword_score ?? selectedEval.result?.score ?? 0).label}
                   </span>
@@ -481,7 +515,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                         <span className={`text-3xl font-black ${styles.textColor}`}>
                           {score}%
                         </span>
-                        <span className="text-[11px] font-semibold text-[#777c86]">ATS Match rate</span>
+                        <span className="text-xs font-semibold text-[#777c86]">ATS Match rate</span>
                       </div>
                     </div>
                   );
@@ -497,10 +531,10 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
               <div className="md:col-span-8 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 flex flex-col justify-between space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-[#e8f1ff] border border-[#0068f9]/20 flex items-center justify-center text-[#0068f9]">
-                      <Sparkles size={15} />
+                    <div className="w-7 h-7 rounded-full bg-[#e8f1ff] text-[#0068f9] flex items-center justify-center">
+                      <Sparkles size={18} />
                     </div>
-                    <h4 className="text-sm font-bold text-[#121722]">Actionable bullet-point polish</h4>
+                    <h4 className="text-xs font-bold text-[#121722]">Actionable bullet-point polish</h4>
                   </div>
                   <button
                     type="button"
@@ -524,7 +558,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
               {/* Strongest Technical Alignments (Col 6) */}
               <div className="md:col-span-6 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-5 space-y-3">
                 <div className="flex items-center gap-2 border-b border-[#efefef] pb-3">
-                  <div className="w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-[#e8f1ff] text-[#0068f9] flex items-center justify-center">
                     <CheckCircle2 size={16} />
                   </div>
                   <h4 className="text-xs font-bold text-[#121722]">Strongest technical alignments</h4>
@@ -532,26 +566,26 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                 <ul className="space-y-2">
                   {(selectedEval.result?.strengths || []).map((s: string, i: number) => (
                     <li key={i} className="text-xs text-[#121722] bg-white border border-[#efefef] rounded-xl p-2.5 flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 mt-1.5"></span>
-                      <span className="font-medium">{s}</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#0068f9] shrink-0 mt-1.5"></span>
+                      <span className="font-medium text-xs">{s}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              {/* Gaps (Col 6) */}
-              <div className="md:col-span-6 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-5 space-y-3">
-                <div className="flex items-center gap-2 border-b border-[#efefef] pb-3">
-                  <div className="w-6 h-6 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+              {/* Gaps (Col 6) - Warning / Reminder Box in Minimal Red */}
+              <div className="md:col-span-6 bg-[#faf9f7] border border-red-200/60 rounded-2xl p-5 space-y-3">
+                <div className="flex items-center gap-2 border-b border-red-100 pb-3">
+                  <div className="w-6 h-6 rounded-full bg-red-50 text-red-600 flex items-center justify-center">
                     <AlertTriangle size={16} />
                   </div>
                   <h4 className="text-xs font-bold text-[#121722]">Competency & evidence gaps</h4>
                 </div>
                 <ul className="space-y-2">
                   {(selectedEval.result?.gaps || []).map((g: string, i: number) => (
-                    <li key={i} className="text-xs text-[#121722] bg-white border border-[#efefef] rounded-xl p-2.5 flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 mt-1.5"></span>
-                      <span className="font-medium">{g}</span>
+                    <li key={i} className="text-xs text-[#121722] bg-white border border-red-100 rounded-xl p-2.5 flex items-start gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0 mt-1.5"></span>
+                      <span className="font-medium text-xs">{g}</span>
                     </li>
                   ))}
                 </ul>
@@ -561,7 +595,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
               {selectedEval.result?.interview_questions && selectedEval.result.interview_questions.length > 0 && (
                 <div className="md:col-span-12 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 space-y-4">
                   <div className="flex items-center gap-2 border-b border-[#efefef] pb-3">
-                    <div className="w-7 h-7 rounded-full bg-[#f4f0ff] text-[#6736eb] flex items-center justify-center">
+                    <div className="w-7 h-7 rounded-full bg-[#e8f1ff] text-[#0068f9] flex items-center justify-center">
                       <HelpCircle size={17} />
                     </div>
                     <h4 className="text-xs font-bold text-[#121722]">
@@ -612,7 +646,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                             {ev.role}
                           </span>
                           {ev.result?.company_name && ev.result.company_name !== 'Unknown Company' && (
-                            <span className="px-2 py-0.5 rounded-full bg-[#faf9f7] border border-[#efefef] text-[11px] font-semibold text-[#121722] flex items-center gap-1">
+                            <span className="px-2.5 py-0.5 rounded-full bg-[#faf9f7] border border-[#efefef] text-xs font-semibold text-[#121722] flex items-center gap-1">
                               <Building2 size={11} className="text-[#777c86]" />
                               <span>{ev.result.company_name}</span>
                             </span>
@@ -654,25 +688,25 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                   <div className="bg-[#faf9f7] border border-[#efefef] rounded-xl p-3.5 space-y-2.5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <Tag size={13} className="text-[#16a34a]" />
+                        <Tag size={13} className="text-[#0068f9]" />
                         <span className="text-xs font-bold text-[#121722]">Job Match Skills & Competencies:</span>
                         {totalKws > 0 && (
-                          <span className="text-[11px] text-[#777c86]">
+                          <span className="text-xs text-[#777c86]">
                             ({matchedKws.length}/{totalKws} ATS keywords matched)
                           </span>
                         )}
                       </div>
                     </div>
 
-                    {/* Matched Skill Pills */}
+                    {/* Matched Skill Pills (All unified with primary blue span) */}
                     <div className="flex flex-wrap gap-1.5">
                       {matchedKws.length > 0 ? (
                         matchedKws.slice(0, 6).map((kw: any, idx: number) => (
                           <span 
                             key={idx}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-emerald-200 text-emerald-800 text-[11px] font-semibold rounded-lg shadow-2xs"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#e8f1ff] border border-[#0068f9]/20 text-[#0068f9] text-xs font-semibold rounded-lg shadow-2xs"
                           >
-                            <Check size={11} className="text-emerald-600" />
+                            <Check size={11} className="text-[#0068f9]" />
                             <span>{kw.keyword}</span>
                           </span>
                         ))
@@ -680,26 +714,26 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                         ev.result.strengths.slice(0, 3).map((st: string, idx: number) => (
                           <span 
                             key={idx}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-[#efefef] text-[#121722] text-[11px] font-medium rounded-lg"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#e8f1ff] border border-[#0068f9]/20 text-[#0068f9] text-xs font-medium rounded-lg"
                           >
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#0068f9]"></span>
                             <span className="truncate max-w-[200px]">{st}</span>
                           </span>
                         ))
                       ) : (
-                        <span className="text-[11px] text-[#777c86] italic">Full competency evaluation available inside.</span>
+                        <span className="text-xs text-[#777c86] italic">Full competency evaluation available inside.</span>
                       )}
 
                       {matchedKws.length > 6 && (
-                        <span className="px-2 py-1 bg-white border border-[#efefef] text-[#777c86] text-[11px] font-medium rounded-lg">
+                        <span className="px-2.5 py-1 bg-white border border-[#efefef] text-[#777c86] text-xs font-medium rounded-lg">
                           +{matchedKws.length - 6} more skills
                         </span>
                       )}
                     </div>
                   </div>
 
-                  {/* Interactive Quick Action Buttons in list card */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-[#efefef]/60">
+                  {/* Interactive Quick Action Buttons in list card - vertically centered and balanced */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-5 border-t border-[#efefef]/80 mt-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"
@@ -707,8 +741,12 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                           e.stopPropagation();
                           handleOpenCoverLetter(ev);
                         }}
-                        className="px-3.5 py-1.5 rounded-full bg-white hover:bg-[#f4f8ff] border border-[#efefef] hover:border-[#0068f9]/30 text-[#121722] text-xs font-semibold transition-all inline-flex items-center justify-center shadow-2xs cursor-pointer"
+                        disabled={loadingAction?.evalId === (ev.id || `${ev.role}-${ev.result?.company_name}`)}
+                        className="px-4 py-1.5 rounded-full bg-white hover:bg-[#f4f8ff] border border-[#efefef] hover:border-[#0068f9]/30 text-[#121722] text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
                       >
+                        {loadingAction?.evalId === (ev.id || `${ev.role}-${ev.result?.company_name}`) && loadingAction.type === 'cover' && (
+                          <Loader2 size={12} className="animate-spin text-[#0068f9]" />
+                        )}
                         <span>Cover Letter</span>
                       </button>
 
@@ -718,8 +756,12 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                           e.stopPropagation();
                           handleOpenInterviewGuide(ev);
                         }}
-                        className="px-3.5 py-1.5 rounded-full bg-white hover:bg-[#f4f8ff] border border-[#efefef] hover:border-[#0068f9]/30 text-[#121722] text-xs font-semibold transition-all inline-flex items-center justify-center shadow-2xs cursor-pointer"
+                        disabled={loadingAction?.evalId === (ev.id || `${ev.role}-${ev.result?.company_name}`)}
+                        className="px-4 py-1.5 rounded-full bg-white hover:bg-[#f4f8ff] border border-[#efefef] hover:border-[#0068f9]/30 text-[#121722] text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
                       >
+                        {loadingAction?.evalId === (ev.id || `${ev.role}-${ev.result?.company_name}`) && loadingAction.type === 'interview' && (
+                          <Loader2 size={12} className="animate-spin text-[#0068f9]" />
+                        )}
                         <span>Interview Prep</span>
                       </button>
 
@@ -729,8 +771,12 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                           e.stopPropagation();
                           handleOpenResumeStudio(ev);
                         }}
-                        className="px-3.5 py-1.5 rounded-full bg-white hover:bg-[#f4f8ff] border border-[#efefef] hover:border-[#0068f9]/30 text-[#121722] text-xs font-semibold transition-all inline-flex items-center justify-center shadow-2xs cursor-pointer"
+                        disabled={loadingAction?.evalId === (ev.id || `${ev.role}-${ev.result?.company_name}`)}
+                        className="px-4 py-1.5 rounded-full bg-white hover:bg-[#f4f8ff] border border-[#efefef] hover:border-[#0068f9]/30 text-[#121722] text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
                       >
+                        {loadingAction?.evalId === (ev.id || `${ev.role}-${ev.result?.company_name}`) && loadingAction.type === 'resume' && (
+                          <Loader2 size={12} className="animate-spin text-[#0068f9]" />
+                        )}
                         <span>Resume Studio</span>
                       </button>
 
@@ -746,7 +792,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                               notes: `Added from Evaluation History. ATS Match: ${score}%`,
                             });
                           }}
-                          className="px-3.5 py-1.5 rounded-full bg-[#f0f5ff] hover:bg-[#e0edff] text-[#0068f9] text-xs font-semibold transition-all inline-flex items-center justify-center cursor-pointer"
+                          className="px-4 py-1.5 rounded-full bg-[#f0f5ff] hover:bg-[#e0edff] text-[#0068f9] text-xs font-semibold transition-all inline-flex items-center justify-center cursor-pointer"
                         >
                           <span>Add to Wishlist</span>
                         </button>
@@ -756,9 +802,9 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                     <button
                       type="button"
                       onClick={() => setSelectedEval(ev)}
-                      className="px-3.5 py-1.5 rounded-full bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-bold transition-all inline-flex items-center justify-center shadow-2xs cursor-pointer ml-auto"
+                      className="px-4 py-1.5 rounded-full bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-bold transition-all inline-flex items-center justify-center shadow-2xs cursor-pointer ml-auto sm:ml-0"
                     >
-                      <span>View Full Assessment</span>
+                      <span>Full Assessment</span>
                     </button>
                   </div>
 
