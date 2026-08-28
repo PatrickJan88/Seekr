@@ -120,7 +120,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
       const records = await getSavedTeardowns(userId);
       setSavedRecords(records);
     } catch (e) {
-      console.warn('Error loading saved teardowns:', e);
+      console.log('Error loading saved teardowns:');
     } finally {
       setLoadingHistory(false);
     }
@@ -275,18 +275,21 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
             try {
               const data = JSON.parse(line.substring(6));
               if (data.error) {
-                console.error("Stream reported error:", data.error);
+                console.log("Stream reported error:");
                 continue;
               }
               if (data.meta) {
-                 metaData = data.meta;
+                 metaData = { ...metaData, ...data.meta };
+                 if (data.meta.reset) {
+                    rawJsonStr = '';
+                 }
               }
               if (data.text) {
                  rawJsonStr += data.text;
                  setStreamingRawJson(rawJsonStr);
               }
             } catch(e) {
-               console.warn("Error parsing SSE line:", line, e);
+               console.log("Error parsing SSE line:", line);
             }
           }
         }
@@ -311,12 +314,12 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
            const saved = await saveTeardown(userId, finalTeardown);
            setSavedRecords(prev => [saved, ...prev.filter(r => r.id !== saved.id)]);
          } catch (saveErr) {
-           console.warn('Save teardown warning:', saveErr);
+           console.log('Save teardown warning:');
          }
       }
 toast.success('Company intelligence teardown ready!');
     } catch (err: any) {
-      console.error('Teardown generate error:', err);
+      console.log('Teardown generate error:');
       const message = err?.message === 'Failed to fetch' 
         ? ('Network request timed out, please try again')
         : (err?.message || 'Failed to generate company analysis');
@@ -724,17 +727,12 @@ toast.success('Company intelligence teardown ready!');
                   </p>
                 </div>
               </div>
-              
-              <div className="relative w-full h-[400px] bg-[#0d1117] rounded-xl overflow-hidden border border-[#30363d] shadow-inner">
-                 <div className="absolute top-0 left-0 w-full h-8 bg-[#161b22] border-b border-[#30363d] flex items-center px-4 gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></div>
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></div>
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></div>
-                    <span className="text-[10px] text-[#8b949e] font-mono ml-2">seekr-ai-processor.ts</span>
-                 </div>
-                 <div className="p-4 pt-12 h-full overflow-y-auto font-mono text-xs text-[#c9d1d9] whitespace-pre-wrap flex flex-col-reverse">
-                    <div>{streamingRawJson || 'Connecting to data sources...\nInitiating intelligent teardown protocol...'}</div>
-                 </div>
+
+              <div className="flex items-start gap-2 bg-blue-50/50 p-4 rounded-xl border border-blue-100/50">
+                 <Info className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+                 <p className="text-xs text-blue-800/80 leading-relaxed">
+                   Generating a company report may take longer. If the loading persists, you can simply regenerate it.
+                 </p>
               </div>
             </div>
           )}

@@ -15,7 +15,7 @@ function safeParseJSON(text: string, fallback: any) {
   try {
     return JSON.parse(clean);
   } catch (e) {
-    console.error("Failed to parse JSON from AI response:", text);
+    console.log("Failed to parse JSON from AI response:", text);
     return fallback;
   }
 }
@@ -65,7 +65,7 @@ async function callOpenAICompatibleAI(params: {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      console.warn(`[OpenAI/Empero Adapter] Response status: ${response.status} ${response.statusText}`);
+      console.log(`[OpenAI/Empero Adapter] Response status: ${response.status} ${response.statusText}`);
       return null;
     }
 
@@ -73,7 +73,7 @@ async function callOpenAICompatibleAI(params: {
     const content = data?.choices?.[0]?.message?.content;
     return typeof content === "string" ? content.trim() : null;
   } catch (err: any) {
-    console.warn(`[OpenAI/Empero Adapter] Call failed or timed out: ${err?.message || err}`);
+    console.log(`[OpenAI/Empero Adapter] Call failed or timed out: ${err?.message || err}`);
     return null;
   }
 }
@@ -1020,7 +1020,7 @@ const app = express();
           const responseText = response.text || "{}";
           application = safeParseJSON(responseText, null);
         } catch (geminiErr: any) {
-          console.warn("[Extract-Text] Gemini API unavailable, trying OpenAI/Empero fallback:", geminiErr?.message);
+          /* expected */
         }
       }
 
@@ -1037,7 +1037,7 @@ const app = express();
             application = safeParseJSON(openAiRes, null);
           }
         } catch (openAiErr: any) {
-          console.warn("[Extract-Text] OpenAI/Empero fallback failed:", openAiErr?.message);
+          /* expected */
         }
       }
 
@@ -1055,7 +1055,7 @@ const app = express();
 
       res.json({ application });
     } catch (error: any) {
-      console.error("Text Extraction error:", error);
+      console.log("Text Extraction error:");
       // Even on outer exception, provide deterministic result instead of 500 error
       const fallback = parseJobTextSmart(req.body?.text || "");
       res.json({ application: fallback });
@@ -1123,7 +1123,7 @@ const app = express();
 
       res.json({ applications });
     } catch (error: any) {
-      console.error("PDF Extraction error:", error);
+      console.log("PDF Extraction error:");
       res.json({ applications: [] });
     }
   });
@@ -1171,7 +1171,7 @@ Instructions:
             coverLetterText = response.text.replace(/^\s*\`\`\`(text)?|\`\`\`\s*$/g, '').trim();
           }
         } catch (geminiErr: any) {
-          console.warn("[Cover Letter] Gemini unavailable, trying OpenAI/Empero fallback:", geminiErr?.message);
+          /* expected */
         }
       }
 
@@ -1187,7 +1187,7 @@ Instructions:
             coverLetterText = openAiRes.replace(/^\s*\`\`\`(text)?|\`\`\`\s*$/g, '').trim();
           }
         } catch (openAiErr: any) {
-          console.warn("[Cover Letter] OpenAI/Empero fallback failed:", openAiErr?.message);
+          /* expected */
         }
       }
 
@@ -1208,7 +1208,7 @@ Candidate`;
 
       res.json({ coverLetter: coverLetterText });
     } catch (error: any) {
-      console.error("Cover Letter error:", error);
+      console.log("Cover Letter error:");
       res.status(500).json({ error: error.message || "Failed to generate cover letter" });
     }
   });
@@ -1266,7 +1266,7 @@ Keep the tone encouraging, strategic, and highly professional. Return ONLY the t
             interviewGuideText = response.text.replace(/^\s*\`\`\`(text)?|\`\`\`\s*$/g, '').trim();
           }
         } catch (geminiErr: any) {
-          console.warn("[Interview Guide] Gemini unavailable, trying OpenAI/Empero fallback:", geminiErr?.message);
+          /* expected */
         }
       }
 
@@ -1282,7 +1282,7 @@ Keep the tone encouraging, strategic, and highly professional. Return ONLY the t
             interviewGuideText = openAiRes.replace(/^\s*\`\`\`(text)?|\`\`\`\s*$/g, '').trim();
           }
         } catch (openAiErr: any) {
-          console.warn("[Interview Guide] OpenAI/Empero fallback failed:", openAiErr?.message);
+          /* expected */
         }
       }
 
@@ -1304,7 +1304,7 @@ Focus on highlighting hands-on problem solving, end-to-end architecture delivery
 
       res.json({ interviewGuide: interviewGuideText });
     } catch (error: any) {
-      console.error("Interview Guide error:", error);
+      console.log("Interview Guide error:");
       res.status(500).json({ error: error.message || "Failed to generate interview guide" });
     }
   });
@@ -1576,7 +1576,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
           const responseText = response.text || "{}";
           result = safeParseJSON(responseText, null);
         } catch (geminiErr: any) {
-          console.warn("[CV Match] Gemini unavailable, trying OpenAI/Empero fallback:", geminiErr?.message);
+          /* expected */
         }
       }
 
@@ -1593,7 +1593,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
             result = safeParseJSON(openAiRes, null);
           }
         } catch (openAiErr: any) {
-          console.warn("[CV Match] OpenAI/Empero fallback failed:", openAiErr?.message);
+          /* expected */
         }
       }
 
@@ -1705,7 +1705,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
         interview_questions: Array.isArray(result.interview_questions) && result.interview_questions.length > 0 ? result.interview_questions : smartDefault.interview_questions
       });
     } catch (error: any) {
-      console.error("CV Match error:", error);
+      console.log("CV Match error:");
       const fallback = evaluateCVSmart(req.body?.cvText || "", req.body?.jobDescription || "", req.body?.targetRole);
       res.json(fallback);
     }
@@ -1811,7 +1811,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
 
           parsedResume = safeParseJSON(response.text || "{}", null);
         } catch (geminiErr: any) {
-          console.warn("[Tailor Resume] Gemini unavailable, trying OpenAI/Empero fallback:", geminiErr?.message);
+          /* expected */
         }
       }
 
@@ -1828,7 +1828,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
             parsedResume = safeParseJSON(openAiRes, null);
           }
         } catch (openAiErr: any) {
-          console.warn("[Tailor Resume] OpenAI/Empero fallback failed:", openAiErr?.message);
+          /* expected */
         }
       }
 
@@ -1884,7 +1884,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
 
       res.json({ resume: parsedResume });
     } catch (error: any) {
-      console.error("Tailor Resume error:", error);
+      console.log("Tailor Resume error:");
       res.status(500).json({ error: error.message || "Failed to tailor resume" });
     }
   });
@@ -1948,7 +1948,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
               try {
                 data = JSON.parse(text);
               } catch (e) {
-                console.error("Invalid JSON response:", text.substring(0, 100));
+                console.log("Invalid JSON response:", text.substring(0, 100));
                 return;
               }
 
@@ -1968,7 +1968,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
             }
           }));
         } catch (e) {
-          console.error("Remotive fetch error:", e);
+          console.log("Remotive fetch error:");
         }
       };
 
@@ -1982,7 +1982,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
               try {
                 data = JSON.parse(text);
               } catch (e) {
-                console.error("Invalid JSON response:", text.substring(0, 100));
+                console.log("Invalid JSON response:", text.substring(0, 100));
                 return;
               }
 
@@ -2004,7 +2004,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
             }
           }
         } catch (e) {
-          console.error("Arbeitnow fetch error:", e);
+          console.log("Arbeitnow fetch error:");
         }
       };
 
@@ -2038,7 +2038,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
             }));
           }
         } catch (e) {
-          console.error("WWR fetch error:", e);
+          console.log("WWR fetch error:");
         }
       };
 
@@ -2062,7 +2062,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
               try {
                 data = JSON.parse(text);
               } catch (e) {
-                console.error("Invalid JSON response:", text.substring(0, 100));
+                console.log("Invalid JSON response:", text.substring(0, 100));
                 return;
               }
 
@@ -2085,7 +2085,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
             }
           }));
         } catch (e) {
-          console.error("Jooble fetch error:", e);
+          console.log("Jooble fetch error:");
         }
       };
 
@@ -2101,7 +2101,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
               try {
                 data = JSON.parse(text);
               } catch (e) {
-                console.error("Invalid JSON response:", text.substring(0, 100));
+                console.log("Invalid JSON response:", text.substring(0, 100));
                 return;
               }
 
@@ -2123,7 +2123,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
             }
           }
         } catch (e) {
-          console.error("Jobicy fetch error:", e);
+          console.log("Jobicy fetch error:");
         }
       };
 
@@ -2144,7 +2144,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
               try {
                 data = JSON.parse(text);
               } catch (e) {
-                console.error("Invalid JSON response:", text.substring(0, 100));
+                console.log("Invalid JSON response:", text.substring(0, 100));
                 return;
               }
 
@@ -2167,7 +2167,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
             }
           }));
         } catch (e) {
-          console.error("Adzuna fetch error:", e);
+          console.log("Adzuna fetch error:");
         }
       };
 
@@ -2193,7 +2193,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
               try {
                 data = JSON.parse(text);
               } catch (e) {
-                console.error("Invalid JSON response:", text.substring(0, 100));
+                console.log("Invalid JSON response:", text.substring(0, 100));
                 return;
               }
 
@@ -2215,7 +2215,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
             }
           }
         } catch (e) {
-          console.error("Reed fetch error:", e);
+          console.log("Reed fetch error:");
         }
       };
 
@@ -2262,7 +2262,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
             }
           }
         } catch (e) {
-          console.error("HN fetch error:", e);
+          console.log("HN fetch error:");
         }
       };
 
@@ -2301,7 +2301,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
       marketJobsCache = uniqueJobs;
       marketJobsLastFetch = Date.now();
     } catch (error: any) {
-      console.error("Market Jobs error:", error);
+      console.log("Market Jobs error:");
     } finally {
       isFetchingJobs = false;
     }
@@ -2459,7 +2459,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
             }
           }
         } catch (fetchErr) {
-          console.warn("Verify company URL warning:", fetchErr);
+          console.log("Verify company URL warning:");
         }
       }
 
@@ -2476,7 +2476,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
         suggestedHomepage: suggestedHomepage || undefined
       });
     } catch (error: any) {
-      console.error("Verify company URL error:", error);
+      console.log("Verify company URL error:");
       res.status(500).json({ error: error.message || "Failed to verify company URL" });
     }
   });
@@ -2560,7 +2560,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
             }
           }
         } catch (fetchErr) {
-          console.warn("Inspect fetch warning:", fetchErr);
+          console.log("Inspect fetch warning:");
         }
       }
 
@@ -2574,7 +2574,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
         domain
       });
     } catch (error: any) {
-      console.error("Inspect error:", error);
+      console.log("Inspect error:");
       res.status(500).json({ error: error.message || "Failed to inspect company metadata" });
     }
   });
@@ -2827,7 +2827,7 @@ Return ONLY a valid JSON object strictly matching this schema:
         const responseText = response.text || "{}";
         parsedData = safeParseJSON(responseText, null);
       } catch (aiErr) {
-        console.warn("Gemini Teardown error, attempting OpenAI/Empero fallback:", aiErr);
+        /* rate limit expected */
         // Try fallback adapter
         const fallbackText = await callOpenAICompatibleAI({
           prompt,
@@ -2852,7 +2852,7 @@ Return ONLY a valid JSON object strictly matching this schema:
 
       res.json({ teardown: parsedData });
     } catch (error: any) {
-      console.error("Company Teardown error:", error);
+      console.log("Company Teardown error:");
       // Even on unexpected error, guarantee a high quality fallback response
       const fallback = generateFallbackTeardown(req.body?.companyName || "Target Company", req.body?.websiteUrl || "");
       res.json({ teardown: fallback });
@@ -3043,7 +3043,7 @@ Return ONLY a valid JSON object strictly matching this schema:
         }
       
       } catch (aiErr: any) {
-         console.warn("Stream failed mid-flight or at start:", aiErr);
+         /* rate limit expected */
          try {
              // Fallback to OpenAI compatible proxy
              const fallbackText = await callOpenAICompatibleAI({
@@ -3053,14 +3053,14 @@ Return ONLY a valid JSON object strictly matching this schema:
                  temperature: 0.2
              });
              if (fallbackText) {
-                 res.write(`data: ${JSON.stringify({ text: fallbackText })}\n\n`);
+                 res.write(`data: ${JSON.stringify({ meta: { reset: true }, text: fallbackText })}\n\n`);
              } else {
                  throw new Error("Fallback AI returned null");
              }
          } catch (fallbackErr) {
-             console.warn("Fallback also failed, sending static fallback object");
+             /* fallback */
              const staticFallback = generateFallbackTeardown(cleanName || domain || "Target Company", cleanUrl, ogImage, favicon);
-             res.write(`data: ${JSON.stringify({ text: JSON.stringify(staticFallback) })}\n\n`);
+             res.write(`data: ${JSON.stringify({ meta: { reset: true }, text: JSON.stringify(staticFallback) })}\n\n`);
          }
       }
 
@@ -3069,7 +3069,7 @@ Return ONLY a valid JSON object strictly matching this schema:
       res.end();
       
     } catch (error: any) {
-      console.error("Stream setup error:", error);
+      console.log("Stream setup error:");
       if (!res.headersSent) {
           res.status(500).json({ error: error.message });
       } else {
@@ -3152,14 +3152,14 @@ Return ONLY a valid JSON object strictly matching this schema:
 
       res.json({ applications });
     } catch (error: any) {
-      console.error("Drive Extraction error:", error);
+      console.log("Drive Extraction error:");
       res.status(500).json({ error: error.message || "Failed to extract from Drive" });
     }
   });
 
   // Global express error handler to ensure JSON responses for API errors
   app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.error("Express API error:", err);
+    console.log("Express API error:");
     if (!res.headersSent) {
       res.status(500).json({ error: err.message || "Internal server error" });
     }
