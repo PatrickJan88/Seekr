@@ -246,6 +246,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
 
       if (!resp.body) throw new Error('ReadableStream not supported');
 
+      
       const reader = resp.body.getReader();
       const decoder = new TextDecoder('utf-8');
       let rawJsonStr = '';
@@ -253,15 +254,23 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
       
       setActiveTab('explorer');
       
+      let buffer = '';
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         
-        const chunkStr = decoder.decode(value, { stream: true });
-        const lines = chunkStr.split('\n');
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        
+        // Keep the last line in the buffer as it might be incomplete
+        buffer = lines.pop() || '';
         
         for (const line of lines) {
-          if (line.startsWith('data: [DONE]')) break;
+          if (line.trim() === '') continue;
+          if (line.startsWith('data: [DONE]')) {
+             // force break
+             break;
+          }
           if (line.startsWith('data: ')) {
             try {
               const data = JSON.parse(line.substring(6));
@@ -276,7 +285,9 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                  rawJsonStr += data.text;
                  setStreamingRawJson(rawJsonStr);
               }
-            } catch(e) {}
+            } catch(e) {
+               console.warn("Error parsing SSE line:", line, e);
+            }
           }
         }
       }
