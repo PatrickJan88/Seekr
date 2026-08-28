@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, ChangeEvent, DragEvent } from "react";
 import { toast } from "sonner";
-import { File, X, Image as ImageIcon, Eye, Download } from "lucide-react";
+import { File, X, Image as ImageIcon, Eye, Download, Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Progress } from "./ui/progress";
@@ -179,7 +179,7 @@ const FileItemCard: React.FC<FileItemCardProps> = ({
                 title="Remove attachment"
                 className="p-1.5 rounded-lg text-[#777c86] hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
               >
-                <X className="h-4 w-4" />
+                <Trash2 className="h-4 w-4" />
               </button>
             )}
           </div>

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { JobApplication, JobStatus, getWorkTypeBadgeStyle, ApplicationLink } from '../types';
-import { Calendar, Building, MoreVertical, Eye, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, Link2, ExternalLink } from 'lucide-react';
+import { Calendar, Building, MoreVertical, Eye, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, Link2, ExternalLink, Trash2, Edit2 } from 'lucide-react';
 
 const STATUSES: JobStatus[] = ['Wishlist', 'Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
 
@@ -223,14 +223,16 @@ function ActionDropdown({ onEdit, onDelete }: { onEdit: () => void, onDelete: ()
         <div className="absolute right-0 top-full mt-1 w-32 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1 overflow-hidden">
           <button
             onClick={(e) => { e.stopPropagation(); setOpen(false); onEdit(); }}
-            className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+            className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
           >
+            <Edit2 size={13} className="text-slate-400" />
             Edit
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); setOpen(false); onDelete(); }}
-            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+            className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors"
           >
+            <Trash2 size={13} className="text-rose-500" />
             Delete
           </button>
         </div>

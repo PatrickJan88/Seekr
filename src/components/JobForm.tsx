@@ -710,16 +710,16 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
         <form id="job-form" onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-[#777c86] mb-1">{trackingSystem === 'academic' ? 'Institution / University' : 'Company'} *</label>
+              <label className="block text-xs font-semibold text-[#121722] mb-1.5">{trackingSystem === 'academic' ? 'Institution / University' : 'Company'} *</label>
               <input type="text" name="company" value={formData.company || ''} onChange={handleChange} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#777c86] mb-1">{trackingSystem === 'academic' ? 'Academic Title / Position' : 'Position'} *</label>
+              <label className="block text-xs font-semibold text-[#121722] mb-1.5">{trackingSystem === 'academic' ? 'Academic Title / Position' : 'Position'} *</label>
               <input type="text" name="position" value={formData.position || ''} onChange={handleChange} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" />
             </div>
             {/* 2-Level Location Selection */}
             <div className="col-span-2 space-y-1">
-              <label className="block text-xs font-medium text-[#777c86]">Location</label>
+              <label className="block text-xs font-semibold text-[#121722] mb-1.5">Location</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Level 1: Country Dropdown */}
                 <div className="relative">
@@ -767,7 +767,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
               )}
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#777c86] mb-1">Work type</label>
+              <label className="block text-xs font-semibold text-[#121722] mb-1.5">Work type</label>
               <div className="relative">
                 <select name="workType" value={formData.workType || ''} onChange={handleChange} className="w-full pl-3.5 pr-9 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722] appearance-none cursor-pointer">
                   <option value="">Select work type...</option>
@@ -779,7 +779,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#777c86] mb-1">Status</label>
+              <label className="block text-xs font-semibold text-[#121722] mb-1.5">Status</label>
               <div className="relative">
                 <select name="status" value={formData.status || 'Applied'} onChange={handleChange} className="w-full pl-3.5 pr-9 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722] appearance-none cursor-pointer">
                   {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
@@ -788,16 +788,16 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#777c86] mb-1">Applied Date</label>
+              <label className="block text-xs font-semibold text-[#121722] mb-1.5">Applied Date</label>
               <input type="date" name="appliedDate" value={formData.appliedDate?.split('T')[0] || ''} onChange={handleChange} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#777c86] mb-1">Next Interview</label>
+              <label className="block text-xs font-semibold text-[#121722] mb-1.5">Next Interview</label>
               <input type="datetime-local" name="nextInterviewDate" value={formData.nextInterviewDate?.slice(0, 16) || ''} onChange={handleChange} className={`w-full px-3.5 py-2 border rounded-2xl bg-[#faf9f7] focus:ring-1 outline-none transition-all text-xs text-[#121722] ${isPastInterview ? 'border-amber-400 focus:border-amber-500 focus:ring-amber-200' : 'border-[#efefef] focus:border-[#0068f9] focus:ring-[#0068f9]'}`} />
               {isPastInterview && <p className="text-[10px] text-amber-600 mt-1">This time is in the past. Reminders cannot be set.</p>}
             </div>
             <div className="flex flex-col justify-end">
-              <label className="block text-xs font-medium text-[#777c86] mb-1">Reminder</label>
+              <label className="block text-xs font-semibold text-[#121722] mb-1.5">Reminder</label>
               <div className="relative">
                 <select name="reminder" value={(formData.nextInterviewDate && !isPastInterview) ? (formData.reminder || 'none') : 'none'} onChange={handleChange} disabled={!formData.nextInterviewDate || isPastInterview} className="w-full pl-3.5 pr-9 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722] disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer">
                   <option value="none">None</option>
@@ -820,7 +820,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#777c86] mb-1">Contact Email</label>
+              <label className="block text-xs font-semibold text-[#121722] mb-1.5">Contact Email</label>
               <input type="email" name="contactEmail" value={formData.contactEmail || ''} onChange={handleChange} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" />
             </div>
           </div>
@@ -874,20 +874,19 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
                           href={formattedUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-[#0068f9] hover:text-white bg-[#eef5ff] hover:bg-[#0068f9] border border-[#0068f9]/20 rounded-lg transition-all"
+                          className="p-1.5 rounded-lg text-[#777c86] hover:text-[#0068f9] hover:bg-[#eef5ff] transition-all flex items-center justify-center cursor-pointer"
                           title="Open link in new tab"
                         >
-                          <span>Open</span>
-                          <ExternalLink size={12} />
+                          <ExternalLink className="h-4 w-4" />
                         </a>
                       ) : null}
                       <button
                         type="button"
                         onClick={() => handleRemoveLink(index)}
-                        className="p-1.5 text-[#777c86] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg text-[#777c86] hover:text-rose-600 hover:bg-rose-50 transition-all flex items-center justify-center cursor-pointer"
                         title="Remove link"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
@@ -932,8 +931,9 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
                   }
                   onDelete(initialData.id); 
                 }} 
-                className="text-red-500 hover:text-red-600 font-medium text-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-rose-500 hover:text-rose-600 font-medium text-xs cursor-pointer transition-colors"
               >
+                <Trash2 size={14} />
                 Delete
               </button>
           ) : <div></div>}
