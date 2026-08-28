@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { JobApplication, JobStatus, getWorkTypeBadgeStyle } from '../types';
-import { Calendar, Building, MoreVertical, Eye, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { JobApplication, JobStatus, getWorkTypeBadgeStyle, ApplicationLink } from '../types';
+import { Calendar, Building, MoreVertical, Eye, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, Link2, ExternalLink } from 'lucide-react';
 
 const STATUSES: JobStatus[] = ['Wishlist', 'Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
 
@@ -100,6 +100,101 @@ function TruncatedNotes({ text }: { text: string }) {
   );
 }
 
+
+function normalizeUrl(url?: string): string {
+  if (!url) return '';
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
+function ApplicationLinksViewer({ app }: { app: JobApplication }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const links: ApplicationLink[] = useMemo(() => {
+    if (app.links && Array.isArray(app.links) && app.links.length > 0) {
+      return app.links.filter(l => l && (l.url?.trim() || l.title?.trim()));
+    }
+    if (app.linkUrl && app.linkUrl.trim()) {
+      return [{ title: 'Reference Link', url: app.linkUrl }];
+    }
+    return [];
+  }, [app.links, app.linkUrl]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  if (links.length === 0) return null;
+
+  if (links.length === 1) {
+    const link = links[0];
+    const url = normalizeUrl(link.url);
+    if (!url) return null;
+
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        title={`${link.title || 'Reference Link'}: ${url}`}
+        className="inline-flex items-center gap-1 px-2 py-0.5 mt-1 text-[11px] font-medium text-[#0068f9] hover:text-[#024bb1] bg-[#eef5ff] hover:bg-[#dbeafe] border border-[#0068f9]/20 rounded-md transition-colors max-w-full truncate"
+      >
+        <Link2 size={11} className="shrink-0" />
+        <span className="truncate">{link.title || 'Link'}</span>
+        <ExternalLink size={10} className="shrink-0 opacity-70" />
+      </a>
+    );
+  }
+
+  return (
+    <div className="relative inline-block mt-1" ref={ref} onClick={(e) => e.stopPropagation()}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium text-[#0068f9] hover:text-[#024bb1] bg-[#eef5ff] hover:bg-[#dbeafe] border border-[#0068f9]/20 rounded-md transition-colors cursor-pointer"
+        title="View all saved links"
+      >
+        <Link2 size={11} className="shrink-0" />
+        <span>{links.length} Links</span>
+        <ChevronDown size={10} className="shrink-0 opacity-70" />
+      </button>
+
+      {open && (
+        <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-slate-200 rounded-xl shadow-xl z-30 py-1.5 overflow-hidden">
+          <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100">
+            Saved Hyperlinks
+          </div>
+          {links.map((link, idx) => {
+            const url = normalizeUrl(link.url);
+            return (
+              <a
+                key={idx}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-between px-3 py-2 text-xs text-slate-700 hover:bg-[#eef5ff] hover:text-[#0068f9] transition-colors group/item"
+              >
+                <span className="font-medium truncate pr-2">{link.title || `Link ${idx + 1}`}</span>
+                <ExternalLink size={12} className="shrink-0 text-slate-400 group-hover/item:text-[#0068f9]" />
+              </a>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function ActionDropdown({ onEdit, onDelete }: { onEdit: () => void, onDelete: () => void }) {
   const [open, setOpen] = useState(false);
@@ -315,6 +410,7 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete, track
                   </td>
                   <td className="border-b border-[#efefef] px-6 py-4 max-w-0" style={{ width: colWidths.company }}>
                     <div className="text-sm text-[#777c86] truncate block" title={app.company}>{app.company}</div>
+                    <ApplicationLinksViewer app={app} />
                   </td>
                   <td className="border-b border-[#efefef] px-6 py-4 max-w-0" style={{ width: colWidths.appliedDate }}>
                     <span className="text-sm text-[#777c86] truncate block">

@@ -14,6 +14,10 @@ export const DEMO_APPLICATIONS: JobApplication[] = [
     appliedDate: '2026-07-15',
     nextInterviewDate: '2026-08-14T14:00',
     reminder: '1 day',
+    links: [
+      { title: 'Interview Meeting Portal', url: 'https://meet.google.com' },
+      { title: 'Design Challenge Spec', url: 'https://figma.com' }
+    ],
     notes: 'Portfolio review completed. Design challenge presentation scheduled with Senior Design Lead.',
     createdAt: NOW - 25 * 86400000,
     updatedAt: NOW - 25 * 86400000
@@ -29,6 +33,9 @@ export const DEMO_APPLICATIONS: JobApplication[] = [
     appliedDate: '2026-07-02',
     nextInterviewDate: '2026-08-12T10:00',
     reminder: '2 hours',
+    links: [
+      { title: 'Company Careers Page', url: 'https://example.com/careers' }
+    ],
     notes: 'On-site interview rounds at European HQ. Live frontend component exercise and design system review.',
     createdAt: NOW - 38 * 86400000,
     updatedAt: NOW - 38 * 86400000

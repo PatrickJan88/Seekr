@@ -12,7 +12,9 @@ export const exportCsv = (applications: JobApplication[]) => {
     Next_Interview: app.nextInterviewDate || '',
     Contact_Name: app.contactName || '',
     Contact_Email: app.contactEmail || '',
-    Salary_Range: app.salaryRange || '',
+    Links: (app.links && app.links.length > 0) 
+      ? app.links.map(l => `${l.title ? l.title + ': ' : ''}${l.url}`).join(' | ') 
+      : (app.linkUrl || ''),
     Notes: app.notes || ''
   })));
 

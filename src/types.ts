@@ -3,6 +3,12 @@ export interface Attachment {
   url: string;
 }
 
+export interface ApplicationLink {
+  id?: string;
+  title: string;
+  url: string;
+}
+
 export type JobStatus = 'Wishlist' | 'Applied' | 'Screening' | 'Technical' | 'Final' | 'Offer' | 'Rejected' | 'Ghosted';
 
 export type WorkType = 'On-site' | 'Hybrid' | 'Remote';
@@ -33,10 +39,11 @@ export interface JobApplication {
   contactName?: string;
   contactEmail?: string;
   notes?: string;
-  salaryRange?: string;
   resumeUrl?: string; // base64 or link
   coverLetterUrl?: string; // base64 or link
   attachments?: Attachment[];
+  links?: ApplicationLink[];
+  linkUrl?: string;
   reminder?: string;
   customReminderDate?: string;
   customReminderEndDate?: string;

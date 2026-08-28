@@ -378,11 +378,16 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
       return;
     }
 
-    if (!auth.currentUser) return;
+    if (!auth.currentUser) {
+      toast.error('You must be signed in to save applications');
+      return;
+    }
+
     try {
       if (editingApp) {
-        await updateApplication(editingApp.id, appData);
-        setApplications(apps => apps.map(a => a.id === editingApp.id ? { ...a, ...appData } as JobApplication : a));
+        const payload = { ...appData, userId: auth.currentUser.uid };
+        await updateApplication(editingApp.id, payload);
+        setApplications(apps => apps.map(a => a.id === editingApp.id ? { ...a, ...payload } as JobApplication : a));
         toast.success('Application updated successfully');
       } else {
         const newApp = await addApplication({ ...appData, userId: auth.currentUser.uid } as any);
@@ -391,9 +396,9 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
       }
       setIsFormOpen(false);
       setEditingApp(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving', err);
-      toast.error('Failed to save application');
+      toast.error(err?.message || 'Failed to save application');
       throw err;
     }
   };

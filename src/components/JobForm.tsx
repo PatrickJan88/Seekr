@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { JobApplication, JobStatus } from '../types';
-import { Wand2, Loader2, X, ChevronDown, MapPin, Globe } from 'lucide-react';
+import { JobApplication, JobStatus, ApplicationLink } from '../types';
+import { Wand2, Loader2, X, ChevronDown, MapPin, Globe, Link2, ExternalLink, Plus, Trash2, Bookmark } from 'lucide-react';
 import { FileUpload, UploadedFile } from './FileUpload';
 import { auth } from '../lib/firebase';
+import { addNotification } from '../lib/notifications';
 import { toast } from 'sonner';
 import { LOCATION_DATA, parseLocationToGroup } from '../data/locationData';
+
+export const normalizeUrl = (url?: string): string => {
+  if (!url) return '';
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+};
 
 const STATUSES: JobStatus[] = ['Wishlist', 'Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
 
@@ -21,6 +30,15 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
   const [formData, setFormData] = useState<Partial<JobApplication>>(
     initialData || { status: 'Applied', company: '', position: '', appliedDate: new Date().toISOString().split('T')[0], trackingSystem }
   );
+  const [links, setLinks] = useState<ApplicationLink[]>(() => {
+    if (initialData?.links && Array.isArray(initialData.links) && initialData.links.length > 0) {
+      return initialData.links;
+    }
+    if (initialData?.linkUrl && initialData.linkUrl.trim()) {
+      return [{ title: 'Company / Portal', url: initialData.linkUrl }];
+    }
+    return [{ title: '', url: '' }];
+  });
   const [isSaving, setIsSaving] = useState(false);
   const [pasteText, setPasteText] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
@@ -380,6 +398,28 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
         if (extracted.location) {
           syncLocationState(extracted.location);
         }
+        
+        // Extract links if present in pasted text
+        const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`[\]]+|www\.[^\s<>"{}|\\^`[\]]+)/gi;
+        const foundUrls = pasteText.match(urlRegex);
+        if (foundUrls && foundUrls.length > 0) {
+          setLinks(prev => {
+            const existingUrls = new Set(prev.map(p => normalizeUrl(p.url)));
+            const newEntries: ApplicationLink[] = [];
+            foundUrls.forEach((u, i) => {
+              const normalized = normalizeUrl(u);
+              if (!existingUrls.has(normalized)) {
+                existingUrls.add(normalized);
+                newEntries.push({
+                  title: i === 0 ? 'Job Posting / Portal' : `Reference Link ${prev.length + newEntries.length + 1}`,
+                  url: normalized
+                });
+              }
+            });
+            return [...prev, ...newEntries];
+          });
+        }
+
         setFormData(prev => ({
           ...prev,
           company: extracted.company || prev.company,
@@ -391,6 +431,27 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
         toast.success('Fields auto-filled successfully!');
         setPasteText('');
       } else {
+        // Check for urls even in raw paste
+        const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`[\]]+|www\.[^\s<>"{}|\\^`[\]]+)/gi;
+        const foundUrls = pasteText.match(urlRegex);
+        if (foundUrls && foundUrls.length > 0) {
+          setLinks(prev => {
+            const existingUrls = new Set(prev.map(p => normalizeUrl(p.url)));
+            const newEntries: ApplicationLink[] = [];
+            foundUrls.forEach((u, i) => {
+              const normalized = normalizeUrl(u);
+              if (!existingUrls.has(normalized)) {
+                existingUrls.add(normalized);
+                newEntries.push({
+                  title: i === 0 ? 'Job Posting / Portal' : `Reference Link ${prev.length + newEntries.length + 1}`,
+                  url: normalized
+                });
+              }
+            });
+            return [...prev, ...newEntries];
+          });
+        }
+
         toast.info('Pasted text added to notes.');
         setFormData(prev => ({
           ...prev,
@@ -436,6 +497,22 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
     })).filter(f => f.url !== '');
 
     setFormData(prev => ({ ...prev, attachments }));
+  };
+
+  const handleAddLink = (presetTitle?: string) => {
+    setLinks(prev => [...prev, { title: presetTitle || '', url: '' }]);
+  };
+
+  const handleRemoveLink = (index: number) => {
+    setLinks(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleLinkChange = (index: number, field: 'title' | 'url', value: string) => {
+    setLinks(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
   };
 
   const initialFiles = React.useMemo(() => {
@@ -498,21 +575,78 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
     setIsSaving(true);
     setSaveError(null);
     try {
-      if (formData.reminder && formData.reminder !== 'none' && formData.nextInterviewDate) {
-        if (auth.currentUser) {
-          const isCustom = formData.reminder === 'custom';
-          let reminderMsg = `Reminder set for ${formData.company} interview ${formData.reminder} before.`;
-          if (isCustom && formData.customReminderDate && formData.customReminderEndDate) {
-            reminderMsg = `Reminder set for ${formData.company} interview from ${formData.customReminderDate} to ${formData.customReminderEndDate}.`;
-          } else if (isCustom && formData.customReminderDate) {
-            reminderMsg = `Reminder set for ${formData.company} interview on ${formData.customReminderDate}.`;
-          } else if (isCustom) {
-            reminderMsg = `Reminder set for ${formData.company} interview.`;
-          }
-          toast.success(reminderMsg);
+      const isInitialCreate = !initialData;
+      const hadPreviousReminder = Boolean(
+        initialData?.reminder &&
+        initialData.reminder !== 'none' &&
+        initialData.nextInterviewDate
+      );
+      const isReminderActive = Boolean(
+        formData.reminder &&
+        formData.reminder !== 'none' &&
+        formData.nextInterviewDate
+      );
+
+      // Check if reminder was modified/newly set
+      const isReminderChanged = isInitialCreate
+        ? isReminderActive
+        : (
+            (!hadPreviousReminder && isReminderActive) ||
+            (isReminderActive && (
+              formData.reminder !== initialData.reminder ||
+              formData.nextInterviewDate !== initialData.nextInterviewDate ||
+              formData.customReminderDate !== initialData.customReminderDate ||
+              formData.customReminderEndDate !== initialData.customReminderEndDate
+            ))
+          );
+
+      if (isReminderChanged && isReminderActive && auth.currentUser) {
+        const isCustom = formData.reminder === 'custom';
+        let formattedInterview = '';
+        try {
+          const d = new Date(formData.nextInterviewDate!);
+          formattedInterview = d.toLocaleString([], {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        } catch {
+          formattedInterview = formData.nextInterviewDate!;
         }
+
+        let reminderMsg = `Reminder set for ${formData.company} interview ${formData.reminder} before (${formattedInterview}).`;
+        let notifTitle = isInitialCreate ? `Reminder Scheduled: ${formData.company}` : `Reminder Updated: ${formData.company}`;
+
+        if (isCustom && formData.customReminderDate && formData.customReminderEndDate) {
+          reminderMsg = `Reminder set for ${formData.company} interview from ${formData.customReminderDate} to ${formData.customReminderEndDate}.`;
+        } else if (isCustom && formData.customReminderDate) {
+          reminderMsg = `Reminder set for ${formData.company} interview on ${formData.customReminderDate}.`;
+        } else if (isCustom) {
+          reminderMsg = `Reminder set for ${formData.company} interview scheduled on ${formattedInterview}.`;
+        }
+
+        if (!isInitialCreate && hadPreviousReminder) {
+          reminderMsg = reminderMsg.replace(/^Reminder set/, 'Reminder updated');
+        }
+
+        toast.success(reminderMsg);
+        await addNotification(auth.currentUser.uid, 'reminder', notifTitle, reminderMsg);
       }
-      await onSave({ ...formData, reminderSent: false });
+
+      const sanitizedLinks = links
+        .filter(l => l && (l.url?.trim() !== '' || l.title?.trim() !== ''))
+        .map(l => ({
+          title: l.title?.trim() || 'Link',
+          url: normalizeUrl(l.url)
+        }));
+
+      await onSave({
+        ...formData,
+        links: sanitizedLinks,
+        linkUrl: sanitizedLinks.length > 0 ? sanitizedLinks[0].url : '',
+        reminderSent: isReminderChanged ? false : (initialData?.reminderSent || false)
+      });
     } catch (err: any) {
       console.error("Save Error Caught:", err);
       setSaveError(err.message || 'Failed to save application');
@@ -691,12 +825,86 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
             </div>
           </div>
 
+          {/* Expanded Notes Section - placed above Links and Attachments */}
           <div>
-            <label className="block text-xs font-medium text-[#777c86] mb-1">Notes</label>
-            <textarea name="notes" value={formData.notes || ''} onChange={handleChange} rows={3} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]"></textarea>
+            <label className="block text-xs font-semibold text-[#121722] mb-1.5">Notes</label>
+            <textarea
+              name="notes"
+              value={formData.notes || ''}
+              onChange={handleChange}
+              rows={5}
+              placeholder="Add key thoughts, interview preparation notes, or follow-up milestones..."
+              className="w-full px-3.5 py-2.5 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:bg-white focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722] leading-relaxed resize-y min-h-[110px]"
+            ></textarea>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 mt-2">
+          {/* Clean & Simple Links Section */}
+          <div>
+            <label className="block text-xs font-semibold text-[#121722] mb-1.5">
+              Links
+            </label>
+
+            <div className="flex flex-col gap-2">
+              {links.map((link, index) => {
+                const formattedUrl = normalizeUrl(link.url);
+                const isValidUrl = formattedUrl && (formattedUrl.startsWith('http://') || formattedUrl.startsWith('https://'));
+                return (
+                  <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-2 bg-white border border-[#efefef] rounded-xl shadow-2xs">
+                    <div className="w-full sm:w-1/3">
+                      <input
+                        type="text"
+                        placeholder="Link name (e.g. Next Step Portal)"
+                        value={link.title}
+                        onChange={(e) => handleLinkChange(index, 'title', e.target.value)}
+                        className="w-full px-3 py-1.5 text-xs font-medium border border-[#efefef] rounded-lg bg-[#faf9f7] focus:bg-white focus:border-[#0068f9] outline-none text-[#121722]"
+                      />
+                    </div>
+                    <div className="w-full sm:flex-1 relative">
+                      <input
+                        type="text"
+                        placeholder="https://..."
+                        value={link.url}
+                        onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
+                        className="w-full px-3 py-1.5 text-xs border border-[#efefef] rounded-lg bg-[#faf9f7] focus:bg-white focus:border-[#0068f9] outline-none text-[#121722] font-mono"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0 justify-end">
+                      {isValidUrl ? (
+                        <a
+                          href={formattedUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-[#0068f9] hover:text-white bg-[#eef5ff] hover:bg-[#0068f9] border border-[#0068f9]/20 rounded-lg transition-all"
+                          title="Open link in new tab"
+                        >
+                          <span>Open</span>
+                          <ExternalLink size={12} />
+                        </a>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLink(index)}
+                        className="p-1.5 text-[#777c86] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                        title="Remove link"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => handleAddLink()}
+                className="w-full flex items-center justify-center gap-1 text-xs font-medium text-[#777c86] hover:text-[#0068f9] bg-[#faf9f7] hover:bg-[#eef5ff] px-3 py-2.5 rounded-xl border border-dashed border-[#d5d7da] hover:border-[#0068f9]/30 transition-all cursor-pointer"
+              >
+                <Plus size={14} />
+                Add Link
+              </button>
+            </div>
+          </div>
+
+          <div>
             <FileUpload 
               label="Attachments" 
               accept=".pdf,.doc,.docx,.xls,.xlsx,image/*,.csv"

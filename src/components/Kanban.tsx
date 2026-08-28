@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { JobApplication, JobStatus, getWorkTypeBadgeStyle } from '../types';
-import { Calendar, Building, MoreVertical, LayoutDashboard, List, MapPin, X, Info } from 'lucide-react';
+import { Calendar, Building, MoreVertical, LayoutDashboard, List, MapPin, X, Info, Link2, ExternalLink } from 'lucide-react';
 import { ListView } from './ListView';
 import { matchLocation } from './ApplicationMap';
 import { Dropdown } from './ui/Dropdown';
@@ -254,12 +254,51 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
                     </span>
                   )}
                 </div>
-                {app.nextInterviewDate && (
-                  <div className="flex items-center gap-2 text-[10px] font-medium text-[#0068f9] bg-[#faf9f7] border border-[#efefef] w-fit px-2.5 py-1 rounded-full">
-                    <Calendar size={12} />
-                    <span>{new Date(app.nextInterviewDate).toLocaleDateString()}</span>
-                  </div>
-                )}
+                <div className="flex items-center gap-2 flex-wrap mt-2">
+                  {app.nextInterviewDate && (
+                    <div className="flex items-center gap-2 text-[10px] font-medium text-[#0068f9] bg-[#faf9f7] border border-[#efefef] w-fit px-2.5 py-1 rounded-full">
+                      <Calendar size={12} />
+                      <span>{new Date(app.nextInterviewDate).toLocaleDateString()}</span>
+                    </div>
+                  )}
+
+                  {(() => {
+                    const allLinks = (app.links && app.links.length > 0)
+                      ? app.links.filter(l => l && (l.url?.trim() || l.title?.trim()))
+                      : (app.linkUrl ? [{ title: 'Link', url: app.linkUrl }] : []);
+                    
+                    if (allLinks.length === 0) return null;
+
+                    return (
+                      <div className="flex items-center gap-1.5 flex-wrap" onClick={e => e.stopPropagation()}>
+                        {allLinks.slice(0, 2).map((lnk, i) => {
+                          const normalized = lnk.url?.startsWith('http://') || lnk.url?.startsWith('https://')
+                            ? lnk.url
+                            : `https://${lnk.url || ''}`;
+                          return (
+                            <a
+                              key={i}
+                              href={normalized}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title={`${lnk.title || 'Link'}: ${lnk.url}`}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold text-[#0068f9] hover:text-[#024bb1] bg-white hover:bg-[#eef5ff] border border-[#0068f9]/20 rounded-md transition-colors shadow-2xs truncate max-w-[130px]"
+                            >
+                              <Link2 size={10} className="shrink-0" />
+                              <span className="truncate">{lnk.title || 'Link'}</span>
+                              <ExternalLink size={9} className="shrink-0 opacity-70" />
+                            </a>
+                          );
+                        })}
+                        {allLinks.length > 2 && (
+                          <span className="text-[10px] font-medium text-[#777c86] bg-white px-1.5 py-0.5 rounded border border-[#efefef]">
+                            +{allLinks.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
               </div>
             ))}
           </div>
