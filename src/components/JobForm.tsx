@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { JobApplication, JobStatus, ApplicationLink } from '../types';
-import { Wand2, Loader2, X, ChevronDown, MapPin, Globe, Link2, ExternalLink, Plus, Trash2, Bookmark } from 'lucide-react';
+import { Wand2, Loader2, X, ChevronDown, MapPin, Globe, Link2, ExternalLink, Plus, Trash2, Bookmark, Sparkles, Building2 } from 'lucide-react';
 import { FileUpload, UploadedFile } from './FileUpload';
 import { auth } from '../lib/firebase';
 import { addNotification } from '../lib/notifications';
 import { toast } from 'sonner';
 import { LOCATION_DATA, parseLocationToGroup } from '../data/locationData';
+import { findBestCompanyHomepageUrl, classifyLink, normalizeHttpUrl } from '../lib/linkUtils';
 
 export const normalizeUrl = (url?: string): string => {
-  if (!url) return '';
-  const trimmed = url.trim();
-  if (!trimmed) return '';
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  return `https://${trimmed}`;
+  return normalizeHttpUrl(url || '');
 };
 
 const STATUSES: JobStatus[] = ['Wishlist', 'Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
@@ -406,12 +403,13 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
           setLinks(prev => {
             const existingUrls = new Set(prev.map(p => normalizeUrl(p.url)));
             const newEntries: ApplicationLink[] = [];
-            foundUrls.forEach((u, i) => {
+            foundUrls.forEach((u) => {
               const normalized = normalizeUrl(u);
               if (!existingUrls.has(normalized)) {
                 existingUrls.add(normalized);
+                const info = classifyLink(normalized, extracted.company || formData.company);
                 newEntries.push({
-                  title: i === 0 ? 'Job Posting / Portal' : `Reference Link ${prev.length + newEntries.length + 1}`,
+                  title: info.title || (info.type === 'homepage' ? 'Official Homepage' : 'Job Posting / Portal'),
                   url: normalized
                 });
               }
@@ -428,7 +426,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
           workType: extractedWorkType || prev.workType,
           notes: extracted.notes ? (prev.notes ? prev.notes + '\n\n' + extracted.notes : extracted.notes) : prev.notes
         }));
-        toast.success('Fields auto-filled successfully!');
+        toast.success('Auto-fill success');
         setPasteText('');
       } else {
         // Check for urls even in raw paste
@@ -438,12 +436,13 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
           setLinks(prev => {
             const existingUrls = new Set(prev.map(p => normalizeUrl(p.url)));
             const newEntries: ApplicationLink[] = [];
-            foundUrls.forEach((u, i) => {
+            foundUrls.forEach((u) => {
               const normalized = normalizeUrl(u);
               if (!existingUrls.has(normalized)) {
                 existingUrls.add(normalized);
+                const info = classifyLink(normalized, formData.company);
                 newEntries.push({
-                  title: i === 0 ? 'Job Posting / Portal' : `Reference Link ${prev.length + newEntries.length + 1}`,
+                  title: info.title || (info.type === 'homepage' ? 'Official Homepage' : 'Job Posting / Portal'),
                   url: normalized
                 });
               }
@@ -471,7 +470,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
         workType: fallback.workType || prev.workType,
         notes: fallback.notes ? (prev.notes ? prev.notes + '\n\n' + fallback.notes : fallback.notes) : prev.notes
       }));
-      toast.success('Fields auto-filled from job description!');
+      toast.success('Auto-fill success');
       setPasteText('');
     } finally {
       setIsExtracting(false);
@@ -641,8 +640,12 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
           url: normalizeUrl(l.url)
         }));
 
+      // Find the authentic verified official homepage URL among candidate links
+      const { bestUrl } = findBestCompanyHomepageUrl(sanitizedLinks, formData.companyUrl || initialData?.companyUrl, formData.company);
+
       await onSave({
         ...formData,
+        companyUrl: bestUrl || formData.companyUrl || '',
         links: sanitizedLinks,
         linkUrl: sanitizedLinks.length > 0 ? sanitizedLinks[0].url : '',
         reminderSent: isReminderChanged ? false : (initialData?.reminderSent || false)
@@ -659,15 +662,20 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
     <div className="fixed top-0 bottom-0 right-0 left-0 md:left-[var(--sidebar-offset,0px)] bg-[#121722]/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-all duration-300">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-[#efefef]">
         <div className="flex items-center justify-between p-6 border-b border-[#efefef] shrink-0">
-          <h2 className="text-xl font-extrabold text-[#121722] m-0">
-            {initialData ? 'Edit Application' : 'New Application'}
-          </h2>
-          <button
-            onClick={onCancel}
-            className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-all hover:bg-[#faf9f7] h-9 w-9 p-0 text-[#777c86] hover:text-[#121722] cursor-pointer"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-extrabold text-[#121722] m-0">
+              {initialData ? 'Edit Application' : 'New Application'}
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onCancel}
+              className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-all hover:bg-[#faf9f7] h-9 w-9 p-0 text-[#777c86] hover:text-[#121722] cursor-pointer"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {isDemo && (

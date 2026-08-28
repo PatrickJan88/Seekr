@@ -11,6 +11,7 @@ import {
   Activity,
   Globe,
   Sparkles,
+  Building2,
   Plus,
   Download,
   Upload,
@@ -164,6 +165,7 @@ export function SidebarNav({
         { id: 'kanban', title: 'My Applications', icon: FolderKanban, badge: applicationCount ? applicationCount : undefined },
         { id: 'analytics', title: 'Analytics', icon: Activity },
         { id: 'cv-match', title: 'AI Evaluator', icon: Sparkles },
+        { id: 'company-intel', title: 'Company 360', icon: Building2 },
       ]
     },
     {

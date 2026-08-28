@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { JobApplication, MatchedKeyword, MissingKeyword, TailoredResumeData } from '../types';
+import { JobApplication, MatchResult, MatchedKeyword, MissingKeyword, TailoredResumeData } from '../types';
 import { extractTextFromPDF, fileToBase64 } from '../lib/pdf';
 import { addEvaluation } from '../db/evaluations';
 import { auth } from '../lib/firebase';
@@ -29,7 +29,9 @@ import {
   Layout,
   Printer,
   Tag,
-  Briefcase
+  Briefcase,
+  BookOpen,
+  Layers
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CoverLetterStudio } from './CoverLetterStudio';
@@ -58,25 +60,159 @@ interface CVMatchAssessmentProps {
   setNestedBreadcrumb?: (crumb: {label: string, onBack: () => void} | null) => void;
 }
 
-export interface MatchResult {
-  company_name?: string;
-  score: number;
-  matchCategory: 'High Match' | 'Medium Match' | 'Low Match';
-  keyword_score?: number;
-  matched_keywords?: MatchedKeyword[];
-  missing_keywords?: MissingKeyword[];
-  strengths: string[];
-  gaps: string[];
-  actionable_polish: string;
-  interview_questions: string[];
-}
-
 export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlist, onViewHistory, setNestedBreadcrumb, trackingSystem = 'industry' }: CVMatchAssessmentProps & { trackingSystem?: 'industry' | 'academic' }) {
+  const [isNormsModalOpen, setIsNormsModalOpen] = useState(false);
+
   const DEMO_RESULT: MatchResult = {
     company_name: 'TechFlow Solutions',
     score: 85,
+    rawWeightedScore: 85,
     matchCategory: 'High Match',
     keyword_score: 85,
+    tierAction: {
+      tier: 'High Match',
+      scoreRange: '≥ 80%',
+      statusLabel: 'Strong Fit',
+      meaning: 'Meets almost all primary "must-have" technical/domain requirements and seniority expectations.',
+      recommendedAction: '1-Click Apply / Priority Queue: Prompt user to apply immediately. Generate tailored outreach messages and custom cover letter.',
+      actionType: 'priority_apply',
+      liftSuggestions: []
+    },
+    dimensions: {
+      hardSkills: {
+        key: 'hardSkills',
+        name: 'Hard Skills & Tech Stack',
+        weight: 0.30,
+        weightLabel: '30%',
+        score: 88,
+        weightedScore: 26,
+        status: 'Pass',
+        metricType: 'Match Rate (%) & Critical Gap Count',
+        extractedCv: 'React 18, TypeScript, Tailwind CSS, State Management, Performance Optimization',
+        requiredJd: 'React 18, TypeScript, Tailwind CSS, Performance Optimization, Automated Testing',
+        evidence: [
+          '5+ years building scalable React & TypeScript production applications',
+          'Deep expertise in memoization, code-splitting, and bundle size reduction'
+        ],
+        gaps: [
+          'Playwright / E2E testing framework not explicitly documented'
+        ]
+      },
+      seniority: {
+        key: 'seniority',
+        name: 'Seniority & Experience Scope',
+        weight: 0.20,
+        weightLabel: '20%',
+        score: 85,
+        weightedScore: 17,
+        status: 'Pass',
+        metricType: 'Delta Score (5 yrs actual vs 5 yrs target)',
+        extractedCv: 'Senior Frontend Engineer with 5+ years of verified software delivery',
+        requiredJd: '5+ years experience building complex web platforms',
+        evidence: [
+          'Full lifecycle ownership across multi-squad engineering environments'
+        ],
+        gaps: []
+      },
+      domain: {
+        key: 'domain',
+        name: 'Domain & Industry Relevance',
+        weight: 0.20,
+        weightLabel: '20%',
+        score: 82,
+        weightedScore: 16,
+        status: 'Pass',
+        metricType: 'Semantic Similarity (0.0 - 1.0)',
+        extractedCv: 'SaaS design systems, accessible design tokens, micro-frontends',
+        requiredJd: 'Web platform architecture and user-facing SaaS interfaces',
+        evidence: [
+          'Demonstrated deep understanding of enterprise component systems'
+        ],
+        gaps: []
+      },
+      methodology: {
+        key: 'methodology',
+        name: 'Methodology & Soft Competencies',
+        weight: 0.15,
+        weightLabel: '15%',
+        score: 88,
+        weightedScore: 13,
+        status: 'Pass',
+        metricType: 'Evidence-based Keyword & Context Match',
+        extractedCv: 'Agile sprints, cross-functional collaboration, design-to-code alignment',
+        requiredJd: 'Collaborative problem solving and sprint execution',
+        evidence: [
+          'Partnered closely with UX research and product managers'
+        ],
+        gaps: []
+      },
+      credentials: {
+        key: 'credentials',
+        name: 'Credentials & Education',
+        weight: 0.10,
+        weightLabel: '10%',
+        score: 90,
+        weightedScore: 9,
+        status: 'Pass',
+        metricType: 'Binary Match with Flexible Equivalence',
+        extractedCv: 'B.S. in Computer Science (or equivalent software engineering background)',
+        requiredJd: 'B.S. in STEM field or equivalent industry experience',
+        evidence: [
+          'Academic and technical foundations validated'
+        ],
+        gaps: []
+      },
+      operational: {
+        key: 'operational',
+        name: 'Operational & Practical Constraints',
+        weight: 0.05,
+        weightLabel: 'Gatekeeper (5%)',
+        score: 95,
+        weightedScore: 5,
+        status: 'Pass',
+        metricType: 'Hard Gate / Knockout (Pass/Fail)',
+        extractedCv: 'Eligible work authorization, matches hybrid/remote preference',
+        requiredJd: 'Legal work authorization and compatible work schedule',
+        evidence: [
+          'Work authorization and location requirements verified'
+        ],
+        gaps: []
+      }
+    },
+    hardGate: {
+      passed: true,
+      isKnockout: false,
+      reason: 'All operational and prerequisite criteria satisfied.',
+      constraintType: 'none',
+      actionNote: 'No operational blockers detected.'
+    },
+    requirementTiers: {
+      mustHaveCoveragePct: 88,
+      mustHaveWarning: false,
+      niceToHaveBonus: 5,
+      totalMustHavesCount: 8,
+      matchedMustHavesCount: 7
+    },
+    criticalGaps: [
+      {
+        skill: 'Playwright / E2E Testing',
+        category: 'Easily Bridgeable',
+        importance: 'Critical',
+        rationale: 'Fast-to-learn automated testing tool. Candidate with strong React/JS background can adopt quickly.',
+        remediation: 'Add a bullet in recent experience mentioning automated regression test suites using Playwright or Cypress.'
+      }
+    ],
+    semanticRelevance: {
+      score: 86,
+      summary: 'Candidate achievements map directly to high-impact UI architecture and performance optimization deliverables required by the position.',
+      examples: [
+        {
+          cvAchievement: 'Engineered design system and state machines used across multiple production products.',
+          jdIntent: 'Architect modular, accessible, and high-performance component systems.',
+          alignmentLevel: 'Strong'
+        }
+      ]
+    },
     matched_keywords: [
       { keyword: 'React 18', category: 'Tools & Frameworks', context: '5+ years experience building production UIs' },
       { keyword: 'TypeScript', category: 'Hard Skills', context: 'Extensive strict-mode architecture' },
@@ -1002,14 +1138,14 @@ ${app.notes || 'No extra description provided.'}`;
                         <button
                           type="button"
                           onClick={() => setCvInputMode('upload')}
-                          className={`px-3 py-1 rounded-full transition-all cursor-pointer ${cvInputMode === 'upload' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86]'}`}
+                          className={`px-3 py-1 rounded-full transition-all cursor-pointer ${cvInputMode === 'upload' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] border border-transparent'}`}
                         >
                           PDF upload
                         </button>
                         <button
                           type="button"
                           onClick={() => setCvInputMode('text')}
-                          className={`px-3 py-1 rounded-full transition-all cursor-pointer ${cvInputMode === 'text' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86]'}`}
+                          className={`px-3 py-1 rounded-full transition-all cursor-pointer ${cvInputMode === 'text' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] border border-transparent'}`}
                         >
                           Paste text
                         </button>
@@ -1166,14 +1302,14 @@ ${app.notes || 'No extra description provided.'}`;
                       <button
                         type="button"
                         onClick={() => setJdSource('custom')}
-                        className={`px-3 py-1 rounded-full transition-all cursor-pointer ${jdSource === 'custom' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86]'}`}
+                        className={`px-3 py-1 rounded-full transition-all cursor-pointer ${jdSource === 'custom' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] border border-transparent'}`}
                       >
                         Custom paste
                       </button>
                       <button
                         type="button"
                         onClick={() => setJdSource('application')}
-                        className={`px-3 py-1 rounded-full transition-all cursor-pointer ${jdSource === 'application' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86]'}`}
+                        className={`px-3 py-1 rounded-full transition-all cursor-pointer ${jdSource === 'application' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] border border-transparent'}`}
                       >
                         Tracked app
                       </button>

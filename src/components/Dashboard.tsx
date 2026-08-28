@@ -24,6 +24,7 @@ import { NotificationsPage } from './NotificationsPage';
 import { SettingsPage } from './SettingsPage';
 import { CVMatchAssessment } from './CVMatchAssessment';
 import { EvaluateHistoryPage } from './EvaluateHistoryPage';
+import { CompanyIntelligenceStudio } from './CompanyIntelligenceStudio';
 import { SidebarNav } from './SidebarNav';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Sparkles } from 'lucide-react';
@@ -42,8 +43,15 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   const syncLockRef = useRef(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [view, setView] = useState<'sankey' | 'kanban' | 'analytics' | 'cv-match' | 'notifications' | 'settings' | 'eval-history' | 'global-market'>('sankey');
+  const [view, setView] = useState<'sankey' | 'kanban' | 'analytics' | 'cv-match' | 'notifications' | 'settings' | 'eval-history' | 'global-market' | 'company-intel'>('sankey');
   const [trackingSystem, setTrackingSystem] = useState<'industry' | 'academic'>('industry');
+  const [companyIntelTarget, setCompanyIntelTarget] = useState<{ companyName?: string; websiteUrl?: string }>({});
+
+  const handleNavigateToTeardown = (companyName: string, websiteUrl?: string) => {
+    setCompanyIntelTarget({ companyName, websiteUrl });
+    setView('company-intel');
+    setIsFormOpen(false);
+  };
 
   const filteredApplications = useMemo(() => {
     return applications.filter(app => (app.trackingSystem || 'industry') === trackingSystem);
@@ -617,6 +625,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     'kanban': 'My Applications',
     'analytics': 'Analytics',
     'cv-match': 'AI Evaluator',
+    'company-intel': 'Company 360',
     'settings': 'Settings',
     'notifications': 'Notifications',
     'eval-history': 'Evaluation History'
@@ -681,6 +690,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
             {view === 'kanban' && <Kanban applications={filteredApplications} onEdit={(app) => { setEditingApp(app); setIsFormOpen(true); }} onStatusChange={handleStatusChange as any} onDelete={handleDelete} locationFilter={locationFilter} onLocationSelect={handleLocationSelect} />}
             {view === 'analytics' && <Analytics applications={filteredApplications} onLocationSelect={handleLocationSelect} />}
             {view === 'cv-match' && <CVMatchAssessment applications={filteredApplications} trackingSystem={trackingSystem} onAddToWishlist={handleSave} onViewHistory={() => setView('eval-history')} setNestedBreadcrumb={setNestedBreadcrumb} />}
+            {view === 'company-intel' && <CompanyIntelligenceStudio applications={filteredApplications} onAddToWishlist={handleSave} initialCompanyName={companyIntelTarget.companyName} initialWebsiteUrl={companyIntelTarget.websiteUrl} isDemo={isDemo} />}
             {view === 'notifications' && <NotificationsPage onBack={() => setView('sankey')} />}
             {view === 'settings' && <SettingsPage onBack={() => setView('sankey')} onClearData={handleClearData} isSyncing={isSyncing} trackingSystem={trackingSystem} setTrackingSystem={setTrackingSystem} />}
             {view === 'eval-history' && <EvaluateHistoryPage onBack={() => setView('cv-match')} applications={filteredApplications} onAddToWishlist={handleSave} />}

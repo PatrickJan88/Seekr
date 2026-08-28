@@ -67,9 +67,6 @@ export function KeywordHighlightPanel({
               Resume Scoring & Keyword Highlighting
             </h4>
           </div>
-          <p className="text-xs text-[#777c86] mt-0.5">
-            ATS keyword density and competency extraction from Resume-Matcher engine.
-          </p>
         </div>
 
         {/* Score Pill Breakdown */}

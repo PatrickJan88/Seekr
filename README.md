@@ -21,21 +21,22 @@
 
 ---
 
-## 📖 Overview
+## Overview
 
 **Seekr** bridges the gap between passive job application tracking and active, AI-assisted career strategy. Engineered for software engineers, data scientists, researchers, and tech professionals, Seekr combines high-performance client-side visual pipelines with server-side AI engines to analyze job postings, evaluate CV compatibility, generate tailored application materials, and track interview milestones.
 
 ---
 
-## 🚀 What's New in Version 3.0.0
+## What's New in Version 3.0.0
 
 Version `3.0.0` represents a major milestone, introducing unified full-stack architecture, comprehensive AI studios, dual career tracking systems, and enhanced document/media attachments.
 
-### 🌟 Major Highlights
+### Major Highlights
 
 *   **Dual Tracking Framework (Industry & Academic Systems)**:
     *   Switch between **Industry Seekr** and **Academic Seekr** workflows with dedicated pipeline stages (e.g., Screening, Job Talks, Campus Visits, Committee Reviews, Grant proposals).
 *   **Complete AI Career Studios**:
+    *   **Company 360 Studio**: Deep-dive holistic teardowns of any company, reverse-engineering core product loops, SWOT matrices, AI placements, and strategic interview pitches.
     *   **Smart CV Match & Evaluator**: Real-time resume vs. job description match scoring, gap analysis, keyword heatmaps, and historical assessment tracking.
     *   **Cover Letter Studio**: AI-generated tailored cover letters matching target role seniority and company culture.
     *   **Interview Prep Studio**: Custom technical, behavioral, and STAR-method questions tailored to specific job postings and candidate backgrounds.
@@ -55,7 +56,7 @@ Version `3.0.0` represents a major milestone, introducing unified full-stack arc
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### **Frontend**
 *   **Framework**: [React 19](https://react.dev/) + [TypeScript 5.8](https://www.typescriptlang.org/)
@@ -76,7 +77,7 @@ Version `3.0.0` represents a major milestone, introducing unified full-stack arc
 
 ---
 
-## ✨ Core Features & Modules
+## Core Features & Modules
 
 ```
 ├── 📊 Pipeline & Overview (Sankey Flow Chart & Activity Funnel)
@@ -108,7 +109,7 @@ Version `3.0.0` represents a major milestone, introducing unified full-stack arc
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 *   **Node.js**: v18.0.0 or higher
@@ -156,9 +157,10 @@ Version `3.0.0` represents a major milestone, introducing unified full-stack arc
 
 ---
 
-## 📜 Version History & Changelog
+## Version History & Changelog
 
 ### **v3.0.0** — *Current Release*
+*   Added **Company 360 Studio** for deep strategic company analysis and interview preparation.
 *   Added **Dual Tracking Systems** (Industry vs. Academic Seekr pipelines).
 *   Introduced **AI Cover Letter Studio**, **Interview Prep Studio**, and **Resume Tailor Studio**.
 *   Built **Client-Side Canvas Compression** for image attachments with zero storage lag.
@@ -178,7 +180,7 @@ Version `3.0.0` represents a major milestone, introducing unified full-stack arc
 
 ---
 
-## 🔒 Security & Privacy
+## Security & Privacy
 
 *   **Zero-Leak PDF Extraction**: All resume text parsing runs entirely client-side inside Web Workers using `pdfjs-dist`. Raw PDF files never leave your browser unless explicitly saved as an attachment.
 *   **Server-Side AI Proxies**: API keys (`GEMINI_API_KEY`) remain strictly on the backend and are never exposed to browser clients.
@@ -186,7 +188,7 @@ Version `3.0.0` represents a major milestone, introducing unified full-stack arc
 
 ---
 
-## 👤 Author & Acknowledgments
+## Author & Acknowledgments
 
 *   **Creator**: [POFEI (Ran Pofei)](https://pofeiportfolio.vercel.app/)
 *   **LinkedIn**: [@pofei-r-79586395](https://www.linkedin.com/in/pofei-r-79586395)

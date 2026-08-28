@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { JobApplication, JobStatus, getWorkTypeBadgeStyle } from '../types';
-import { Calendar, Building, MoreVertical, LayoutDashboard, List, MapPin, X, Info, Link2, ExternalLink } from 'lucide-react';
+import { Calendar, Building, MoreVertical, LayoutDashboard, List, MapPin, X, Info, Link2, ExternalLink, Sparkles, Building2 } from 'lucide-react';
 import { ListView } from './ListView';
 import { matchLocation } from './ApplicationMap';
 import { Dropdown } from './ui/Dropdown';
@@ -266,7 +266,7 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
                     const allLinks = (app.links && app.links.length > 0)
                       ? app.links.filter(l => l && (l.url?.trim() || l.title?.trim()))
                       : (app.linkUrl ? [{ title: 'Link', url: app.linkUrl }] : []);
-                    
+
                     if (allLinks.length === 0) return null;
 
                     return (
