@@ -27,6 +27,7 @@ import { CompanyTeardownData, JobApplication } from '../types';
 import { HeadcountTrendChart } from './HeadcountTrendChart';
 import { auth } from '../lib/firebase';
 import { getSavedTeardowns, saveTeardown, deleteSavedTeardown, SavedTeardownRecord } from '../db/teardowns';
+import { jsonrepair } from 'jsonrepair';
 import { toast } from 'sonner';
 import { 
   findBestCompanyHomepageUrl, 
@@ -74,6 +75,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
   const [websiteUrl, setWebsiteUrl] = useState(initialWebsiteUrl);
   
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingRawJson, setStreamingRawJson] = useState("");
   const [currentTeardown, setCurrentTeardown] = useState<CompanyTeardownData | null>(null);
 
   // Classified links for currently selected app/target
@@ -225,7 +227,11 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
 
     setIsLoading(true);
     try {
-      const resp = await fetch('/api/company-teardown', {
+      
+      // Switch to streaming endpoint
+      
+      setStreamingRawJson("");
+      const resp = await fetch('/api/company-teardown/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -235,32 +241,69 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
       });
 
       if (!resp.ok) {
-        let errMsg = 'Failed to generate company analysis';
-        try {
-          const err = await resp.json();
-          errMsg = err.error || errMsg;
-        } catch (e) {}
-        throw new Error(errMsg);
+        throw new Error('Failed to generate company analysis');
       }
 
-      const data = await resp.json();
-      const teardown: CompanyTeardownData = data.teardown;
-      if (!teardown) {
-        throw new Error('Received empty intelligence data');
-      }
-      setCurrentTeardown(teardown);
+      if (!resp.body) throw new Error('ReadableStream not supported');
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let rawJsonStr = '';
+      let metaData: any = {};
+      
       setActiveTab('explorer');
-
-      // Auto-save to history
-      const userId = auth.currentUser?.uid || 'guest_user';
-      try {
-        const saved = await saveTeardown(userId, teardown);
-        setSavedRecords(prev => [saved, ...prev.filter(r => r.id !== saved.id)]);
-      } catch (saveErr) {
-        console.warn('Save teardown warning:', saveErr);
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunkStr = decoder.decode(value, { stream: true });
+        const lines = chunkStr.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: [DONE]')) break;
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.substring(6));
+              if (data.error) {
+                console.error("Stream reported error:", data.error);
+                continue;
+              }
+              if (data.meta) {
+                 metaData = data.meta;
+              }
+              if (data.text) {
+                 rawJsonStr += data.text;
+                 setStreamingRawJson(rawJsonStr);
+              }
+            } catch(e) {}
+          }
+        }
       }
 
-      toast.success('Company intelligence teardown ready!');
+      // Final parse check
+      let finalTeardown: CompanyTeardownData | null = null;
+      try {
+        finalTeardown = JSON.parse(jsonrepair(rawJsonStr));
+      } catch (e) {
+        throw new Error("Stream returned invalid or incomplete data.");
+      }
+      
+      if (finalTeardown) {
+         if (metaData.ogImage && !finalTeardown.ogImage) finalTeardown.ogImage = metaData.ogImage;
+         if (metaData.logoUrl && !finalTeardown.logoUrl) finalTeardown.logoUrl = metaData.logoUrl;
+         finalTeardown.generatedAt = Date.now();
+         setCurrentTeardown(finalTeardown);
+         
+         const userId = auth.currentUser?.uid || 'guest_user';
+         try {
+           const saved = await saveTeardown(userId, finalTeardown);
+           setSavedRecords(prev => [saved, ...prev.filter(r => r.id !== saved.id)]);
+         } catch (saveErr) {
+           console.warn('Save teardown warning:', saveErr);
+         }
+      }
+toast.success('Company intelligence teardown ready!');
     } catch (err: any) {
       console.error('Teardown generate error:', err);
       const message = err?.message === 'Failed to fetch' 
@@ -653,30 +696,39 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
             </div>
           </div>
 
+          
           {/* Loading Skeleton Indicator */}
           {isLoading && (
-            <div className="bg-white border border-[#efefef] rounded-2xl p-12 text-center flex flex-col items-center justify-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 animate-pulse">
-                <Sparkles className="w-6 h-6 animate-spin" />
-              </div>
-              <div className="flex items-center gap-2 mb-2">
-                <h3 className="text-base font-bold text-[#121722]">
-                  {'Fetching...'}
-                </h3>
-                <div className="relative group flex items-center">
-                  <button type="button" className="text-[#a5a5a5] hover:text-blue-600 transition-colors cursor-help">
-                    <Info size={14} />
-                  </button>
-                  <div className="absolute left-0 bottom-full mb-2 w-72 p-2.5 bg-[#121722] text-white text-xs rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 shadow-xl pointer-events-none font-normal text-left">
-                    {'Fetching authentic open-graph assets, structuring core retention mechanics, classifying AI spectrum tiers, and mapping LinkedIn workforce dynamics.'}
-                    <div className="absolute left-2 -bottom-1 border-4 border-transparent border-t-[#121722]"></div>
-                  </div>
+            <div className="bg-white border border-[#efefef] rounded-2xl p-6 shadow-2xs flex flex-col gap-6 animate-in fade-in duration-300">
+              <div className="flex items-center gap-3 border-b border-[#efefef] pb-4">
+                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 animate-spin">
+                  <Sparkles className="w-5 h-5" />
                 </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[#121722]">
+                    {'Synthesizing Company Intelligence...'}
+                  </h3>
+                  <p className="text-xs text-[#777c86]">
+                    {'Extracting open-graph assets, mapping core loops, and reverse-engineering metrics.'}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="relative w-full h-[400px] bg-[#0d1117] rounded-xl overflow-hidden border border-[#30363d] shadow-inner">
+                 <div className="absolute top-0 left-0 w-full h-8 bg-[#161b22] border-b border-[#30363d] flex items-center px-4 gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></div>
+                    <span className="text-[10px] text-[#8b949e] font-mono ml-2">seekr-ai-processor.ts</span>
+                 </div>
+                 <div className="p-4 pt-12 h-full overflow-y-auto font-mono text-xs text-[#c9d1d9] whitespace-pre-wrap flex flex-col-reverse">
+                    <div>{streamingRawJson || 'Connecting to data sources...\nInitiating intelligent teardown protocol...'}</div>
+                 </div>
               </div>
             </div>
           )}
-
-          {/* Render Active Teardown Report */}
+          
+{/* Render Active Teardown Report */}
           {currentTeardown && !isLoading && (
             <div className="flex flex-col gap-6 animate-in fade-in duration-300">
               {/* Report Header Card */}
