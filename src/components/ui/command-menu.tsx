@@ -462,7 +462,7 @@ const CommandMenuEmpty = React.forwardRef<
   >
     <div className="w-[104px] h-[104px] aspect-square flex items-center justify-center">
       <img
-        src="/icons/person-reviewing-policy.svg"
+        src="/icons/highlight-search.svg"
         alt="No search results"
         className="w-full h-full object-contain"
       />

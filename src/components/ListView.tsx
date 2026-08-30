@@ -448,7 +448,7 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete, track
               <tr>
                 <td colSpan={7} className="px-6 py-12 text-center">
                   <NoDataState 
-                    icon="/icons/person-building-pipeline.svg" 
+                    icon="/icons/highlight-search.svg" 
                     title="No applications yet" 
                   />
                 </td>

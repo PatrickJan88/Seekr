@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactECharts from 'echarts-for-react';
 import { JobApplication } from '../types';
+import { NoDataState } from './NoDataState';
 
 interface SankeyChartProps {
   onAdd?: () => void;
@@ -13,25 +14,16 @@ export function SankeyChart({ applications, isDemo = false, onAdd }: SankeyChart
 
   if (total === 0) {
     return (
-      <div className="flex flex-col justify-center items-center h-[500px] bg-white rounded-2xl border border-[#efefef] p-6 text-center gap-3 animate-in fade-in duration-300">
-        <div className="w-[104px] h-[104px] aspect-square flex items-center justify-center">
-          <img
-            src="/icons/dashboard.svg"
-            alt="No application yet"
-            className="w-full h-full object-contain"
+      <div className="relative w-full flex-1 flex flex-col min-h-[500px]">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col justify-center items-center relative animate-in fade-in duration-300">
+          <NoDataState
+            icon="/icons/dashboard.svg"
+            alt="Tracking your first application"
+            title="Tracking your first application"
+            actionText="New Application"
+            onAction={onAdd}
           />
         </div>
-        <span className="font-semibold text-sm text-[#121722]">
-          No application yet
-        </span>
-        {onAdd && (
-          <button
-            onClick={onAdd}
-            className="mt-2 px-5 py-2.5 bg-[#0068f9] text-white text-xs font-semibold rounded-full hover:bg-[#024bb1] transition-all cursor-pointer shadow-2xs"
-          >
-            New Application
-          </button>
-        )}
       </div>
     );
   }
