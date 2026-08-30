@@ -678,17 +678,17 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
            </div>
            
            <div className="flex items-center gap-3">
-             <CommandSearch applications={applications} onSelectApplication={(app) => { setEditingApp(app); setIsFormOpen(true); }} />
+             <CommandSearch applications={applications} onSelectApplication={(app) => { setEditingApp(app); setIsFormOpen(true); }} trackingSystem={trackingSystem} />
              <NotificationCenter onViewAll={() => setView('notifications')} />
            </div>
          </header>
 
          {/* Content Scrollable Area */}
          <main className="flex-1 overflow-y-auto bg-[#faf9f7] p-6 md:p-8 w-full flex flex-col custom-scrollbar relative">
-            {view === 'sankey' && <SankeyChart applications={filteredApplications} onAdd={() => { setEditingApp(null); setIsFormOpen(true); }} />}
+            {view === 'sankey' && <SankeyChart applications={filteredApplications} onAdd={() => { setEditingApp(null); setIsFormOpen(true); }} trackingSystem={trackingSystem} />}
             {view === 'global-market' && <GlobalMarket isDemo={isDemo} onAddToWishlist={handleSave} trackingSystem={trackingSystem} />}
-            {view === 'kanban' && <Kanban applications={filteredApplications} onEdit={(app) => { setEditingApp(app); setIsFormOpen(true); }} onStatusChange={handleStatusChange as any} onDelete={handleDelete} locationFilter={locationFilter} onLocationSelect={handleLocationSelect} />}
-            {view === 'analytics' && <Analytics applications={filteredApplications} onLocationSelect={handleLocationSelect} />}
+            {view === 'kanban' && <Kanban applications={filteredApplications} onEdit={(app) => { setEditingApp(app); setIsFormOpen(true); }} onStatusChange={handleStatusChange as any} onDelete={handleDelete} locationFilter={locationFilter} onLocationSelect={handleLocationSelect} trackingSystem={trackingSystem} />}
+            {view === 'analytics' && <Analytics applications={filteredApplications} onLocationSelect={handleLocationSelect} trackingSystem={trackingSystem} />}
             {view === 'cv-match' && <CVMatchAssessment applications={filteredApplications} trackingSystem={trackingSystem} onAddToWishlist={handleSave} onViewHistory={() => setView('eval-history')} setNestedBreadcrumb={setNestedBreadcrumb} />}
             {view === 'company-intel' && (
               <CompanyIntelligenceStudio 

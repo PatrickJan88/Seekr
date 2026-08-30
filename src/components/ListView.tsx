@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { JobApplication, JobStatus, getWorkTypeBadgeStyle, ApplicationLink } from '../types';
+import { JobApplication, JobStatus, getWorkTypeBadgeStyle, ApplicationLink, getStatusLabel } from '../types';
 import { Calendar, Building, MoreVertical, Eye, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, Link2, ExternalLink, Trash2, Edit2 } from 'lucide-react';
 import { NoDataState } from './NoDataState';
 
@@ -24,7 +24,7 @@ const STATUS_COLORS: Record<JobStatus, string> = {
   Ghosted: 'bg-gray-100 text-gray-700',
 };
 
-function StatusDropdown({ status, onChange }: { status: JobStatus; onChange: (s: JobStatus) => void }) {
+function StatusDropdown({ status, onChange, trackingSystem = 'industry' }: { status: JobStatus; onChange: (s: JobStatus) => void; trackingSystem?: 'industry' | 'academic' }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -44,12 +44,12 @@ function StatusDropdown({ status, onChange }: { status: JobStatus; onChange: (s:
         onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
         className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-colors border border-transparent hover:border-slate-300 ${STATUS_COLORS[status]}`}
       >
-        {status}
+        {getStatusLabel(status, trackingSystem)}
         <ChevronDown size={12} className="ml-1 opacity-70" />
       </button>
       
       {open && (
-        <div className="absolute top-full left-0 mt-1 w-40 bg-white border border-slate-200 rounded-lg shadow-lg z-10 py-1">
+        <div className="absolute top-full left-0 mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg z-10 py-1">
           {STATUSES.map(s => (
             <button
               key={s}
@@ -57,7 +57,7 @@ function StatusDropdown({ status, onChange }: { status: JobStatus; onChange: (s:
               className={`w-full text-left px-4 py-2 text-sm transition-colors hover:bg-slate-50 flex items-center justify-between ${s === status ? 'font-bold' : ''}`}
             >
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${STATUS_COLORS[s]}`}>
-                {s}
+                {getStatusLabel(s, trackingSystem)}
               </span>
             </button>
           ))}
@@ -437,6 +437,7 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete, track
                     <StatusDropdown 
                       status={app.status} 
                       onChange={(newStatus) => onStatusChange(app.id, newStatus)} 
+                      trackingSystem={trackingSystem}
                     />
                   </td>
                   <td className="border-b border-[#efefef] px-6 py-4 max-w-0 text-right" style={{ width: colWidths.actions }}>
@@ -446,11 +447,13 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete, track
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center">
-                  <NoDataState 
-                    icon="/icons/highlight-search.svg" 
-                    title="No applications yet" 
-                  />
+                <td colSpan={7} className="p-0 border-0">
+                  <div className="w-full h-[calc(100vh-340px)] min-h-[380px] flex items-center justify-center">
+                    <NoDataState 
+                      icon="/icons/person-searching-list.svg" 
+                      title="No application yet" 
+                    />
+                  </div>
                 </td>
               </tr>
             )}

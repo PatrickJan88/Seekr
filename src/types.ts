@@ -11,6 +11,32 @@ export interface ApplicationLink {
 
 export type JobStatus = 'Wishlist' | 'Applied' | 'Screening' | 'Technical' | 'Final' | 'Offer' | 'Rejected' | 'Ghosted';
 
+export const getStatusLabel = (status: JobStatus | string, trackingSystem: 'industry' | 'academic' = 'industry'): string => {
+  if (trackingSystem === 'academic') {
+    switch (status) {
+      case 'Applied':
+        return 'Submitted';
+      case 'Screening':
+        return 'Committee Review';
+      case 'Technical':
+        return 'First-Round Interview';
+      case 'Final':
+        return 'Campus Visit';
+      case 'Offer':
+        return 'Offer';
+      case 'Wishlist':
+        return 'Wishlist';
+      case 'Rejected':
+        return 'Rejected';
+      case 'Ghosted':
+        return 'Ghosted';
+      default:
+        return status;
+    }
+  }
+  return status;
+};
+
 export type WorkType = 'On-site' | 'Hybrid' | 'Remote';
 
 export const getWorkTypeBadgeStyle = (workType?: WorkType | string) => {

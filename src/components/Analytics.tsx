@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { JobApplication, JobStatus } from '../types';
+import { JobApplication, JobStatus, getStatusLabel } from '../types';
 import { ApplicationMap } from './ApplicationMap';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -10,9 +10,10 @@ interface AnalyticsProps {
   applications: JobApplication[];
   isDemo?: boolean;
   onLocationSelect?: (country: string | null) => void;
+  trackingSystem?: 'industry' | 'academic';
 }
 
-export function Analytics({ applications, isDemo = false, onLocationSelect }: AnalyticsProps) {
+export function Analytics({ applications, isDemo = false, onLocationSelect, trackingSystem = 'industry' }: AnalyticsProps) {
   const [linkedinViews, setLinkedinViews] = useState('');
   const [linkedinSearches, setLinkedinSearches] = useState('');
   const [savedInsights, setSavedInsights] = useState<{views: number, searches: number} | null>(null);
@@ -23,14 +24,18 @@ export function Analytics({ applications, isDemo = false, onLocationSelect }: An
   }, {} as Record<JobStatus, number>);
 
   const funnelData = [
-    { name: 'Applied', count: statusCounts['Applied'] || 0 },
-    { name: 'Screening', count: statusCounts['Screening'] || 0 },
-    { name: 'Technical', count: statusCounts['Technical'] || 0 },
-    { name: 'Final', count: statusCounts['Final'] || 0 },
-    { name: 'Offer', count: statusCounts['Offer'] || 0 },
+    { name: getStatusLabel('Applied', trackingSystem), count: statusCounts['Applied'] || 0 },
+    { name: getStatusLabel('Screening', trackingSystem), count: statusCounts['Screening'] || 0 },
+    { name: getStatusLabel('Technical', trackingSystem), count: statusCounts['Technical'] || 0 },
+    { name: getStatusLabel('Final', trackingSystem), count: statusCounts['Final'] || 0 },
+    { name: getStatusLabel('Offer', trackingSystem), count: statusCounts['Offer'] || 0 },
   ];
 
-  const pieData = Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
+  const pieData = Object.entries(statusCounts).map(([statusKey, value]) => ({ 
+    name: getStatusLabel(statusKey, trackingSystem), 
+    rawStatus: statusKey,
+    value 
+  }));
   
   const statusColors: Record<string, string> = {
     'Wishlist': '#c7d2fe',
@@ -43,12 +48,23 @@ export function Analytics({ applications, isDemo = false, onLocationSelect }: An
     'Offer': '#8ec5ff'
   };
 
+  const getStatusColor = (labelOrKey: string) => {
+    if (statusColors[labelOrKey]) return statusColors[labelOrKey];
+    // Map academic labels back to colors
+    if (labelOrKey === getStatusLabel('Applied', 'academic')) return statusColors['Applied'];
+    if (labelOrKey === getStatusLabel('Screening', 'academic')) return statusColors['Screening'];
+    if (labelOrKey === getStatusLabel('Technical', 'academic')) return statusColors['Technical'];
+    if (labelOrKey === getStatusLabel('Final', 'academic')) return statusColors['Final'];
+    if (labelOrKey === getStatusLabel('Offer', 'academic')) return statusColors['Offer'];
+    return '#8ec5ff';
+  };
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length && payload[0]) {
       const item = payload[0];
       const name = item.name || item.payload?.name || '';
       const value = item.value ?? 0;
-      const color = statusColors[name] || item.color || '#3b82f6';
+      const color = getStatusColor(name) || item.color || '#3b82f6';
 
       return (
         <div className="bg-white border border-slate-200 rounded-lg shadow-md p-3">
@@ -109,7 +125,7 @@ export function Analytics({ applications, isDemo = false, onLocationSelect }: An
                   dataKey="value"
                 >
                   {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={statusColors[entry.name] || '#ccc'} />
+                    <Cell key={`cell-${index}`} fill={getStatusColor(entry.rawStatus || entry.name)} />
                   ))}
                 </Pie>
                 <RechartsTooltip content={<CustomTooltip />} />

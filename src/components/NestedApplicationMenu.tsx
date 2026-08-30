@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Briefcase, ChevronRight, Check, Search, ChevronDown } from "lucide-react";
-import { JobApplication, JobStatus } from "../types";
+import { JobApplication, JobStatus, getStatusLabel } from "../types";
 
 interface NestedApplicationMenuProps {
   applications: JobApplication[];
@@ -103,7 +103,7 @@ export function NestedApplicationMenu({
                     {selectedAppId === app.id && <Check size={14} className="text-[#0068f9] shrink-0 ml-2" />}
                   </div>
                   <span className="text-[10px] text-[#777c86] truncate">
-                    {app.company} • {app.status}
+                    {app.company} • {getStatusLabel(app.status, trackingSystem)}
                   </span>
                 </DropdownMenu.Item>
               ))
@@ -119,7 +119,7 @@ export function NestedApplicationMenu({
               return (
                 <DropdownMenu.Sub key={status}>
                   <DropdownMenu.SubTrigger className="flex items-center px-3 py-2 text-xs text-[#121722] rounded-lg cursor-pointer hover:bg-[#faf9f7] outline-none select-none data-[state=open]:bg-[#faf9f7]">
-                    {status}
+                    {getStatusLabel(status, trackingSystem)}
                     <span className="ml-2 text-[10px] text-[#a5a5a5] px-1.5 py-0.5 bg-[#efefef] rounded-full">
                       {apps.length}
                     </span>

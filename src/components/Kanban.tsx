@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { JobApplication, JobStatus, getWorkTypeBadgeStyle } from '../types';
+import { JobApplication, JobStatus, getWorkTypeBadgeStyle, getStatusLabel } from '../types';
 import { Calendar, Building, MoreVertical, LayoutDashboard, List, MapPin, X, Info, Link2, ExternalLink, Sparkles, Building2 } from 'lucide-react';
 import { ListView } from './ListView';
 import { matchLocation } from './ApplicationMap';
@@ -208,7 +208,7 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-[#121722] flex items-center gap-1.5">
-              {status}
+              {getStatusLabel(status, trackingSystem)}
               {status === 'Ghosted' && (
                 <div className="group relative flex items-center">
                   <Info size={14} className="text-[#777c86] cursor-pointer hover:text-[#121722] transition-colors" />

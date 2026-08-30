@@ -1,15 +1,16 @@
 import React from 'react';
 import ReactECharts from 'echarts-for-react';
-import { JobApplication } from '../types';
+import { JobApplication, getStatusLabel } from '../types';
 import { NoDataState } from './NoDataState';
 
 interface SankeyChartProps {
   onAdd?: () => void;
   applications: JobApplication[];
   isDemo?: boolean;
+  trackingSystem?: 'industry' | 'academic';
 }
 
-export function SankeyChart({ applications, isDemo = false, onAdd }: SankeyChartProps) {
+export function SankeyChart({ applications, isDemo = false, onAdd, trackingSystem = 'industry' }: SankeyChartProps) {
   const total = applications.length;
 
   if (total === 0) {
@@ -49,27 +50,36 @@ export function SankeyChart({ applications, isDemo = false, onAdd }: SankeyChart
   const reachedFinal = counts['Final'] + counts['Offer'];
   const reachedOffer = counts['Offer'];
 
+  const appliedLabel = getStatusLabel('Applied', trackingSystem);
+  const screeningLabel = getStatusLabel('Screening', trackingSystem);
+  const technicalLabel = getStatusLabel('Technical', trackingSystem);
+  const finalLabel = getStatusLabel('Final', trackingSystem);
+  const offerLabel = getStatusLabel('Offer', trackingSystem);
+  const ghostedLabel = getStatusLabel('Ghosted', trackingSystem);
+  const rejectedLabel = getStatusLabel('Rejected', trackingSystem);
+  const totalLabel = trackingSystem === 'academic' ? 'Total Submissions' : 'Total Applications';
+
   const nodes = [
-    { name: 'Total Applications', itemStyle: { color: '#2b7fff' } },
-    { name: 'Applied', itemStyle: { color: '#86efac' } },
-    { name: 'Ghosted', itemStyle: { color: '#cbd5e1' } },
-    { name: 'Rejected', itemStyle: { color: '#fca5a5' } },
-    { name: 'Screening', itemStyle: { color: '#8ec5ff' } },
-    { name: 'Technical', itemStyle: { color: '#8ec5ff' } },
-    { name: 'Final', itemStyle: { color: '#8ec5ff' } },
-    { name: 'Offer', itemStyle: { color: '#8ec5ff' } },
+    { name: totalLabel, itemStyle: { color: '#2b7fff' } },
+    { name: appliedLabel, itemStyle: { color: '#86efac' } },
+    { name: ghostedLabel, itemStyle: { color: '#cbd5e1' } },
+    { name: rejectedLabel, itemStyle: { color: '#fca5a5' } },
+    { name: screeningLabel, itemStyle: { color: '#8ec5ff' } },
+    { name: technicalLabel, itemStyle: { color: '#8ec5ff' } },
+    { name: finalLabel, itemStyle: { color: '#8ec5ff' } },
+    { name: offerLabel, itemStyle: { color: '#8ec5ff' } },
   ];
 
   const links: any[] = [];
   
-  if (counts['Applied'] > 0) links.push({ source: 'Total Applications', target: 'Applied', value: counts['Applied'] });
-  if (counts['Ghosted'] > 0) links.push({ source: 'Total Applications', target: 'Ghosted', value: counts['Ghosted'] });
-  if (counts['Rejected'] > 0) links.push({ source: 'Total Applications', target: 'Rejected', value: counts['Rejected'] });
+  if (counts['Applied'] > 0) links.push({ source: totalLabel, target: appliedLabel, value: counts['Applied'] });
+  if (counts['Ghosted'] > 0) links.push({ source: totalLabel, target: ghostedLabel, value: counts['Ghosted'] });
+  if (counts['Rejected'] > 0) links.push({ source: totalLabel, target: rejectedLabel, value: counts['Rejected'] });
   
-  if (reachedScreening > 0) links.push({ source: 'Total Applications', target: 'Screening', value: reachedScreening });
-  if (reachedTechnical > 0) links.push({ source: 'Screening', target: 'Technical', value: reachedTechnical });
-  if (reachedFinal > 0) links.push({ source: 'Technical', target: 'Final', value: reachedFinal });
-  if (reachedOffer > 0) links.push({ source: 'Final', target: 'Offer', value: reachedOffer });
+  if (reachedScreening > 0) links.push({ source: totalLabel, target: screeningLabel, value: reachedScreening });
+  if (reachedTechnical > 0) links.push({ source: screeningLabel, target: technicalLabel, value: reachedTechnical });
+  if (reachedFinal > 0) links.push({ source: technicalLabel, target: finalLabel, value: reachedFinal });
+  if (reachedOffer > 0) links.push({ source: finalLabel, target: offerLabel, value: reachedOffer });
 
   const activeNodes = new Set<string>();
   links.forEach(l => {
@@ -78,6 +88,16 @@ export function SankeyChart({ applications, isDemo = false, onAdd }: SankeyChart
   });
 
   const filteredNodes = nodes.filter(n => activeNodes.has(n.name));
+
+  const labelToStatusKey: Record<string, string> = {
+    [appliedLabel]: 'Applied',
+    [screeningLabel]: 'Screening',
+    [technicalLabel]: 'Technical',
+    [finalLabel]: 'Final',
+    [offerLabel]: 'Offer',
+    [ghostedLabel]: 'Ghosted',
+    [rejectedLabel]: 'Rejected',
+  };
 
   const option = {
     tooltip: {
@@ -89,8 +109,8 @@ export function SankeyChart({ applications, isDemo = false, onAdd }: SankeyChart
       formatter: (params: any) => {
         if (!params) return '<div></div>';
         if (params.dataType === 'node') {
-          const category = params.name === 'Applied' ? 'Applied' : params.name;
-          const count = category === 'Total Applications' ? applications.length : (counts[category as keyof typeof counts] || 0);
+          const statusKey = labelToStatusKey[params.name];
+          const count = params.name === totalLabel ? applications.length : (statusKey ? (counts[statusKey] || 0) : 0);
           return `<div style="display:flex; align-items:center; gap:8px;"><div style="width:12px; height:12px; border-radius:50%; background-color:${params.color || '#3b82f6'};"></div><span style="color:#1e293b; font-weight:500; font-family: ui-sans-serif, system-ui, sans-serif;">${params.name || ''} : ${count}</span></div>`;
         }
         const source = params.data?.source || params.name || '';
@@ -157,8 +177,8 @@ export function SankeyChart({ applications, isDemo = false, onAdd }: SankeyChart
           fontWeight: 'bold',
           formatter: (params: any) => {
             if (params.dataType === 'node') {
-              const category = params.name === 'Applied' ? 'Applied' : params.name;
-              const count = category === 'Total Applications' ? applications.length : (counts[category as keyof typeof counts] || 0);
+              const statusKey = labelToStatusKey[params.name];
+              const count = params.name === totalLabel ? applications.length : (statusKey ? (counts[statusKey] || 0) : 0);
               return `${params.name} (${count})`;
             }
             return `${params.name}: ${params.value}`;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { JobApplication, JobStatus, ApplicationLink } from '../types';
+import { JobApplication, JobStatus, ApplicationLink, getStatusLabel } from '../types';
 import { Wand2, Loader2, X, ChevronDown, MapPin, Globe, Link2, ExternalLink, Plus, Trash2, Bookmark, Sparkles, Building2 } from 'lucide-react';
 import { FileUpload, UploadedFile } from './FileUpload';
 import { auth } from '../lib/firebase';
@@ -790,7 +790,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
               <label className="block text-xs font-semibold text-[#121722] mb-1.5">Status</label>
               <div className="relative">
                 <select name="status" value={formData.status || 'Applied'} onChange={handleChange} className="w-full pl-3.5 pr-9 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722] appearance-none cursor-pointer">
-                  {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                  {STATUSES.map(s => <option key={s} value={s}>{getStatusLabel(s, trackingSystem)}</option>)}
                 </select>
                 <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#777c86] pointer-events-none" />
               </div>

@@ -309,7 +309,7 @@ const CommandMenuList = React.forwardRef<
         type={scrollType}
         scrollHideDelay={scrollHideDelay}
       >
-        <div className="space-y-1">{children}</div>
+        <div className="space-y-1 h-full min-h-[330px] flex flex-col">{children}</div>
       </ScrollArea>
     </div>
   );
@@ -455,7 +455,7 @@ const CommandMenuEmpty = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "flex flex-col items-center justify-center gap-3 py-10 animate-in fade-in duration-300",
+      "flex-1 w-full h-full min-h-[330px] flex flex-col items-center justify-center gap-3 animate-in fade-in duration-300",
       className
     )}
     {...props}

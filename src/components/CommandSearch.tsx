@@ -15,7 +15,7 @@ import {
 } from "./ui/command-menu";
 import { Kbd } from "./ui/kbd";
 import { Search, Building, Briefcase } from "lucide-react";
-import { JobApplication } from "../types";
+import { JobApplication, getStatusLabel } from "../types";
 
 // Utility function to detect OS and return appropriate modifier key
 const getModifierKey = () => {
@@ -30,9 +30,10 @@ const getModifierKey = () => {
 interface CommandSearchProps {
   applications: JobApplication[];
   onSelectApplication: (app: JobApplication) => void;
+  trackingSystem?: 'industry' | 'academic';
 }
 
-export function CommandSearch({ applications, onSelectApplication }: CommandSearchProps) {
+export function CommandSearch({ applications, onSelectApplication, trackingSystem = 'industry' }: CommandSearchProps) {
   const [open, setOpen] = React.useState(false);
   
   useCommandMenuShortcut(() => setOpen(true));
@@ -55,6 +56,7 @@ export function CommandSearch({ applications, onSelectApplication }: CommandSear
             We can make a component that sits inside CommandMenuContent that consumes the context. */}
         <CommandSearchBody 
           applications={applications} 
+          trackingSystem={trackingSystem}
           onSelect={(app) => {
             onSelectApplication(app);
             setOpen(false);
@@ -68,7 +70,7 @@ export function CommandSearch({ applications, onSelectApplication }: CommandSear
 // Inner component to access the context
 import { useCommandMenu } from "./ui/command-menu";
 
-function CommandSearchBody({ applications, onSelect }: { applications: JobApplication[], onSelect: (app: JobApplication) => void }) {
+function CommandSearchBody({ applications, onSelect, trackingSystem = 'industry' }: { applications: JobApplication[], onSelect: (app: JobApplication) => void, trackingSystem?: 'industry' | 'academic' }) {
   const { value, setValue } = useCommandMenu();
 
   React.useEffect(() => {
@@ -140,7 +142,7 @@ function CommandSearchBody({ applications, onSelect }: { applications: JobApplic
                 >
                   <div className="flex flex-col">
                     <span className="font-semibold">{app.position}</span>
-                    <span className="text-xs text-[#777c86]">{app.company} {app.status ? `• ${app.status}` : ''}</span>
+                    <span className="text-xs text-[#777c86]">{app.company} {app.status ? `• ${getStatusLabel(app.status, trackingSystem)}` : ''}</span>
                   </div>
                 </CommandMenuItem>
               );
@@ -163,7 +165,7 @@ function CommandSearchBody({ applications, onSelect }: { applications: JobApplic
                   >
                     <div className="flex flex-col">
                       <span className="font-semibold">{app.company}</span>
-                      <span className="text-xs text-[#777c86]">{app.position} {app.status ? `• ${app.status}` : ''}</span>
+                      <span className="text-xs text-[#777c86]">{app.position} {app.status ? `• ${getStatusLabel(app.status, trackingSystem)}` : ''}</span>
                     </div>
                   </CommandMenuItem>
                 );
