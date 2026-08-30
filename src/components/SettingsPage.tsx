@@ -194,7 +194,7 @@ export function SettingsPage({ onBack, onClearData, isSyncing, trackingSystem = 
                 <button
                   onClick={() => { onBack(); onClearData(); }}
                   disabled={isSyncing}
-                  className="bg-[#dc2626] hover:bg-[#b91c1c] text-white font-medium px-4 py-2 rounded-[6px] transition-colors text-[13px] shadow-sm cursor-pointer"
+                  className="bg-[#dc2626] hover:bg-[#b91c1c] text-white font-medium px-4 py-2 rounded-full transition-colors text-[13px] shadow-sm cursor-pointer"
                 >
                   Clear All Data
                 </button>
@@ -212,7 +212,7 @@ export function SettingsPage({ onBack, onClearData, isSyncing, trackingSystem = 
               <div className="px-5 py-3.5 bg-red-50 flex items-center justify-end border-t border-red-100">
                 <button
                   onClick={() => setShowDeleteAccountConfirm(true)}
-                  className="bg-[#dc2626] hover:bg-[#b91c1c] text-white font-medium px-4 py-2 rounded-[6px] transition-colors text-[13px] shadow-sm cursor-pointer"
+                  className="bg-[#dc2626] hover:bg-[#b91c1c] text-white font-medium px-4 py-2 rounded-full transition-colors text-[13px] shadow-sm cursor-pointer"
                 >
                   Delete Personal Account
                 </button>
@@ -260,8 +260,8 @@ export function SettingsPage({ onBack, onClearData, isSyncing, trackingSystem = 
              <h3 className="text-lg font-bold text-[#121722] mb-2">Delete Account</h3>
              <p className="text-[13px] text-[#777c86] mb-6">This action cannot be undone. This will permanently delete your account and remove your data from our servers.</p>
              <div className="flex justify-end gap-3">
-               <button onClick={() => setShowDeleteAccountConfirm(false)} className="px-4 py-2 rounded-[6px] font-medium text-[13px] text-[#777c86] hover:bg-[#faf9f7] transition-colors cursor-pointer border border-transparent hover:border-[#efefef]">Cancel</button>
-               <button onClick={handleDeleteAccount} className="px-4 py-2 rounded-[6px] font-medium text-[13px] bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-colors cursor-pointer shadow-sm">Delete Account</button>
+               <button onClick={() => setShowDeleteAccountConfirm(false)} className="px-4 py-2 rounded-full font-medium text-[13px] text-[#777c86] hover:bg-[#faf9f7] transition-colors cursor-pointer border border-transparent hover:border-[#efefef]">Cancel</button>
+               <button onClick={handleDeleteAccount} className="px-4 py-2 rounded-full font-medium text-[13px] bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-colors cursor-pointer shadow-sm">Delete Account</button>
              </div>
           </div>
         </div>

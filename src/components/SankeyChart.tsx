@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactECharts from 'echarts-for-react';
 import { JobApplication } from '../types';
-import { Plus } from 'lucide-react';
 
 interface SankeyChartProps {
   onAdd?: () => void;
@@ -14,15 +13,25 @@ export function SankeyChart({ applications, isDemo = false, onAdd }: SankeyChart
 
   if (total === 0) {
     return (
-      <div className="flex flex-col justify-center items-center h-[500px] text-[#777c86] bg-white rounded-2xl border border-[#efefef]">
-        <div className="mb-4 text-[14px] font-medium text-[#525866]">No data available for the overview.</div>
-        <button
-          onClick={onAdd}
-          className="inline-flex items-center justify-center gap-2 rounded-xl text-[13px] font-bold transition-all bg-[#121722] text-white hover:bg-[#2b303b] px-5 py-2.5 shadow-xs cursor-pointer"
-        >
-          <Plus size={16} />
-          <span>New Application</span>
-        </button>
+      <div className="flex flex-col justify-center items-center h-[500px] bg-white rounded-2xl border border-[#efefef] p-6 text-center gap-3 animate-in fade-in duration-300">
+        <div className="w-[104px] h-[104px] aspect-square flex items-center justify-center">
+          <img
+            src="/icons/dashboard.svg"
+            alt="No application yet"
+            className="w-full h-full object-contain"
+          />
+        </div>
+        <span className="font-semibold text-sm text-[#121722]">
+          No application yet
+        </span>
+        {onAdd && (
+          <button
+            onClick={onAdd}
+            className="mt-2 px-5 py-2.5 bg-[#0068f9] text-white text-xs font-semibold rounded-full hover:bg-[#024bb1] transition-all cursor-pointer shadow-2xs"
+          >
+            New Application
+          </button>
+        )}
       </div>
     );
   }

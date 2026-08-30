@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { HeadcountPoint } from '../types';
+import { NoDataState } from './NoDataState';
 
 interface HeadcountTrendChartProps {
   data: HeadcountPoint[];
@@ -22,8 +23,8 @@ export const HeadcountTrendChart: React.FC<HeadcountTrendChartProps> = ({
 
   if (!data || data.length === 0) {
     return (
-      <div className="h-48 flex items-center justify-center text-sm text-[#777c86]">
-        {'No headcount trend data available'}
+      <div className="h-64 flex items-center justify-center">
+        <NoDataState icon="/icons/crunch.svg" title="No data available" />
       </div>
     );
   }

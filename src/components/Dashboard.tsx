@@ -690,7 +690,23 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
             {view === 'kanban' && <Kanban applications={filteredApplications} onEdit={(app) => { setEditingApp(app); setIsFormOpen(true); }} onStatusChange={handleStatusChange as any} onDelete={handleDelete} locationFilter={locationFilter} onLocationSelect={handleLocationSelect} />}
             {view === 'analytics' && <Analytics applications={filteredApplications} onLocationSelect={handleLocationSelect} />}
             {view === 'cv-match' && <CVMatchAssessment applications={filteredApplications} trackingSystem={trackingSystem} onAddToWishlist={handleSave} onViewHistory={() => setView('eval-history')} setNestedBreadcrumb={setNestedBreadcrumb} />}
-            {view === 'company-intel' && <CompanyIntelligenceStudio applications={filteredApplications} onAddToWishlist={handleSave} initialCompanyName={companyIntelTarget.companyName} initialWebsiteUrl={companyIntelTarget.websiteUrl} isDemo={isDemo} />}
+            {view === 'company-intel' && (
+              <CompanyIntelligenceStudio 
+                applications={filteredApplications} 
+                onAddToWishlist={handleSave} 
+                onViewWishlist={(app) => {
+                  if (app) {
+                    setEditingApp(app);
+                    setIsFormOpen(true);
+                  } else {
+                    setView('kanban');
+                  }
+                }}
+                initialCompanyName={companyIntelTarget.companyName} 
+                initialWebsiteUrl={companyIntelTarget.websiteUrl} 
+                isDemo={isDemo} 
+              />
+            )}
             {view === 'notifications' && <NotificationsPage onBack={() => setView('sankey')} />}
             {view === 'settings' && <SettingsPage onBack={() => setView('sankey')} onClearData={handleClearData} isSyncing={isSyncing} trackingSystem={trackingSystem} setTrackingSystem={setTrackingSystem} />}
             {view === 'eval-history' && <EvaluateHistoryPage onBack={() => setView('cv-match')} applications={filteredApplications} onAddToWishlist={handleSave} />}

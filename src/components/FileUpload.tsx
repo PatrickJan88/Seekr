@@ -481,7 +481,7 @@ export function FileUpload({
                   <button
                     type="button"
                     onClick={() => handleDownload(previewFile)}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-[#0068f9] hover:bg-[#024bb1] px-4 py-2 rounded-xl transition-all shadow-xs cursor-pointer"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-[#0068f9] hover:bg-[#024bb1] px-5 py-2 rounded-full transition-all shadow-xs cursor-pointer"
                   >
                     <Download className="h-4 w-4" />
                     Download File

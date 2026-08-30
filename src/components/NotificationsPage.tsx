@@ -4,6 +4,7 @@ import { auth } from '../lib/firebase';
 import { getNotifications, markNotificationRead, deleteNotification, clearAllNotifications } from '../lib/notifications';
 import { AppNotification } from '../types';
 import { toast } from 'sonner';
+import { NoDataState } from './NoDataState';
 
 interface NotificationsPageProps {
   onBack?: () => void;
@@ -85,11 +86,10 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
             <div className="p-12 text-center text-[#777c86] text-xs">Loading notifications...</div>
           ) : notifications.length === 0 ? (
             <div className="p-16 text-center flex flex-col items-center justify-center h-full min-h-[350px]">
-              <div className="w-14 h-14 bg-[#faf9f7] border border-[#efefef] rounded-full flex items-center justify-center mb-3">
-                <Bell size={22} className="text-[#a5a5a5]" />
-              </div>
-              <h3 className="text-sm font-semibold text-[#121722] mb-1">No notifications yet</h3>
-              <p className="text-[#777c86] text-xs">When you get reminders or application updates, they'll show up here.</p>
+              <NoDataState 
+                icon="/icons/person-ringing-bell.svg" 
+                title="No notifications yet" 
+              />
             </div>
           ) : (
             notifications.map((n) => (

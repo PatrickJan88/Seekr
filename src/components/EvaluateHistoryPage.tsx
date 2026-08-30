@@ -28,6 +28,7 @@ import { CoverLetterStudio } from './CoverLetterStudio';
 import { InterviewPrepStudio } from './InterviewPrepStudio';
 import { ResumeTemplateStudio } from './ResumeTemplateStudio';
 import { toast } from 'sonner';
+import { NoDataState } from './NoDataState';
 
 interface EvaluateHistoryPageProps {
   onBack: () => void;
@@ -379,21 +380,13 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
             <p className="text-sm font-medium">Loading evaluation history...</p>
           </div>
         ) : evaluations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-[#777c86] p-6 text-center">
-            <div className="w-12 h-12 rounded-full bg-[#faf9f7] border border-[#efefef] flex items-center justify-center mb-4 text-[#0068f9]">
-              <Sparkles size={24} />
-            </div>
-            <h3 className="text-[#121722] font-semibold mb-1">No evaluations yet</h3>
-            <p className="text-sm text-[#777c86] max-w-sm mb-4">
-              Use the AI Match Evaluator to review your CV against target job postings.
-            </p>
-            <button
-              onClick={onBack}
-              className="px-5 py-2 bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-bold rounded-full transition-all shadow-2xs cursor-pointer"
-            >
-              Start New Evaluation
-            </button>
-          </div>
+          <NoDataState
+            icon="/icons/crunch.svg"
+            title="No data available"
+            description="Use the AI Match Evaluator to review your CV against target job postings."
+            actionText="Start New Evaluation"
+            onAction={onBack}
+          />
         ) : selectedEval ? (
           /* DETAILED EVALUATION VIEW */
           <div className="p-4 sm:p-6 space-y-6 overflow-y-auto max-h-full animate-in fade-in duration-200">

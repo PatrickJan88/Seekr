@@ -990,7 +990,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                     <button
                       type="button"
                       onClick={handleAddExperience}
-                      className="px-2.5 py-1 bg-[#f0f5ff] text-[#0068f9] hover:bg-[#e0edff] rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                      className="px-3 py-1 bg-[#f0f5ff] text-[#0068f9] hover:bg-[#e0edff] rounded-full text-xs font-semibold flex items-center gap-1 transition-colors"
                     >
                       <Plus size={13} />
                       <span>Add Role</span>
@@ -1094,7 +1094,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                     <button
                       type="button"
                       onClick={handleAddEducation}
-                      className="px-2.5 py-1 bg-[#f0f5ff] text-[#0068f9] hover:bg-[#e0edff] rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                      className="px-3 py-1 bg-[#f0f5ff] text-[#0068f9] hover:bg-[#e0edff] rounded-full text-xs font-semibold flex items-center gap-1 transition-colors"
                     >
                       <Plus size={13} />
                       <span>Add Degree</span>

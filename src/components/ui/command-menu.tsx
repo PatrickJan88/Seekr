@@ -451,16 +451,25 @@ CommandMenuSeparator.displayName = "CommandMenuSeparator";
 const CommandMenuEmpty = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
->(({ className, children = "No results found.", ...props }, ref) => (
+>(({ className, children = "No search results", ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "py-10 text-center text-sm text-[#777c86]",
+      "flex flex-col items-center justify-center gap-3 py-10 animate-in fade-in duration-300",
       className
     )}
     {...props}
   >
-    {children}
+    <div className="w-[104px] h-[104px] aspect-square flex items-center justify-center">
+      <img
+        src="/icons/person-reviewing-policy.svg"
+        alt="No search results"
+        className="w-full h-full object-contain"
+      />
+    </div>
+    <span className="font-semibold text-sm text-[#121722]">
+      {children}
+    </span>
   </div>
 ));
 CommandMenuEmpty.displayName = "CommandMenuEmpty";

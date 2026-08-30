@@ -2010,35 +2010,42 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
 
       const fetchWeWorkRemotely = async () => {
         try {
-          const Parser = (await import('rss-parser')).default;
-          const parser = new Parser();
-          const feed = await Promise.race([
-            parser.parseURL('https://weworkremotely.com/categories/remote-programming-jobs.rss'),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('WWR Timeout')), 5000))
-          ]) as any;
-          if (feed.items && Array.isArray(feed.items)) {
-            allJobs = allJobs.concat(feed.items.map((item: any) => {
-              const titleParts = item.title?.split(':') || [];
-              const company_name = titleParts.length > 1 ? titleParts[0].trim() : 'Unknown Company';
-              const title = titleParts.length > 1 ? titleParts.slice(1).join(':').trim() : item.title;
-              return {
-                id: `wwr-${item.guid || Date.now()}`,
-                url: item.link,
-                title: title,
-                company_name: company_name,
-                company_logo: '',
-                category: 'software-dev',
-                tags: ['remote'],
-                job_type: 'full_time',
-                publication_date: parsePublicationDate(item.isoDate || item.pubDate),
-                candidate_required_location: 'Remote',
-                salary: '',
-                description: item.contentSnippet || item.content || ''
-              };
-            }));
+          const response = await fetch('https://weworkremotely.com/categories/remote-programming-jobs.rss', {
+            signal: AbortSignal.timeout(5000),
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+              'Accept': 'application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8'
+            }
+          });
+          if (response.ok) {
+            const xmlText = await response.text();
+            const Parser = (await import('rss-parser')).default;
+            const parser = new Parser();
+            const feed = await parser.parseString(xmlText);
+            if (feed.items && Array.isArray(feed.items)) {
+              allJobs = allJobs.concat(feed.items.map((item: any) => {
+                const titleParts = item.title?.split(':') || [];
+                const company_name = titleParts.length > 1 ? titleParts[0].trim() : 'Unknown Company';
+                const title = titleParts.length > 1 ? titleParts.slice(1).join(':').trim() : item.title;
+                return {
+                  id: `wwr-${item.guid || Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                  url: item.link,
+                  title: title,
+                  company_name: company_name,
+                  company_logo: '',
+                  category: 'software-dev',
+                  tags: ['remote'],
+                  job_type: 'full_time',
+                  publication_date: parsePublicationDate(item.isoDate || item.pubDate),
+                  candidate_required_location: 'Remote',
+                  salary: '',
+                  description: item.contentSnippet || item.content || ''
+                };
+              }));
+            }
           }
-        } catch (e) {
-          console.log("WWR fetch error:");
+        } catch (_e) {
+          // Gracefully continue if WeWorkRemotely feed is unreachable or blocked
         }
       };
 

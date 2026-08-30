@@ -26,6 +26,7 @@ const getContinent = (countryName: string) => {
 import { NestedLocationMenu } from './NestedLocationMenu';
 import { NestedRoleMenu } from './NestedRoleMenu';
 import { DateFilterMenu } from './DateFilterMenu';
+import { NoDataState } from './NoDataState';
 
 
 const ROLE_CATEGORIES_ACADEMIC = {
@@ -411,8 +412,8 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
             <p className="text-sm font-medium bg-red-50 border border-red-100 p-4 rounded-xl">{error}</p>
           </div>
         ) : processedJobs.length === 0 ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-[#777c86]">
-            <p className="text-sm font-medium">No jobs found</p>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <NoDataState icon="/icons/crunch.svg" title="No data available" />
           </div>
         ) : (
           <div className="flex flex-col w-full min-h-max pb-8">

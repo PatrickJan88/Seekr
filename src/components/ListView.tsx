@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { JobApplication, JobStatus, getWorkTypeBadgeStyle, ApplicationLink } from '../types';
 import { Calendar, Building, MoreVertical, Eye, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, Link2, ExternalLink, Trash2, Edit2 } from 'lucide-react';
+import { NoDataState } from './NoDataState';
 
 const STATUSES: JobStatus[] = ['Wishlist', 'Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
 
@@ -445,8 +446,11 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete, track
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center text-[#777c86] text-sm">
-                  No applications found for the selected filters.
+                <td colSpan={7} className="px-6 py-12 text-center">
+                  <NoDataState 
+                    icon="/icons/person-building-pipeline.svg" 
+                    title="No applications yet" 
+                  />
                 </td>
               </tr>
             )}

@@ -123,8 +123,8 @@ function CommandSearchBody({ applications, onSelect }: { applications: JobApplic
     <>
       <CommandMenuInput placeholder="Search positions, companies..." />
       <CommandMenuList>
-        {!hasResults && query.length > 0 && (
-          <CommandMenuEmpty>No results found for "{value}"</CommandMenuEmpty>
+        {!hasResults && (
+          <CommandMenuEmpty>No search results</CommandMenuEmpty>
         )}
         
         {positions.length > 0 && (

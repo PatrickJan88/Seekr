@@ -177,17 +177,17 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
             </div>
           )}
 
-          <div className="flex items-center gap-1 bg-white border border-[#efefef] rounded-2xl p-1 shadow-2xs h-[34px]">
+          <div className="flex items-center gap-1 bg-white border border-[#efefef] rounded-full p-1 shadow-2xs h-[34px]">
             <button
               onClick={() => setLayoutMode('kanban')}
-              className={`p-1 px-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center h-full ${layoutMode === 'kanban' ? 'bg-[#faf9f7] text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
+              className={`p-1 px-2.5 rounded-full transition-all cursor-pointer flex items-center justify-center h-full ${layoutMode === 'kanban' ? 'bg-[#faf9f7] text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
               title="Kanban View"
             >
               <LayoutDashboard size={14} />
             </button>
             <button
               onClick={() => setLayoutMode('list')}
-              className={`p-1 px-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center h-full ${layoutMode === 'list' ? 'bg-[#faf9f7] text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
+              className={`p-1 px-2.5 rounded-full transition-all cursor-pointer flex items-center justify-center h-full ${layoutMode === 'list' ? 'bg-[#faf9f7] text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
               title="List View"
             >
               <List size={14} />

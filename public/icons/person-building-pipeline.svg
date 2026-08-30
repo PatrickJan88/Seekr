@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-label="person building pipeline" viewBox="0 0 200 200">
+  <g transform="translate(10, 10)">
+    <!-- Person figure -->
+    <path d="M70 20c-7.7 0-14 6.3-14 14s6.3 14 14 14 14-6.3 14-14-6.3-14-14-14zm0 6c4.4 0 8 3.6 8 8s-3.6 8-8 8-8-3.6-8-8 3.6-8 8-8z"/>
+    <path d="M52 54c-11 0-20 9-20 20v24c0 3.3 2.7 6 6 6s6-2.7 6-6V74c0-4.4 3.6-8 8-8h16v78c0 3.3 2.7 6 6 6s6-2.7 6-6v-40h6v40c0 3.3 2.7 6 6 6s6-2.7 6-6V66h16c4.4 0 8 3.6 8 8v16c0 3.3 2.7 6 6 6s6-2.7 6-6V74c0-11-9-20-20-20H52z"/>
+    <!-- Pipeline segments / Flow nodes -->
+    <rect x="110" y="30" width="46" height="28" rx="6" fill="none" stroke="currentColor" stroke-width="5"/>
+    <circle cx="133" cy="44" r="5"/>
+    
+    <path d="M133 58v18" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+    
+    <rect x="110" y="76" width="46" height="28" rx="6" fill="none" stroke="currentColor" stroke-width="5"/>
+    <line x1="120" y1="90" x2="146" y2="90" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+    
+    <path d="M133 104v18" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+    
+    <rect x="110" y="122" width="46" height="28" rx="6" fill="none" stroke="currentColor" stroke-width="5"/>
+    <path d="M124 136l6 6 12-12" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Connectors / Tools -->
+    <path d="M96 74h14" stroke="currentColor" stroke-width="4" stroke-dasharray="3 3"/>
+    <path d="M96 120h14" stroke="currentColor" stroke-width="4" stroke-dasharray="3 3"/>
+  </g>
+</svg>

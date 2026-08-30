@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Building2, 
   Globe, 
@@ -9,7 +9,8 @@ import {
   Copy, 
   Download, 
   ExternalLink, 
-  ChevronRight, 
+  ChevronRight,
+  ChevronLeft, 
   Trash2, 
   Languages, 
   Printer, 
@@ -21,10 +22,12 @@ import {
   CheckCircle2,
   RefreshCw,
   Layers,
-  Info
+  Info,
+  Star
 } from 'lucide-react';
 import { CompanyTeardownData, JobApplication } from '../types';
 import { HeadcountTrendChart } from './HeadcountTrendChart';
+import { NoDataState } from './NoDataState';
 import { auth } from '../lib/firebase';
 import { getSavedTeardowns, saveTeardown, deleteSavedTeardown, SavedTeardownRecord } from '../db/teardowns';
 import { jsonrepair } from 'jsonrepair';
@@ -40,19 +43,13 @@ import {
 interface CompanyIntelligenceStudioProps {
   applications?: JobApplication[];
   onAddToWishlist?: (app: Partial<JobApplication>) => void;
+  onViewWishlist?: (app?: JobApplication) => void;
   initialCompanyName?: string;
   initialWebsiteUrl?: string;
   isDemo?: boolean;
 }
 
-const PRESET_COMPANIES = [
-  { name: 'Linear', url: 'https://linear.app' },
-  { name: 'Stripe', url: 'https://stripe.com' },
-  { name: 'Figma', url: 'https://figma.com' },
-  { name: 'Notion', url: 'https://notion.so' },
-  { name: 'Supabase', url: 'https://supabase.com' },
-  { name: 'Mistral AI', url: 'https://mistral.ai' }
-];
+
 
 interface UrlVerificationState {
   isVerifying: boolean;
@@ -66,10 +63,19 @@ interface UrlVerificationState {
 export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps> = ({
   applications = [],
   onAddToWishlist,
+  onViewWishlist,
   initialCompanyName = '',
   initialWebsiteUrl = '',
   isDemo = false
 }) => {
+  const recentScrollRef = useRef<HTMLDivElement>(null);
+  const handleScrollRecent = (direction: 'left' | 'right') => {
+    if (recentScrollRef.current) {
+      const scrollAmount = direction === 'left' ? -220 : 220;
+      recentScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
   const [activeTab, setActiveTab] = useState<'explorer' | 'history'>('explorer');
   const [companyName, setCompanyName] = useState(initialCompanyName);
   const [websiteUrl, setWebsiteUrl] = useState(initialWebsiteUrl);
@@ -97,6 +103,80 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
 
   // Copy state
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  interface RecentSearchItem {
+    name: string;
+    url: string;
+    report?: CompanyTeardownData;
+    timestamp?: number;
+  }
+
+  const [recentSearches, setRecentSearches] = useState<RecentSearchItem[]>([]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('seekr_recent_searches');
+      if (stored) {
+        setRecentSearches(JSON.parse(stored));
+      }
+    } catch (e) {}
+  }, []);
+
+  const addRecentSearch = (name: string, url: string, report?: CompanyTeardownData) => {
+    if (!name && !url) return;
+    const item: RecentSearchItem = {
+      name: name || (report?.companyName || 'Company'),
+      url: url || (report?.websiteUrl || ''),
+      report: report || undefined,
+      timestamp: Date.now()
+    };
+    setRecentSearches(prev => {
+      const filtered = prev.filter(p => p.name.toLowerCase() !== item.name.toLowerCase());
+      const updated = [item, ...filtered].slice(0, 15);
+      try {
+        localStorage.setItem('seekr_recent_searches', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  };
+
+  const handleSelectRecentSearch = (item: RecentSearchItem) => {
+    setCompanyName(item.name);
+    setWebsiteUrl(item.url);
+    setActiveTab('explorer');
+    
+    if (item.report) {
+      setCurrentTeardown(item.report);
+      toast.success(`Loaded report for ${item.name}`);
+    } else {
+      verifyAndSetUrl(item.url, item.name);
+      handleGenerate(item.name, item.url);
+    }
+  };
+
+  const handleToggleSave = async () => {
+    if (!currentTeardown) return;
+    const userId = auth.currentUser?.uid || 'guest_user';
+    const existing = savedRecords.find(r => r.companyName.toLowerCase() === currentTeardown.companyName.toLowerCase());
+    
+    if (existing) {
+       try {
+         await deleteSavedTeardown(existing.id, userId);
+         setSavedRecords(prev => prev.filter(r => r.id !== existing.id));
+         toast.success('Removed from Saved');
+       } catch (err) {
+         toast.error('Failed to remove from Saved');
+       }
+    } else {
+       try {
+         const saved = await saveTeardown(userId, currentTeardown);
+         setSavedRecords(prev => [saved, ...prev.filter(r => r.id !== saved.id)]);
+         toast.success('Company intelligence saved!');
+       } catch (err) {
+         toast.error('Failed to save company intelligence');
+       }
+    }
+  };
 
   // Load history on mount
   useEffect(() => {
@@ -309,15 +389,10 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
          finalTeardown.generatedAt = Date.now();
          setCurrentTeardown(finalTeardown);
          
-         const userId = auth.currentUser?.uid || 'guest_user';
-         try {
-           const saved = await saveTeardown(userId, finalTeardown);
-           setSavedRecords(prev => [saved, ...prev.filter(r => r.id !== saved.id)]);
-         } catch (saveErr) {
-           console.log('Save teardown warning:');
-         }
+         // Keep in recent searches with report attached so clicking loads it immediately
+         addRecentSearch(finalTeardown.companyName || targetName, finalTeardown.websiteUrl || targetUrl, finalTeardown);
       }
-toast.success('Company intelligence teardown ready!');
+      toast.success('Company intelligence teardown ready!');
     } catch (err: any) {
       console.log('Teardown generate error:');
       const message = err?.message === 'Failed to fetch' 
@@ -523,197 +598,172 @@ toast.success('Company intelligence teardown ready!');
     a.company.toLowerCase() === (currentTeardown?.companyName || '').toLowerCase()
   );
 
-  const renderTabSwitcher = () => (
-    <div className="flex items-center gap-1 bg-[#faf9f7] p-1 border border-[#efefef] rounded-full text-xs font-medium shrink-0">
-      <button
-        onClick={() => setActiveTab('explorer')}
-        className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
-          activeTab === 'explorer' 
-            ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' 
-            : 'text-[#777c86] hover:text-[#121722] border border-transparent'
-        }`}
-      >
-        {'Teardown'}
-      </button>
-      <button
-        onClick={() => setActiveTab('history')}
-        className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-all cursor-pointer ${
-          activeTab === 'history' 
-            ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' 
-            : 'text-[#777c86] hover:text-[#121722] border border-transparent'
-        }`}
-      >
-        <span>{'History'}</span>
-        {savedRecords.length > 0 && (
-          <span className="w-4 h-4 rounded-full bg-blue-100 text-[10px] flex items-center justify-center font-bold text-blue-700 border border-blue-200">
-            {savedRecords.length}
-          </span>
-        )}
-      </button>
-    </div>
-  );
-
   return (
-    <div className="w-full flex-1 flex flex-col gap-6 pb-16 font-sans">
-      {activeTab === 'explorer' ? (
-        <>
-          {/* Input & Search Section */}
-          <div className="bg-white border border-[#efefef] rounded-2xl p-5 shadow-2xs flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#efefef]">
-              <div>
-                <h3 className="text-base font-bold text-[#121722]">
-                  {'Analyze any company\'s core loop and product features.'}
-                </h3>
-              </div>
-              {renderTabSwitcher()}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-              <div className="md:col-span-4 relative">
-                <label className="block text-[11px] font-bold text-[#777c86] mb-1.5">
-                  {'Company Name'}
-                </label>
-                <div className="relative">
-                  <Building2 className="w-4 h-4 text-[#a5a5a5] absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    placeholder="e.g. Linear, Stripe, Figma"
-                    className="w-full pl-9 pr-3 h-10 text-sm bg-[#faf9f7] border border-[#efefef] rounded-xl text-[#121722] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium"
-                  />
-                </div>
-              </div>
-
-              <div className="md:col-span-5 relative">
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-[11px] font-bold text-[#777c86]">
-                    {'Company Website'}
-                  </label>
-                </div>
-                <div className="relative">
-                  <Globe className="w-4 h-4 text-[#a5a5a5] absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={websiteUrl}
-                    onChange={(e) => handleUrlChange(e.target.value)}
-                    placeholder="https://www.teamtailor.com/en-us/"
-                    className="w-full pl-9 pr-8 h-10 text-sm bg-[#faf9f7] border border-[#efefef] rounded-xl text-[#121722] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-                  />
-                  {verification.verified && !verification.isAts && (
-                    <ShieldCheck className="w-4 h-4 text-blue-600 absolute right-3 top-1/2 -translate-y-1/2" title="Verified official homepage" />
-                  )}
-                </div>
-              </div>
-
-              <div className="md:col-span-3">
-                <button
-                  onClick={() => handleGenerate()}
-                  disabled={isLoading || (!companyName && !websiteUrl)}
-                  className="w-full h-10 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-full transition-all shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin text-white" />
-                      <span>{'Analyzing System...'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 text-blue-200" />
-                      <span>{'Generate Insight'}</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Smart ATS Warning / Link Switcher */}
-            {verification.isAts && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-900">
-                <div className="flex items-center gap-2">
-                  <AlertCircle size={15} className="text-amber-600 shrink-0" />
-                  <span>
-                    <strong>{'ATS Job Portal Link Detected:'}</strong>{' '}
-                    {'Company intelligence works best with the authentic corporate homepage.'}
-                  </span>
-                </div>
-                {verification.suggestedHomepage && (
-                  <button
-                    onClick={() => {
-                      setWebsiteUrl(verification.suggestedHomepage!);
-                      verifyAndSetUrl(verification.suggestedHomepage!, companyName);
-                      toast.success(`Switched to official homepage: ${verification.suggestedHomepage}`);
-                    }}
-                    className="px-2.5 py-1 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 text-xs shrink-0 cursor-pointer flex items-center gap-1"
-                  >
-                    <CheckCircle2 size={12} />
-                    <span>{`Use Official: ${verification.suggestedHomepage}`}</span>
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Candidate Links Badge Bar (when loaded from application) */}
-            {candidateLinks.length > 1 && (
-              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#efefef]">
-                <span className="text-[11px] font-bold text-[#777c86] uppercase flex items-center gap-1">
-                  <Link2 size={12} className="text-blue-600" />
-                  <span>{'Detected Links:'}</span>
+    <div className="relative w-full flex-1 flex flex-col gap-6 font-sans">
+      {/* Top Controls Card */}
+      <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex flex-col relative">
+        {/* Unified Global Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-1 bg-[#faf9f7] p-1 border border-[#efefef] rounded-full text-xs font-medium shrink-0">
+            <button
+              onClick={() => setActiveTab('explorer')}
+              className={`px-4 py-1.5 rounded-full transition-all cursor-pointer ${
+                activeTab === 'explorer' 
+                  ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' 
+                  : 'text-[#777c86] hover:text-[#121722] border border-transparent'
+              }`}
+            >
+              {'Teardown'}
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full transition-all cursor-pointer ${
+                activeTab === 'history' 
+                  ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' 
+                  : 'text-[#777c86] hover:text-[#121722] border border-transparent'
+              }`}
+            >
+              <span>{'Saved'}</span>
+              {savedRecords.length > 0 && (
+                <span className="w-4 h-4 rounded-full bg-blue-100 text-[10px] flex items-center justify-center font-bold text-blue-700 border border-blue-200">
+                  {savedRecords.length}
                 </span>
-                {candidateLinks.map((lnk, idx) => {
-                  const isCurrent = websiteUrl.toLowerCase().includes(lnk.domain);
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        setWebsiteUrl(lnk.normalizedUrl);
-                        verifyAndSetUrl(lnk.normalizedUrl, companyName);
-                      }}
-                      className={`px-2.5 py-1 text-xs rounded-lg border transition-all flex items-center gap-1.5 cursor-pointer ${
-                        isCurrent
-                          ? 'bg-blue-50 text-blue-700 border-blue-300 font-semibold'
-                          : 'bg-[#faf9f7] text-[#525866] border-[#efefef] hover:border-blue-200'
-                      }`}
-                    >
-                      {lnk.type === 'homepage' && <CheckCircle2 size={12} className="text-blue-600" />}
-                      <span>{lnk.title || lnk.domain}</span>
-                      <span className={`text-[10px] px-1 py-0.2 rounded font-medium ${
-                        lnk.type === 'homepage' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {lnk.type === 'homepage' ? 'Official Homepage' : lnk.type === 'ats_job_post' ? 'Job Post (ATS)' : 'Link'}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Quick Presets */}
-            <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-[#efefef]">
-              <span className="text-xs text-[#777c86] font-medium">
-                {'Sample Companies:'}
-              </span>
-              {PRESET_COMPANIES.map(p => (
-                <button
-                  key={p.name}
-                  onClick={() => {
-                    setCompanyName(p.name);
-                    setWebsiteUrl(p.url);
-                    verifyAndSetUrl(p.url, p.name);
-                    handleGenerate(p.name, p.url);
-                  }}
-                  className="px-2.5 py-1 text-xs bg-[#faf9f7] hover:bg-blue-50 text-[#525866] hover:text-blue-700 border border-[#efefef] hover:border-blue-200 rounded-lg transition-all cursor-pointer font-medium"
-                >
-                  {p.name}
-                </button>
-              ))}
-            </div>
+              )}
+            </button>
           </div>
 
-          
+          {activeTab === 'explorer' ? (
+            <div className="flex-1 flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto md:max-w-2xl">
+              <div className="relative w-full">
+                <Building2 className="w-4 h-4 text-[#a5a5a5] absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="e.g. Linear, Stripe"
+                  className="w-full pl-9 pr-3 h-10 text-xs bg-[#faf9f7] border border-[#efefef] rounded-xl text-[#121722] focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
+                />
+              </div>
+              <div className="relative w-full">
+                <Globe className="w-4 h-4 text-[#a5a5a5] absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={websiteUrl}
+                  onChange={(e) => handleUrlChange(e.target.value)}
+                  placeholder="Website URL"
+                  className="w-full pl-9 pr-8 h-10 text-xs bg-[#faf9f7] border border-[#efefef] rounded-xl text-[#121722] focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
+                />
+                {verification.verified && !verification.isAts && (
+                  <ShieldCheck className="w-4 h-4 text-blue-600 absolute right-2 top-1/2 -translate-y-1/2" title="Verified" />
+                )}
+              </div>
+              <button
+                onClick={() => { setActiveTab('explorer'); handleGenerate(); }}
+                disabled={isLoading || (!companyName && !websiteUrl)}
+                className="h-10 px-5 flex items-center justify-center gap-1.5 bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-semibold rounded-full transition-all shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shrink-0 w-full sm:w-auto"
+              >
+                {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin text-white" /> : <Sparkles className="w-3.5 h-3.5 text-blue-200" />}
+                <span>{'Generate'}</span>
+              </button>
+            </div>
+          ) : (
+            <div className="relative w-full sm:w-72">
+              <Search className="w-3.5 h-3.5 text-[#a5a5a5] absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={historySearch}
+                onChange={(e) => setHistorySearch(e.target.value)}
+                placeholder={'Search company...'}
+                className="w-full pl-8 pr-3 h-10 text-xs bg-[#faf9f7] border border-[#efefef] rounded-xl text-[#121722] focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
+              />
+            </div>
+          )}
+        </div>
+
+        {activeTab === 'explorer' && verification.isAts && (
+          <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-900">
+            <div className="flex items-center gap-2">
+              <AlertCircle size={15} className="text-amber-600 shrink-0" />
+              <span>
+                <strong>{'ATS Job Portal Link Detected:'}</strong>{' '}
+                {'Company intelligence works best with the authentic corporate homepage.'}
+              </span>
+            </div>
+            {verification.suggestedHomepage && (
+              <button
+                onClick={() => {
+                  setWebsiteUrl(verification.suggestedHomepage);
+                  verifyAndSetUrl(verification.suggestedHomepage, companyName);
+                  toast.success(`Switched to official homepage: ${verification.suggestedHomepage}`);
+                }}
+                className="px-2.5 py-1 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 text-xs shrink-0 cursor-pointer flex items-center gap-1"
+              >
+                <CheckCircle2 size={12} />
+                <span>{`Use Official: ${verification.suggestedHomepage}`}</span>
+              </button>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'explorer' && (
+          <div className="mt-3.5 bg-[#faf9f7] rounded-xl px-3.5 py-2.5 flex items-center gap-3">
+            <span className="text-[11px] text-[#777c86] font-medium shrink-0">Recent Searches:</span>
+            {recentSearches.length === 0 ? (
+              <span className="text-xs text-[#a5a5a5]">No recent searches yet</span>
+            ) : (
+              <>
+                <div 
+                  ref={recentScrollRef} 
+                  className="flex-1 overflow-x-auto flex items-center gap-2 scrollbar-hide scroll-smooth py-0.5"
+                >
+                  {recentSearches.map((p, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleSelectRecentSearch(p)}
+                      className="text-xs text-[#525866] hover:text-[#0068f9] bg-white hover:bg-blue-50/80 border border-[#efefef] hover:border-blue-200 px-2.5 py-1 rounded-lg transition-all cursor-pointer font-medium whitespace-nowrap shrink-0 shadow-2xs flex items-center gap-1 group"
+                      title={`Click to load report for ${p.name}`}
+                    >
+                      <span className="group-hover:underline">{p.name}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button 
+                    onClick={() => handleScrollRecent('left')}
+                    className="p-1 hover:bg-white rounded-lg text-[#a5a5a5] hover:text-[#121722] transition-colors cursor-pointer border border-transparent hover:border-[#efefef]"
+                    title="Scroll left"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button 
+                    onClick={() => handleScrollRecent('right')}
+                    className="p-1 hover:bg-white rounded-lg text-[#a5a5a5] hover:text-[#121722] transition-colors cursor-pointer border border-transparent hover:border-[#efefef]"
+                    title="Scroll right"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {activeTab === 'explorer' ? (
+        <>
+          {/* Empty State for Explorer */}
+          {!currentTeardown && !isLoading && (
+            <div className="bg-white rounded-2xl border border-[#efefef] shadow-2xs p-8 sm:p-16 flex-1 flex flex-col items-center justify-center animate-in fade-in duration-300 min-h-[400px]">
+              <NoDataState
+                icon="/icons/person-benchmarking-forecast.svg"
+                title="No analysis yet"
+              />
+            </div>
+          )}
+
           {/* Loading Skeleton Indicator */}
           {isLoading && (
-            <div className="bg-white border border-[#efefef] rounded-2xl p-6 shadow-2xs flex flex-col gap-6 animate-in fade-in duration-300">
+            <div className="bg-white rounded-2xl border border-[#efefef] shadow-2xs p-6 flex-1 flex flex-col gap-6 animate-in fade-in duration-300">
               <div className="flex items-center gap-3 border-b border-[#efefef] pb-4">
                 <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 animate-spin">
                   <Sparkles className="w-5 h-5" />
@@ -754,88 +804,120 @@ toast.success('Company intelligence teardown ready!');
                   </div>
                 )}
 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex items-start gap-4">
-                    {currentTeardown.logoUrl ? (
-                      <img 
-                        src={currentTeardown.logoUrl} 
-                        alt={currentTeardown.companyName} 
-                        className="w-14 h-14 rounded-2xl border border-[#efefef] p-1.5 bg-white shadow-2xs object-contain shrink-0" 
-                        onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
-                      />
-                    ) : (
-                      <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center font-bold text-xl shrink-0">
-                        {currentTeardown.companyName.charAt(0)}
-                      </div>
-                    )}
-
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="text-2xl font-black text-[#121722] tracking-tight">
-                          {currentTeardown.companyName}
-                        </h2>
-                        <a 
-                          href={currentTeardown.websiteUrl} 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          className="inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-800 font-semibold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60"
-                        >
-                          <span>{currentTeardown.websiteUrl.replace(/^https?:\/\//, '')}</span>
-                          <ArrowUpRight size={12} />
-                        </a>
-                      </div>
-
-                      <p className="text-sm text-[#525866] mt-1 font-medium max-w-2xl">
-                        {currentTeardown.tagline}
-                      </p>
-
-                      <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-[#777c86]">
-                        <span className="font-semibold text-[#121722]">{currentTeardown.industry}</span>
-                        {currentTeardown.headquarters && (
-                          <>
-                            <span>•</span>
-                            <span>{currentTeardown.headquarters}</span>
-                          </>
-                        )}
-                        {currentTeardown.foundedYear && (
-                          <>
-                            <span>•</span>
-                            <span>{`Est. ${currentTeardown.foundedYear}`}</span>
-                          </>
-                        )}
-                      </div>
+                <div className="flex items-start gap-4">
+                  {currentTeardown.logoUrl ? (
+                    <img 
+                      src={currentTeardown.logoUrl} 
+                      alt={currentTeardown.companyName} 
+                      className="w-14 h-14 rounded-2xl border border-[#efefef] p-1.5 bg-white shadow-2xs object-contain shrink-0" 
+                      onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center font-bold text-xl shrink-0">
+                      {currentTeardown.companyName.charAt(0)}
                     </div>
-                  </div>
+                  )}
 
-                  {/* Top Header Controls */}
-                  <div className="flex flex-wrap items-center gap-2 self-start md:self-center">
-                    <button
-                      onClick={handleExportPdf}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#525866] hover:text-[#121722] bg-[#faf9f7] hover:bg-[#f4f4f5] border border-[#efefef] rounded-xl transition-all cursor-pointer"
-                      title="Export PDF Report"
-                    >
-                      <Download size={14} />
-                      <span className="hidden sm:inline">Export</span>
-                    </button>
-
-                    {onAddToWishlist && !matchedApp && (
-                      <button
-                        onClick={() => {
-                          onAddToWishlist({
-                            company: currentTeardown.companyName,
-                            companyUrl: currentTeardown.websiteUrl,
-                            status: 'Wishlist',
-                            role: 'Product / Engineering',
-                            notes: `Auto-linked from Company Intelligence Studio:\n${currentTeardown.tagline}`
-                          });
-                          toast.success(`Added ${currentTeardown.companyName} to your Wishlist!`);
-                        }}
-                        className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-2xs cursor-pointer"
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-2xl font-black text-[#121722] tracking-tight">
+                        {currentTeardown.companyName}
+                      </h2>
+                      <a 
+                        href={currentTeardown.websiteUrl} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-800 font-semibold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60"
                       >
-                        <PlusCircle size={14} />
-                        <span>{'Add to Wishlist'}</span>
+                        <span>{currentTeardown.websiteUrl.replace(/^https?:\/\//, '')}</span>
+                        <ArrowUpRight size={12} />
+                      </a>
+                    </div>
+
+                    <p className="text-sm text-[#525866] mt-1 font-medium max-w-2xl">
+                      {currentTeardown.tagline}
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-[#777c86]">
+                      <span className="font-semibold text-[#121722]">{currentTeardown.industry}</span>
+                      {currentTeardown.headquarters && (
+                        <>
+                          <span>•</span>
+                          <span>{currentTeardown.headquarters}</span>
+                        </>
+                      )}
+                      {currentTeardown.foundedYear && (
+                        <>
+                          <span>•</span>
+                          <span>{`Est. ${currentTeardown.foundedYear}`}</span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Action Controls in One Row - Left Aligned */}
+                    <div className="flex flex-wrap items-center gap-2.5 mt-4 pt-1">
+                      {(() => {
+                        const isSaved = savedRecords.some(r => r.companyName.toLowerCase() === currentTeardown.companyName.toLowerCase());
+                        return (
+                          <button
+                            onClick={handleToggleSave}
+                            className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all cursor-pointer shadow-2xs ${
+                              isSaved
+                                ? 'bg-[#fff9eb] border border-[#fde68a] text-[#d97706] hover:bg-[#fef3c7]'
+                                : 'bg-[#faf9f7] hover:bg-[#f4f4f5] border border-[#efefef] text-[#525866] hover:text-[#121722]'
+                            }`}
+                            title={isSaved ? "Remove from Saved" : "Add to Saved"}
+                          >
+                            <Star size={14} className={isSaved ? "fill-[#f59e0b] text-[#f59e0b]" : "text-[#777c86]"} />
+                            <span>{isSaved ? 'Saved' : 'Save'}</span>
+                          </button>
+                        );
+                      })()}
+
+                      <button
+                        onClick={handleExportPdf}
+                        className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#525866] hover:text-[#121722] bg-[#faf9f7] hover:bg-[#f4f4f5] border border-[#efefef] rounded-full transition-all cursor-pointer shadow-2xs"
+                        title="Export PDF Report"
+                      >
+                        <Download size={14} className="text-[#777c86]" />
+                        <span>Export</span>
                       </button>
-                    )}
+
+                      {matchedApp ? (
+                        <button
+                          onClick={() => {
+                            if (onViewWishlist) {
+                              onViewWishlist(matchedApp);
+                            } else {
+                              toast.info(`Viewing ${currentTeardown.companyName} in Wishlist tracker`);
+                            }
+                          }}
+                          className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-full transition-all shadow-2xs cursor-pointer text-white bg-[#0068f9] hover:bg-[#024bb1]"
+                          title={`View ${currentTeardown.companyName} in Wishlist`}
+                        >
+                          <ArrowUpRight size={14} />
+                          <span>View in Wishlist</span>
+                        </button>
+                      ) : onAddToWishlist ? (
+                        <button
+                          onClick={() => {
+                            onAddToWishlist({
+                              company: currentTeardown.companyName,
+                              companyUrl: currentTeardown.websiteUrl,
+                              status: 'Wishlist',
+                              role: 'Product / Engineering',
+                              notes: `Auto-linked from Company Intelligence Studio:\n${currentTeardown.tagline}`
+                            });
+                            toast.success(`Added ${currentTeardown.companyName} to your Wishlist!`);
+                          }}
+                          className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-full transition-all shadow-2xs cursor-pointer text-white bg-[#0068f9] hover:bg-[#024bb1]"
+                          title={`Add ${currentTeardown.companyName} to Wishlist`}
+                        >
+                          <PlusCircle size={14} />
+                          <span>Add to Wishlist</span>
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1320,61 +1402,23 @@ toast.success('Company intelligence teardown ready!');
         </>
       ) : (
         /* Saved Teardowns & History View (Inside Dedicated Tab) */
-        <div className="bg-white border border-[#efefef] rounded-2xl p-6 shadow-2xs flex flex-col gap-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#efefef]">
-            <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-[#121722]">
-                {'Company Search History'}
-              </h2>
-              <div className="relative group flex items-center">
-                <button type="button" className="text-[#a5a5a5] hover:text-blue-600 transition-colors cursor-help">
-                  <Info size={14} />
-                </button>
-                <div className="absolute left-0 bottom-full mb-2 w-72 p-2.5 bg-[#121722] text-white text-xs rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 shadow-xl pointer-events-none font-normal">
-                  {'All previously generated holistic teardowns are stored securely for instant review.'}
-                  <div className="absolute left-2 -bottom-1 border-4 border-transparent border-t-[#121722]"></div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
-              <div className="relative w-full sm:w-64">
-                <Search className="w-3.5 h-3.5 text-[#a5a5a5] absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={historySearch}
-                  onChange={(e) => setHistorySearch(e.target.value)}
-                  placeholder={'Search company...'}
-                  className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#faf9f7] border border-[#efefef] rounded-xl text-[#121722] focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
-                />
-              </div>
-              {renderTabSwitcher()}
-            </div>
-          </div>
-
+        <div className="bg-white rounded-2xl border border-[#efefef] shadow-2xs p-6 flex-1 flex flex-col">
           {loadingHistory ? (
-            <div className="py-16 text-center text-xs text-[#777c86] flex flex-col items-center gap-2">
+            <div className="flex-1 flex flex-col items-center justify-center py-16 text-center text-xs text-[#777c86] gap-2">
               <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
               <span>{'Loading saved briefs...'}</span>
             </div>
           ) : savedRecords.length === 0 ? (
-            <div className="py-16 text-center text-xs text-[#777c86] flex flex-col items-center gap-2">
-              <Building2 className="w-8 h-8 text-[#d1d5db]" />
-              <span className="font-semibold text-sm text-[#121722]">
-                {'No saved company teardowns yet'}
-              </span>
-              <p className="max-w-xs text-[#a5a5a5]">
-                {'Enter any company name in the Teardown tab to generate your first analysis.'}
-              </p>
-              <button
-                onClick={() => setActiveTab('explorer')}
-                className="mt-2 px-3.5 py-1.5 bg-[#121722] text-white text-xs font-semibold rounded-xl hover:bg-[#232936] transition-all cursor-pointer"
-              >
-                {'Analyze a Company Now'}
-              </button>
+            <div className="flex-1 flex flex-col items-center justify-center py-12">
+              <NoDataState
+                icon="/icons/person-holding-star-up.svg"
+                title="No saved company yet"
+                actionText="Analyze Now"
+                onAction={() => setActiveTab('explorer')}
+              />
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
               {savedRecords
                 .filter(r => r.companyName.toLowerCase().includes(historySearch.toLowerCase()))
                 .map((record) => (
@@ -1408,10 +1452,10 @@ toast.success('Company intelligence teardown ready!');
 
                         <button
                           onClick={(e) => handleDeleteRecord(record.id, e)}
-                          className="text-[#a5a5a5] hover:text-rose-600 p-1 transition-colors cursor-pointer"
-                          title="Delete from history"
+                          className="p-1.5 text-amber-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
+                          title="Remove from Saved"
                         >
-                          <Trash2 size={13} />
+                          <Star size={15} className="fill-[#f59e0b] text-[#f59e0b]" />
                         </button>
                       </div>
 
