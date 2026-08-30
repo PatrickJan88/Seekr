@@ -1061,7 +1061,7 @@ ${app.notes || 'No extra description provided.'}`;
         >
           {/* STEPPER SIDEBAR NAV - LEFT SIDE */}
           <div className="w-full md:w-60 lg:w-64 shrink-0 bg-white border border-[#efefef] rounded-2xl p-4 sm:p-6 shadow-2xs flex flex-col self-stretch min-h-[500px]">
-            <StepperNav className="w-full flex-1 flex flex-col justify-between">
+            <StepperNav className="w-full flex-1 flex flex-col justify-between pb-6">
               {steps.map((step, index) => (
                 <React.Fragment key={index}>
                   <StepperItem step={index + 1} className="relative flex items-center w-full z-10">
