@@ -369,13 +369,15 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                   Total: {evaluations.length} {evaluations.length === 1 ? 'evaluation' : 'evaluations'}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={onBack}
-                  className="px-3.5 py-1.5 rounded-full border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] text-xs font-semibold transition-all flex items-center justify-center cursor-pointer shadow-2xs"
-                >
-                  <span>New Evaluation</span>
-                </button>
+                {evaluations.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={onBack}
+                    className="px-3.5 py-1.5 rounded-full border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] text-xs font-semibold transition-all flex items-center justify-center cursor-pointer shadow-2xs"
+                  >
+                    <span>New Evaluation</span>
+                  </button>
+                )}
               </div>
             </>
           )}

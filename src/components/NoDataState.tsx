@@ -32,7 +32,7 @@ export const NoDataState: React.FC<NoDataStateProps> = ({
         {title}
       </span>
       {description && (
-        <p className="text-xs text-[#777c86] max-w-sm">
+        <p className="text-xs text-[#777c86] whitespace-nowrap">
           {description}
         </p>
       )}
