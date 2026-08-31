@@ -1397,6 +1397,14 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                   </div>
                 </div>
               </div>
+
+              {/* Bottom AI Disclaimer */}
+              <div className="flex items-center justify-center pt-2 pb-2">
+                <p className="flex items-center gap-1.5 text-xs text-[#777c86] text-center">
+                  <Info size={14} className="shrink-0" />
+                  {'AI evaluations may contain inaccuracies; always review the results.'}
+                </p>
+              </div>
             </div>
           )}
         </>

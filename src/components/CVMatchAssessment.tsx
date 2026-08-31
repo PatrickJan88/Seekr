@@ -774,8 +774,9 @@ ${app.notes || 'No extra description provided.'}`;
                 <h3 className="text-sm font-bold text-[#121722]">
                   Match Analysis for {targetRole}{result.company_name && result.company_name !== 'Unknown Company' ? ` • Targeting ${result.company_name}` : ''}
                 </h3>
-                <p className="text-xs text-[#777c86]">
-                  The AI evaluator may produce results that contain mistakes. Please always review the content carefully.
+                <p className="flex items-center gap-1.5 text-xs text-[#777c86] mt-0.5">
+                  <Info size={14} className="shrink-0" />
+                  AI evaluations may contain inaccuracies; always review the results.
                 </p>
               </div>
             </div>

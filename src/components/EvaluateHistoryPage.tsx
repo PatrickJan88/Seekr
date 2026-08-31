@@ -313,7 +313,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
         {/* Top Header / First Blank Space Header */}
         <div className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0 bg-white">
           {selectedEval ? (
-            /* Selected Evaluation Header: Left Back button with same size as Add to Wishlist, Right Add to Wishlist button */
+            /* Selected Evaluation Header: Left Back button with same size as Add to Wishlist, Middle AI disclaimer, Right Add to Wishlist button */
             <div className="w-full flex items-center justify-between gap-4">
               <button
                 type="button"
@@ -323,7 +323,12 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                 <span>Back</span>
               </button>
 
-              {onAddToWishlist && (
+              <p className="flex items-center gap-1.5 text-xs text-[#777c86] text-center">
+                <Info size={14} className="shrink-0" />
+                AI evaluations may contain inaccuracies; always review the results.
+              </p>
+
+              {onAddToWishlist ? (
                 <button
                   type="button"
                   onClick={() => {
@@ -345,14 +350,17 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                 >
                   <span>Add to Wishlist</span>
                 </button>
+              ) : (
+                <div className="w-16" />
               )}
             </div>
           ) : (
             /* Evaluations List Header: Left Disclaimer, Right Total count and New Evaluation button */
             <>
               <div className="space-y-1">
-                <p className="text-xs text-[#777c86]">
-                  The AI evaluator may produce results that contain mistakes. Please always review the content carefully.
+                <p className="flex items-center gap-1.5 text-xs text-[#777c86]">
+                  <Info size={14} className="shrink-0" />
+                  AI evaluations may contain inaccuracies; always review the results.
                 </p>
               </div>
 

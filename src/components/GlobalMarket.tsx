@@ -110,56 +110,7 @@ interface GlobalMarketProps {
 }
 
 
-const ACADEMIC_JOBS: any[] = [
-  {
-    id: "acad-1",
-    title: "Postdoctoral Researcher in Quantum Computing",
-    company_name: "Massachusetts Institute of Technology (MIT)",
-    url: "#",
-    publication_date: new Date().toISOString(),
-    parsed_location: { continent: "North America", country: "United States", city: "Cambridge" }
-  },
-  {
-    id: "acad-2",
-    title: "Lecturer in Computer Science",
-    company_name: "University of Oxford",
-    url: "#",
-    publication_date: new Date().toISOString(),
-    parsed_location: { continent: "Europe", country: "United Kingdom", city: "Oxford" }
-  },
-  {
-    id: "acad-3",
-    title: "Assistant Professor - Artificial Intelligence",
-    company_name: "Stanford University",
-    url: "#",
-    publication_date: new Date(Date.now() - 86400000 * 2).toISOString(),
-    parsed_location: { continent: "North America", country: "United States", city: "Stanford" }
-  },
-  {
-    id: "acad-4",
-    title: "PhD Candidate - Machine Learning",
-    company_name: "ETH Zurich",
-    url: "#",
-    publication_date: new Date(Date.now() - 86400000 * 5).toISOString(),
-    parsed_location: { continent: "Europe", country: "Switzerland", city: "Zurich" }
-  },
-  {
-    id: "acad-5",
-    title: "Teaching Fellow in Data Science",
-    company_name: "National University of Singapore (NUS)",
-    url: "#",
-    publication_date: new Date(Date.now() - 86400000 * 10).toISOString(),
-    parsed_location: { continent: "Asia", country: "Singapore", city: "Singapore" }
-  },
-  {
-    id: "acad-6",
-    title: "Research Scientist - Bioinformatics",
-    company_name: "Max Planck Institute",
-    url: "#",
-    publication_date: new Date(Date.now() - 86400000 * 1).toISOString(),
-    parsed_location: { continent: "Europe", country: "Germany", city: "Munich" }
-  }
-];
+const ACADEMIC_JOBS: any[] = [];
 
 export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'industry' }: GlobalMarketProps) {
   const [jobs, setJobs] = useState<MarketJob[]>([]);
