@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { JobApplication, MatchResult, MatchedKeyword, MissingKeyword, TailoredResumeData } from '../types';
+import { JobApplication, MatchResult, MatchedKeyword, MissingKeyword, TailoredResumeData, UserResume } from '../types';
 import { extractTextFromPDF, fileToBase64 } from '../lib/pdf';
 import { addEvaluation } from '../db/evaluations';
+import { 
+  getUserResume, 
+  saveUserResume, 
+  deleteUserResume, 
+  getStoredLocalResume, 
+  RESUME_UPDATED_EVENT 
+} from '../db/resumes';
 import { auth } from '../lib/firebase';
 import AgentAvatar from './AgentAvatar';
 import PersonaOrbCarousel, { TECH_ROLES } from './PersonaOrbCarousel';
@@ -244,10 +251,48 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
 
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [targetRole, setTargetRole] = useState('');
+  const [storedResume, setStoredResume] = useState<UserResume | null>(() => getStoredLocalResume(auth.currentUser?.uid));
   const [cvFile, setCvFile] = useState<File | null>(null);
-  const [cvText, setCvText] = useState(isDemo ? 'Senior Frontend Engineer with 5+ years experience in React, TypeScript, and modern CSS architecture.' : '');
+  const [cvText, setCvText] = useState<string>(() => {
+    const local = getStoredLocalResume(auth.currentUser?.uid);
+    if (local?.cvText) return local.cvText;
+    if (isDemo) return 'Senior Frontend Engineer with 5+ years experience in React, TypeScript, and modern CSS architecture.';
+    return '';
+  });
   const [isExtractingPdf, setIsExtractingPdf] = useState(false);
   const [cvInputMode, setCvInputMode] = useState<'upload' | 'text'>('upload');
+
+  useEffect(() => {
+    const fetchResume = async () => {
+      const resume = await getUserResume(auth.currentUser?.uid || 'guest');
+      if (resume) {
+        setStoredResume(resume);
+        if (!cvFile && (!cvText || cvText === 'Senior Frontend Engineer with 5+ years experience in React, TypeScript, and modern CSS architecture.')) {
+          setCvText(resume.cvText);
+        }
+      }
+    };
+    fetchResume();
+
+    const handleResumeUpdated = (e: any) => {
+      const updated = e.detail as UserResume | null;
+      setStoredResume(updated);
+      if (updated) {
+        if (!cvFile) {
+          setCvText(updated.cvText);
+        }
+      } else {
+        if (!cvFile) {
+          setCvText('');
+        }
+      }
+    };
+
+    window.addEventListener(RESUME_UPDATED_EVENT, handleResumeUpdated);
+    return () => {
+      window.removeEventListener(RESUME_UPDATED_EVENT, handleResumeUpdated);
+    };
+  }, [auth.currentUser?.uid, cvFile]);
   
   const [jdSource, setJdSource] = useState<'custom' | 'application'>('custom');
   const [selectedAppId, setSelectedAppId] = useState<string>('');
@@ -326,9 +371,12 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
     setIsGeneratingInterviewGuide(true);
     toast.loading('Generating tailored interview strategy guide...', { id: 'interview-prep-load' });
     try {
+      const effectiveCvText = cvText.trim() || storedResume?.cvText.trim() || '';
       let pdfBase64 = '';
-      if (cvFile && !cvText) {
+      if (cvFile && !effectiveCvText) {
         pdfBase64 = await fileToBase64(cvFile).catch(() => '');
+      } else if (!cvFile && !effectiveCvText && storedResume?.pdfBase64) {
+        pdfBase64 = storedResume.pdfBase64;
       }
       
       const res = await fetch('/api/generate-interview-guide', {
@@ -336,7 +384,7 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           targetRole,
-          cvText,
+          cvText: effectiveCvText,
           pdfBase64,
           jobDescription,
           trackingSystem,
@@ -388,9 +436,12 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
     setIsGeneratingCoverLetter(true);
     toast.loading('Generating tailored cover letter...', { id: 'cover-letter-load' });
     try {
+      const effectiveCvText = cvText.trim() || storedResume?.cvText.trim() || '';
       let pdfBase64 = '';
-      if (cvFile && !cvText) {
+      if (cvFile && !effectiveCvText) {
         pdfBase64 = await fileToBase64(cvFile).catch(() => '');
+      } else if (!cvFile && !effectiveCvText && storedResume?.pdfBase64) {
+        pdfBase64 = storedResume.pdfBase64;
       }
       
       const res = await fetch('/api/generate-cover-letter', {
@@ -398,7 +449,7 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           targetRole,
-          cvText,
+          cvText: effectiveCvText,
           pdfBase64,
           jobDescription,
           trackingSystem,
@@ -490,9 +541,12 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
     setIsTailoringResume(true);
     toast.loading('Crafting tailored resume with ATS templates...', { id: 'resume-studio-load' });
     try {
+      const effectiveCvText = cvText.trim() || storedResume?.cvText.trim() || '';
       let pdfBase64 = '';
-      if (cvFile && !cvText) {
+      if (cvFile && !effectiveCvText) {
         pdfBase64 = await fileToBase64(cvFile).catch(() => '');
+      } else if (!cvFile && !effectiveCvText && storedResume?.pdfBase64) {
+        pdfBase64 = storedResume.pdfBase64;
       }
 
       const res = await fetch('/api/tailor-resume', {
@@ -500,7 +554,7 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           targetRole,
-          cvText,
+          cvText: effectiveCvText,
           pdfBase64,
           jobDescription,
           companyName: result?.company_name,
@@ -582,8 +636,25 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
     setIsExtractingPdf(true);
     try {
       const extractedText = await extractTextFromPDF(file);
+      let base64 = '';
+      try {
+        base64 = await fileToBase64(file);
+      } catch (bErr) {
+        console.warn('PDF base64 conversion warning:', bErr);
+      }
       setCvText(extractedText);
-      toast.success('CV PDF text extracted successfully!');
+
+      // Automatically store on our platform for future reuse across the app
+      const saved = await saveUserResume(auth.currentUser?.uid || 'guest', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type || 'application/pdf',
+        cvText: extractedText,
+        pdfBase64: base64,
+      });
+      setStoredResume(saved);
+
+      toast.success('CV uploaded & automatically saved to My Resume for next time!');
     } catch (err) {
       console.warn('Browser PDF text extraction fell back to server PDF parsing', err);
       toast.info('PDF attached. AI server will analyze document directly.');
@@ -592,7 +663,7 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
     }
   };
 
-  const handleRemoveCvFile = (e?: React.MouseEvent) => {
+  const handleRemoveCvFile = async (e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation();
       e.preventDefault();
@@ -600,9 +671,15 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
     setCvFile(null);
     setCvText('');
     setShowCvTextPreview(false);
+    setStoredResume(null);
+    try {
+      await deleteUserResume(auth.currentUser?.uid || 'guest');
+    } catch (err) {
+      console.warn('Failed to delete stored resume:', err);
+    }
     const inputEl = document.getElementById('cv-file-upload') as HTMLInputElement;
     if (inputEl) inputEl.value = '';
-    toast.info('Uploaded CV removed');
+    toast.info('CV removed from evaluation and saved profile');
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -635,7 +712,7 @@ ${app.notes || 'No extra description provided.'}`;
 
   const validateStep = (step: number) => {
     if (step === 1) return !!targetRole;
-    if (step === 2) return !!cvText || !!cvFile;
+    if (step === 2) return !!cvText.trim() || !!cvFile || !!storedResume?.cvText.trim();
     if (step === 3) return !!jobDescription.trim();
     return false;
   };
@@ -659,7 +736,8 @@ ${app.notes || 'No extra description provided.'}`;
       toast.error('Please provide or select a Job Description.');
       return;
     }
-    if (!cvText && !cvFile) {
+    const effectiveCvText = cvText.trim() || storedResume?.cvText.trim() || '';
+    if (!effectiveCvText && !cvFile) {
       toast.error('Please upload or paste your CV text.');
       return;
     }
@@ -668,8 +746,10 @@ ${app.notes || 'No extra description provided.'}`;
 
     try {
       let pdfBase64 = '';
-      if (cvFile && !cvText) {
-        pdfBase64 = await fileToBase64(cvFile);
+      if (cvFile && !effectiveCvText) {
+        pdfBase64 = await fileToBase64(cvFile).catch(() => '');
+      } else if (!cvFile && !effectiveCvText && storedResume?.pdfBase64) {
+        pdfBase64 = storedResume.pdfBase64;
       }
 
       const res = await fetch('/api/cv-match', {
@@ -677,7 +757,7 @@ ${app.notes || 'No extra description provided.'}`;
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           targetRole,
-          cvText,
+          cvText: effectiveCvText,
           pdfBase64,
           jobDescription,
           trackingSystem
@@ -1160,7 +1240,7 @@ ${app.notes || 'No extra description provided.'}`;
                         onDragOver={handleDragOver}
                         onDrop={handleDrop}
                         className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer flex-1 flex flex-col items-center justify-center min-h-[220px] ${
-                          cvFile ? 'border-[#0068f9] bg-[#e8f1ff]/20' : 'border-[#efefef] hover:border-[#0068f9] bg-[#faf9f7]'
+                          cvFile || storedResume ? 'border-[#0068f9] bg-[#e8f1ff]/20' : 'border-[#efefef] hover:border-[#0068f9] bg-[#faf9f7]'
                         }`}
                       >
                         <input
@@ -1179,14 +1259,16 @@ ${app.notes || 'No extra description provided.'}`;
                               <Upload size={24} className={isDemo ? 'opacity-50' : ''} />
                             )}
                           </div>
-                          {cvFile ? (
+                          {cvFile || storedResume ? (
                             <div className="space-y-2">
                               <p className="text-sm font-bold text-[#121722] flex items-center justify-center gap-1.5 max-w-full px-2">
                                 <FileCheck size={18} className="text-[#0068f9] shrink-0" />
-                                <span className="truncate max-w-[260px] sm:max-w-[320px]">{cvFile.name}</span>
+                                <span className="truncate max-w-[260px] sm:max-w-[320px]">
+                                  {cvFile ? cvFile.name : (storedResume?.fileName || 'CV.pdf')}
+                                </span>
                               </p>
                               <p className="text-xs text-[#777c86]">
-                                {(cvFile.size / 1024).toFixed(1)} KB • {cvText ? `${cvText.length} characters parsed` : 'Ready'}
+                                {(((cvFile ? cvFile.size : storedResume?.fileSize) || 0) / 1024).toFixed(1)} KB • {cvText ? `${cvText.length.toLocaleString()} characters indexed` : 'Ready for AI Evaluator'}
                               </p>
 
                               {/* ACTION BUTTONS: REMOVE OR REPLACE PDF */}
@@ -1194,19 +1276,17 @@ ${app.notes || 'No extra description provided.'}`;
                                 <button
                                   type="button"
                                   onClick={handleRemoveCvFile}
-                                  className="px-3 py-1.5 rounded-full text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 transition-colors inline-flex items-center gap-1.5 shadow-2xs cursor-pointer"
-                                  title="Delete uploaded PDF"
+                                  className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 transition-colors inline-flex items-center justify-center shadow-2xs cursor-pointer"
+                                  title="Delete stored CV"
                                 >
-                                  <Trash2 size={13} />
-                                  <span>Delete PDF</span>
+                                  <span>Delete</span>
                                 </button>
                                 <label
                                   htmlFor="cv-file-upload"
-                                  className="px-3 py-1.5 rounded-full text-xs font-semibold text-[#0068f9] bg-white hover:bg-blue-50 border border-[#efefef] transition-colors inline-flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                                  className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-[#0068f9] bg-white hover:bg-blue-50 border border-[#efefef] transition-colors inline-flex items-center justify-center shadow-2xs cursor-pointer"
                                   title="Upload a different PDF file"
                                 >
-                                  <Upload size={13} />
-                                  <span>Replace PDF</span>
+                                  <span>Replace</span>
                                 </label>
                               </div>
                             </div>
@@ -1228,7 +1308,7 @@ ${app.notes || 'No extra description provided.'}`;
                               <p className="text-sm font-semibold text-[#121722]">
                                 Click to upload or drag & drop your PDF CV
                               </p>
-                              <p className="text-xs text-[#a5a5a5] mt-1">PDF format supported up to 10MB</p>
+                              <p className="text-xs text-[#a5a5a5] mt-1">PDF format supported up to 10MB • Automatically saved to My Resume</p>
                             </div>
                           )}
                         </label>

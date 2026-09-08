@@ -90,6 +90,18 @@ export interface AppNotification {
   unread: boolean;
 }
 
+export interface UserResume {
+  id: string;
+  userId: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  cvText: string;
+  pdfBase64?: string;
+  uploadedAt: number;
+  updatedAt: number;
+}
+
 export type EvaluatorDimensionKey = 'hardSkills' | 'seniority' | 'domain' | 'methodology' | 'credentials' | 'operational';
 
 export interface DimensionEvaluation {

@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, ExternalLink, Search, MapPin, Briefcase, Clock, Building2, Plus } from 'lucide-react';
+import { Loader2, ExternalLink, Search, MapPin, Briefcase, Clock, Building2, Plus, Sparkles, Info, Upload, X } from 'lucide-react';
+import { toast } from 'sonner';
 import locationsData from '../data/locations.json';
+import { UserResume } from '../types';
+import { getUserResume, getStoredLocalResume, saveUserResume, RESUME_UPDATED_EVENT } from '../db/resumes';
+import { auth } from '../lib/firebase';
+import { extractTextFromPDF, fileToBase64 } from '../lib/pdf';
+import { extractCVProfile, scoreJobMatch, CVProfile, JobMatchScore } from '../lib/cvJobMatcher';
 
 const getContinent = (countryName: string) => {
     if (!countryName) return 'Other';
@@ -124,6 +130,96 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
   const [typeFilter, setTypeFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
 
+  // CV & Matched Up state
+  const [storedResume, setStoredResume] = useState<UserResume | null>(() => getStoredLocalResume(auth.currentUser?.uid));
+  const [isMatchedUpActive, setIsMatchedUpActive] = useState<boolean>(false);
+  const [isCalculatingMatches, setIsCalculatingMatches] = useState<boolean>(false);
+  const [showCVProfileInfo, setShowCVProfileInfo] = useState<boolean>(false);
+  const [showNoCvNotice, setShowNoCvNotice] = useState<boolean>(false);
+  const [isUploadingCv, setIsUploadingCv] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchResume = async () => {
+      const resume = await getUserResume(auth.currentUser?.uid || 'guest');
+      if (resume) {
+        setStoredResume(resume);
+      }
+    };
+    fetchResume();
+
+    const handleResumeUpdated = (e: any) => {
+      const updated = e.detail as UserResume | null;
+      setStoredResume(updated);
+      if (!updated?.cvText?.trim()) {
+        setIsMatchedUpActive(false);
+      }
+    };
+
+    window.addEventListener(RESUME_UPDATED_EVENT, handleResumeUpdated);
+    return () => {
+      window.removeEventListener(RESUME_UPDATED_EVENT, handleResumeUpdated);
+    };
+  }, [auth.currentUser?.uid]);
+
+  // Determine effective CV profile from uploaded CV only (no default UI/UX designer fallback)
+  const effectiveProfile = React.useMemo<CVProfile | null>(() => {
+    if (storedResume?.cvText?.trim()) {
+      return extractCVProfile(storedResume.cvText);
+    }
+    return null;
+  }, [storedResume?.cvText]);
+
+  // Direct CV upload handler from the Matched Up notice popover
+  const handleDirectCvUpload = async (file: File) => {
+    if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
+      toast.error('Please upload a PDF format CV.');
+      return;
+    }
+
+    setIsUploadingCv(true);
+    toast.loading('Reading & extracting CV text...', { id: 'market-cv-upload' });
+
+    try {
+      let extractedText = '';
+      let base64 = '';
+      try {
+        extractedText = await extractTextFromPDF(file);
+      } catch (err) {
+        console.warn('PDF text extraction error:', err);
+      }
+
+      try {
+        base64 = await fileToBase64(file);
+      } catch (err) {
+        console.warn('PDF base64 conversion error:', err);
+      }
+
+      const saved = await saveUserResume(auth.currentUser?.uid || 'guest', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type || 'application/pdf',
+        cvText: extractedText,
+        pdfBase64: base64,
+      });
+
+      setStoredResume(saved);
+      setShowNoCvNotice(false);
+
+      if (extractedText?.trim()) {
+        const profile = extractCVProfile(extractedText);
+        setIsMatchedUpActive(true);
+        toast.success(`CV uploaded! Matched Up active, ranked by your ${profile.detectedRole} background.`, { id: 'market-cv-upload' });
+      } else {
+        toast.success('CV uploaded and saved to My Resume.', { id: 'market-cv-upload' });
+      }
+    } catch (err: any) {
+      console.error('Failed to upload CV in GlobalMarket:', err);
+      toast.error('Failed to upload CV: ' + (err.message || 'unknown error'), { id: 'market-cv-upload' });
+    } finally {
+      setIsUploadingCv(false);
+    }
+  };
+
   useEffect(() => {
     const fetchJobs = async () => {
       try {
@@ -236,6 +332,59 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
     return isNaN(parsed) ? NaN : parsed;
   };
 
+  // Map of scores for all jobs computed against user's CV profile
+  const jobScoresMap = React.useMemo(() => {
+    const map = new Map<string | number, JobMatchScore>();
+    if (!effectiveProfile || !isMatchedUpActive) return map;
+
+    const baseJobs = trackingSystem === 'academic' ? ACADEMIC_JOBS : jobs;
+    for (const job of baseJobs) {
+      const score = scoreJobMatch(job, effectiveProfile);
+      map.set(job.id, score);
+    }
+    return map;
+  }, [jobs, effectiveProfile, trackingSystem, isMatchedUpActive]);
+
+  const handleToggleMatchedUp = async () => {
+    if (isMatchedUpActive) {
+      setIsMatchedUpActive(false);
+      setShowNoCvNotice(false);
+      toast.info('Standard chronological sorting restored.');
+      return;
+    }
+
+    setIsCalculatingMatches(true);
+
+    // Read the user's CV text freshly from Firestore or local storage first
+    let currentResume = storedResume;
+    try {
+      const latest = await getUserResume(auth.currentUser?.uid || 'guest');
+      if (latest) {
+        currentResume = latest;
+        setStoredResume(latest);
+      }
+    } catch {
+      // fallback to current storedResume in memory
+    }
+
+    if (!currentResume?.cvText?.trim()) {
+      setIsCalculatingMatches(false);
+      setShowNoCvNotice(true);
+      toast.info('Please upload your CV first to enable Matched Up sorting.');
+      return;
+    }
+
+    // Parse the candidate's real CV profile (supporting any tech or academic role)
+    const profile = extractCVProfile(currentResume.cvText);
+
+    setTimeout(() => {
+      setIsCalculatingMatches(false);
+      setShowNoCvNotice(false);
+      setIsMatchedUpActive(true);
+      toast.success(`Matched Up active! Ranked by your CV (${profile.detectedRole}) background & skills.`);
+    }, 150);
+  };
+
   const processedJobs = React.useMemo(() => {
     let baseJobs = trackingSystem === 'academic' ? ACADEMIC_JOBS : jobs;
     let result = baseJobs.filter((job) => {
@@ -299,17 +448,124 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
       });
       result = scored.filter(item => item.score > 0).sort((a, b) => b.score - a.score).map(item => item.job);
     }
+
+    // Automatically sort by CV match score from most matched to least matched when Matched Up is active
+    if (isMatchedUpActive && effectiveProfile) {
+      result = [...result].sort((a, b) => {
+        const scoreA = jobScoresMap.get(a.id)?.totalScore ?? 0;
+        const scoreB = jobScoresMap.get(b.id)?.totalScore ?? 0;
+        if (scoreB !== scoreA) {
+          return scoreB - scoreA; // Highest match first
+        }
+        const timeA = parseJobDate(a.publication_date) || 0;
+        const timeB = parseJobDate(b.publication_date) || 0;
+        return timeB - timeA;
+      });
+    }
     
     return result;
-  }, [jobs, countryFilter, cityFilter, typeFilter, dateFilter, searchTerm]);
+  }, [jobs, countryFilter, cityFilter, typeFilter, dateFilter, searchTerm, isMatchedUpActive, effectiveProfile, jobScoresMap]);
 
   return (
     <div className="relative w-full flex-1 flex flex-col min-h-[500px]">
       <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col relative">
       <div className="pb-4 sm:pb-6 border-b border-[#efefef] shrink-0">
         
+        <div className="flex flex-wrap lg:flex-nowrap items-center gap-3 w-full">
+          {/* Matched Up Button - arranged before all locations */}
+          <div className="relative shrink-0 w-full sm:w-auto z-50">
+            <button
+              type="button"
+              id="matched-up-sort-btn"
+              onClick={handleToggleMatchedUp}
+              disabled={isCalculatingMatches}
+              className={`flex items-center justify-center gap-2 h-11 px-4 sm:px-5 rounded-full text-sm font-medium transition-all shadow-2xs cursor-pointer select-none w-full sm:w-auto ${
+                isMatchedUpActive
+                  ? 'bg-[#0068f9] text-white hover:bg-[#024bb1] border border-[#0068f9] shadow-sm'
+                  : 'bg-white text-[#121722] border border-[#efefef] hover:bg-[#faf9f7] hover:border-[#0068f9]/40'
+              }`}
+              title={
+                isMatchedUpActive
+                  ? 'Matched Up active: Click to restore standard chronological sorting'
+                  : storedResume?.cvText?.trim()
+                  ? `Matched Up: Auto-rank by your ${effectiveProfile?.detectedRole || 'CV'} background & skills`
+                  : 'Upload your CV to activate tailored Matched Up ranking'
+              }
+            >
+              {isCalculatingMatches ? (
+                <Loader2 size={16} className="animate-spin text-current" />
+              ) : (
+                <Sparkles size={16} className={isMatchedUpActive ? 'text-amber-300' : 'text-[#0068f9]'} />
+              )}
+              <span className="font-semibold whitespace-nowrap">Matched Up</span>
+              {isMatchedUpActive && (
+                <span className="ml-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white/25 text-white leading-none">
+                  ON
+                </span>
+              )}
+            </button>
 
-        <div className="flex flex-col sm:flex-row gap-4">
+            {/* Encouraging Notice with the button if user has not uploaded a CV yet */}
+            {showNoCvNotice && !storedResume?.cvText?.trim() && (
+              <div 
+                id="matched-up-upload-notice"
+                className="absolute left-0 top-full mt-2.5 w-[320px] sm:w-[380px] bg-white border border-[#efefef] rounded-2xl shadow-xl p-5 z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+              >
+                <div className="flex items-start justify-between gap-3 mb-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-[#0068f9]/10 text-[#0068f9] flex items-center justify-center shrink-0">
+                      <Sparkles size={16} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-[#121722]">Upload your CV to activate Matched Up</h4>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowNoCvNotice(false)}
+                    className="text-[#a5a5a5] hover:text-[#121722] p-1 rounded-md transition-colors cursor-pointer"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+
+                <p className="text-xs text-[#777c86] leading-relaxed mb-4">
+                  Seekr reads your CV background, skills, previous experience, and sector (tech or academic) to automatically rank opportunities from most matched to least matched for you.
+                </p>
+
+                <label
+                  htmlFor="market-cv-upload-input"
+                  className={`border-2 border-dashed border-[#d0e1fd] hover:border-[#0068f9] bg-[#f5f9ff]/70 hover:bg-[#edf5ff] rounded-xl p-4 text-center transition-all cursor-pointer flex flex-col items-center justify-center block ${
+                    isUploadingCv ? 'opacity-70 pointer-events-none' : ''
+                  }`}
+                >
+                  <input
+                    id="market-cv-upload-input"
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    className="hidden"
+                    disabled={isUploadingCv}
+                    onChange={(e) => e.target.files?.[0] && handleDirectCvUpload(e.target.files[0])}
+                  />
+                  <div className="w-10 h-10 rounded-full bg-white border border-[#d0e1fd] text-[#0068f9] flex items-center justify-center mx-auto mb-2 shadow-2xs">
+                    {isUploadingCv ? (
+                      <Loader2 size={20} className="animate-spin text-[#0068f9]" />
+                    ) : (
+                      <Upload size={18} />
+                    )}
+                  </div>
+                  <span className="text-xs font-semibold text-[#121722] block">
+                    {isUploadingCv ? 'Reading & extracting CV text...' : 'Upload your CV (PDF)'}
+                  </span>
+                  <span className="text-[11px] text-[#777c86] mt-0.5 block">
+                    PDF up to 10MB • Saved to My Resume
+                  </span>
+                </label>
+              </div>
+            )}
+          </div>
+
+          {/* All Locations - preserves original width */}
           <div className="shrink-0 w-full sm:w-auto z-50">
             <NestedLocationMenu
               locationTree={locationTree}
@@ -321,6 +577,8 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
               onSelectCity={setCityFilter}
             />
           </div>
+
+          {/* All Roles - preserves original width */}
           <div className="shrink-0 w-full sm:w-auto z-50">
             <NestedRoleMenu
               roleCategories={trackingSystem === 'academic' ? ROLE_CATEGORIES_ACADEMIC : ROLE_CATEGORIES_INDUSTRY}
@@ -328,28 +586,91 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
               onSelectType={setTypeFilter}
             />
           </div>
+
+          {/* Date Posted - preserves original width */}
           <div className="shrink-0 w-full sm:w-auto z-50">
             <DateFilterMenu
               dateFilter={dateFilter}
               onSelectDate={setDateFilter}
             />
           </div>
-          <div className="relative flex-1 flex items-center gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a5a5a5]" size={16} />
+
+          {/* Expanded Width Search Box & Results Counter */}
+          <div className="relative flex-1 min-w-[180px] flex items-center">
+            <div className="relative w-full">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a5a5a5]" size={15} />
               <input
                 type="text"
-                placeholder="Search roles or companies in market"
+                placeholder="Search market"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-11 pr-4 h-11 bg-white border border-[#efefef] rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#0068f9] transition-all shadow-2xs hover:bg-[#faf9f7]"
+                className="w-full pl-9 pr-4 h-11 bg-white border border-[#efefef] rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#0068f9] transition-all shadow-2xs hover:bg-[#faf9f7]"
               />
             </div>
-            <div className="text-[#777c86] text-sm whitespace-nowrap font-medium pr-2">
-              {processedJobs.length > 99 ? '99+ results' : `${processedJobs.length} results`}
-            </div>
+          </div>
+
+          <div className="text-[#777c86] text-xs sm:text-sm whitespace-nowrap font-medium shrink-0">
+            {processedJobs.length > 99 ? '99+ results' : `${processedJobs.length} results`}
           </div>
         </div>
+
+        {/* Matched Up Information Banner */}
+        {isMatchedUpActive && effectiveProfile && (
+          <div className="mt-3.5 px-4 py-2.5 bg-[#e8f1ff]/60 border border-[#0068f9]/20 rounded-xl flex flex-wrap items-center justify-between gap-2.5 text-xs text-[#121722] animate-in fade-in duration-200">
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="inline-flex items-center gap-1.5 font-bold text-[#0068f9]">
+                <Sparkles size={14} className="text-[#0068f9]" />
+                <span>Matched Up Active</span>
+              </div>
+              <span className="text-[#a5a5a5]">•</span>
+              <span>
+                Ranked by <strong className="font-semibold text-[#121722]">{effectiveProfile.detectedRole}</strong> ({effectiveProfile.seniority}) background, skills & experience
+              </span>
+              {storedResume?.fileName && (
+                <span className="text-[#777c86] bg-white px-2 py-0.5 rounded-md border border-[#efefef]">
+                  CV: {storedResume.fileName}
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowCVProfileInfo(!showCVProfileInfo)}
+                className="text-[11px] font-semibold text-[#0068f9] hover:underline cursor-pointer flex items-center gap-1"
+              >
+                <Info size={12} />
+                <span>{showCVProfileInfo ? 'Hide Signals' : 'View Matching Signals'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMatchedUpActive(false);
+                  toast.info('Standard chronological sorting restored');
+                }}
+                className="text-[11px] text-[#777c86] hover:text-[#121722] hover:underline cursor-pointer ml-2"
+              >
+                Reset
+              </button>
+            </div>
+
+            {showCVProfileInfo && (
+              <div className="w-full pt-2 border-t border-[#0068f9]/10 mt-1 flex flex-wrap gap-1.5 items-center">
+                <span className="text-[#777c86] text-[11px]">Match Signals:</span>
+                {effectiveProfile.skills.slice(0, 10).map((skill) => (
+                  <span key={skill} className="px-2 py-0.5 rounded-md bg-white border border-[#0068f9]/20 text-[11px] font-medium text-[#0068f9]">
+                    {skill}
+                  </span>
+                ))}
+                {effectiveProfile.softSkills.slice(0, 4).map((soft) => (
+                  <span key={soft} className="px-2 py-0.5 rounded-md bg-white border border-[#efefef] text-[11px] text-[#777c86]">
+                    {soft}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-auto bg-transparent relative pt-4 sm:pt-6 custom-scrollbar">
@@ -368,11 +689,13 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
           </div>
         ) : (
           <div className="flex flex-col w-full min-h-max pb-8">
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {processedJobs.map((job) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {processedJobs.map((job) => {
+              const matchScore = isMatchedUpActive ? jobScoresMap.get(job.id) : null;
+              return (
               <div key={job.id} className="bg-[#faf9f7] border border-[#efefef] rounded-2xl p-5 hover:border-[#0068f9]/30 hover:shadow-md transition-all flex flex-col h-full group relative w-full">
                 <a href={job.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-10 rounded-2xl" aria-label={`View ${job.title} job at ${job.company_name}`} />
-                <div className="flex items-start justify-between w-full mb-4 gap-3">
+                <div className="flex items-start justify-between w-full mb-3 gap-3">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     {job.company_logo ? (
                       <div className="w-11 h-11 rounded-xl overflow-hidden border border-[#efefef] shrink-0 bg-white flex items-center justify-center shadow-xs">
@@ -388,7 +711,19 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
                       <p className="text-sm text-[#777c86] font-medium truncate">{job.company_name}</p>
                     </div>
                   </div>
-                  <div className="shrink-0 z-20">
+                  <div className="shrink-0 z-20 flex items-center gap-2">
+                    {isMatchedUpActive && matchScore && (
+                      <div className={`px-2.5 py-1 rounded-full text-xs font-bold border flex items-center gap-1 shadow-2xs shrink-0 ${
+                        matchScore.totalScore >= 85
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : matchScore.totalScore >= 70
+                          ? 'bg-blue-50 text-[#0068f9] border-blue-200'
+                          : 'bg-neutral-50 text-[#777c86] border-[#efefef]'
+                      }`}>
+                        <Sparkles size={11} className={matchScore.totalScore >= 70 ? 'text-current' : 'text-[#a5a5a5]'} />
+                        <span>{matchScore.totalScore}%</span>
+                      </div>
+                    )}
                     <button
                       onClick={(e) => {
                         e.preventDefault();
@@ -409,6 +744,21 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
                     </button>
                   </div>
                 </div>
+
+                {/* Match signals chips when Matched Up is active */}
+                {isMatchedUpActive && matchScore && matchScore.matchedKeywords.length > 0 && (
+                  <div className="mb-3 flex flex-wrap items-center gap-1.5 z-10 relative">
+                    <span className="text-[10px] text-[#777c86] font-medium">Matched:</span>
+                    {matchScore.matchedKeywords.map((kw) => (
+                      <span
+                        key={kw}
+                        className="text-[10px] font-semibold bg-[#e8f1ff] text-[#0068f9] px-2 py-0.5 rounded-md border border-[#0068f9]/15"
+                      >
+                        {kw}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 
                 <div className="mt-auto space-y-2">
                   <div className="flex items-center gap-2 text-xs text-[#777c86]">
@@ -431,10 +781,11 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
                   </div>
                 </div>
               </div>
-            ))}
+            );
+          })}
             </div>
             {processedJobs.length > 0 && (
-              <div className="text-center text-[#a5a5a5] text-sm py-8 mx-6 border-t border-[#efefef]">
+              <div className="text-center text-[#a5a5a5] text-sm py-8 border-t border-[#efefef]">
                 The end.
               </div>
             )}

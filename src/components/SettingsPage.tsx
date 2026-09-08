@@ -1,10 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Footer } from './Footer';
-import { Github, Linkedin, Briefcase, GraduationCap, Check, ChevronDown } from 'lucide-react';
+import { 
+  Github, 
+  Linkedin, 
+  Briefcase, 
+  GraduationCap, 
+  Check, 
+  ChevronDown,
+  FileText,
+  Upload,
+  RefreshCw
+} from 'lucide-react';
 import { auth, logout } from '../lib/firebase';
 import { SupportForm } from './SupportForm';
 import { toast } from 'sonner';
+import { extractTextFromPDF, fileToBase64 } from '../lib/pdf';
+import { 
+  getUserResume, 
+  saveUserResume, 
+  deleteUserResume, 
+  getStoredLocalResume, 
+  RESUME_UPDATED_EVENT 
+} from '../db/resumes';
+import { UserResume } from '../types';
 
 interface SettingsPageProps {
   trackingSystem?: 'industry' | 'academic';
@@ -18,6 +37,111 @@ export function SettingsPage({ onBack, onClearData, isSyncing, trackingSystem = 
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState(false);
+  const [showDeleteResumeConfirm, setShowDeleteResumeConfirm] = useState(false);
+
+  // My Resume state
+  const [storedResume, setStoredResume] = useState<UserResume | null>(() => getStoredLocalResume(auth.currentUser?.uid));
+  const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const [showScannedText, setShowScannedText] = useState(false);
+
+  useEffect(() => {
+    const fetchResume = async () => {
+      const resume = await getUserResume(auth.currentUser?.uid || 'guest');
+      if (resume) {
+        setStoredResume(resume);
+      }
+    };
+    fetchResume();
+
+    const handleResumeUpdated = (e: any) => {
+      setStoredResume(e.detail as UserResume | null);
+    };
+
+    window.addEventListener(RESUME_UPDATED_EVENT, handleResumeUpdated);
+    return () => {
+      window.removeEventListener(RESUME_UPDATED_EVENT, handleResumeUpdated);
+    };
+  }, [auth.currentUser?.uid]);
+
+  const handleSettingsCvUpload = async (file: File) => {
+    if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
+      toast.error('Please upload a PDF format CV.');
+      return;
+    }
+
+    setIsUploadingResume(true);
+    toast.loading('Scanning & extracting CV text...', { id: 'settings-resume-upload' });
+
+    try {
+      let extractedText = '';
+      let base64 = '';
+      try {
+        extractedText = await extractTextFromPDF(file);
+      } catch (err) {
+        console.warn('PDF text extraction fallback:', err);
+      }
+
+      try {
+        base64 = await fileToBase64(file);
+      } catch (err) {
+        console.warn('PDF base64 fallback:', err);
+      }
+
+      const saved = await saveUserResume(auth.currentUser?.uid || 'guest', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type || 'application/pdf',
+        cvText: extractedText,
+        pdfBase64: base64,
+      });
+
+      setStoredResume(saved);
+      toast.success('CV uploaded & scanned! Saved to My Resume.', { id: 'settings-resume-upload' });
+    } catch (err: any) {
+      console.error('Failed to upload CV in Settings:', err);
+      toast.error('Failed to upload CV: ' + (err.message || 'unknown error'), { id: 'settings-resume-upload' });
+    } finally {
+      setIsUploadingResume(false);
+    }
+  };
+
+  const handleDeleteStoredResume = async () => {
+    try {
+      await deleteUserResume(auth.currentUser?.uid || 'guest', storedResume?.id);
+      setStoredResume(null);
+      setShowDeleteResumeConfirm(false);
+      setShowScannedText(false);
+      toast.info('CV removed from your profile');
+    } catch (err) {
+      console.error('Failed to delete CV:', err);
+      toast.error('Failed to delete CV');
+    }
+  };
+
+  const downloadStoredPdf = () => {
+    if (!storedResume?.pdfBase64) {
+      toast.info('PDF binary not cached locally; extracted text is active.');
+      return;
+    }
+    const link = document.createElement('a');
+    link.href = `data:application/pdf;base64,${storedResume.pdfBase64}`;
+    link.download = storedResume.fileName || 'resume.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Downloading CV PDF');
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleSettingsCvUpload(e.dataTransfer.files[0]);
+    }
+  };
 
   const handleDeleteAccount = async () => {
     try {
@@ -154,6 +278,147 @@ export function SettingsPage({ onBack, onClearData, isSyncing, trackingSystem = 
             </div>
           </div>
 
+          {/* MY RESUME SECTION */}
+          <div className="p-6">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-[#121722]">My Resume</h3>
+                  {storedResume && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Active Default CV
+                    </span>
+                  )}
+                </div>
+                <p className="text-[13px] text-[#777c86] mt-1.5 leading-relaxed">
+                  Seekr scans the text from your uploaded document to track your profile and power customized AI evaluations, job-matching scores, and tailored recommendations.
+                </p>
+              </div>
+
+              {storedResume && (
+                <div className="flex items-center gap-2 shrink-0">
+                  <label
+                    htmlFor="settings-cv-replace"
+                    className="inline-flex items-center justify-center rounded-full text-xs font-semibold bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-9 px-4 py-2 cursor-pointer transition-colors"
+                  >
+                    <span>Replace</span>
+                    <input
+                      id="settings-cv-replace"
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      className="hidden"
+                      disabled={isUploadingResume}
+                      onChange={(e) => e.target.files?.[0] && handleSettingsCvUpload(e.target.files[0])}
+                    />
+                  </label>
+                </div>
+              )}
+            </div>
+
+            {/* Resume Display Card or Upload Zone */}
+            {storedResume ? (
+              <div className="bg-[#faf9f7] border border-[#efefef] rounded-2xl p-4 sm:p-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-start gap-3.5 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-white border border-[#efefef] text-[#0068f9] flex items-center justify-center shrink-0 shadow-2xs">
+                      <FileText size={20} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-sm font-bold text-[#121722] truncate max-w-md">
+                          {storedResume.fileName}
+                        </h4>
+                        <span className="text-[11px] font-medium text-[#777c86] bg-white border border-[#efefef] px-2 py-0.5 rounded-md shadow-2xs">
+                          {(storedResume.fileSize / 1024).toFixed(1)} KB
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-[#777c86] mt-1.5 flex-wrap">
+                        <span>Uploaded {new Date(storedResume.uploadedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                    {storedResume.pdfBase64 && (
+                      <button
+                        type="button"
+                        onClick={downloadStoredPdf}
+                        className="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium text-[#121722] bg-white hover:bg-[#f3f4f6] border border-[#efefef] transition-colors shadow-2xs cursor-pointer"
+                        title="Download stored PDF"
+                      >
+                        <span>Download</span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowScannedText(!showScannedText)}
+                      className="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium text-[#0068f9] bg-white hover:bg-[#e8f1ff] border border-[#efefef] transition-colors shadow-2xs cursor-pointer"
+                    >
+                      <span>{showScannedText ? 'Hide' : 'View'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteResumeConfirm(true)}
+                      className="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium text-rose-600 bg-white hover:bg-rose-50 border border-rose-200 transition-colors shadow-2xs cursor-pointer"
+                      title="Delete stored CV"
+                    >
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Expanded Scanned Text Preview */}
+                {showScannedText && (
+                  <div className="mt-4 pt-4 border-t border-[#efefef] animate-in fade-in duration-150">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold text-[#121722]">
+                        Scanned CV Content (Indexed for Evaluation & Match Analysis)
+                      </span>
+                      <span className="text-[11px] text-[#777c86]">
+                        {storedResume.cvText.split(/\s+/).filter(Boolean).length} words • {storedResume.cvText.length} characters
+                      </span>
+                    </div>
+                    <div className="bg-white border border-[#efefef] rounded-xl p-3 max-h-60 overflow-y-auto font-mono text-[11px] text-[#121722] leading-relaxed whitespace-pre-wrap select-text custom-scrollbar">
+                      {storedResume.cvText || '(No text extracted from this document)'}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                className="border-2 border-dashed border-[#efefef] hover:border-[#0068f9] bg-[#faf9f7] rounded-2xl p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center min-h-[160px]"
+              >
+                <input
+                  id="settings-cv-empty-upload"
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  className="hidden"
+                  disabled={isUploadingResume}
+                  onChange={(e) => e.target.files?.[0] && handleSettingsCvUpload(e.target.files[0])}
+                />
+                <label htmlFor="settings-cv-empty-upload" className="cursor-pointer block">
+                  <div className="w-12 h-12 rounded-full bg-white border border-[#efefef] text-[#0068f9] flex items-center justify-center mx-auto mb-2 shadow-2xs">
+                    {isUploadingResume ? (
+                      <RefreshCw size={22} className="animate-spin text-[#0068f9]" />
+                    ) : (
+                      <Upload size={22} />
+                    )}
+                  </div>
+                  <p className="text-sm font-semibold text-[#121722]">
+                    {isUploadingResume ? 'Scanning & processing CV...' : 'Upload your CV (PDF)'}
+                  </p>
+                  <p className="text-xs text-[#777c86] mt-1 max-w-sm mx-auto">
+                    Drag & drop your PDF file here, or click to browse. Max 10MB.
+                  </p>
+                </label>
+              </div>
+            )}
+          </div>
+
           <div className="p-6">
             <h3 className="text-sm font-semibold text-[#121722] mb-1">Interview Preparation Automation</h3>
             <p className="text-[13px] text-[#777c86] mb-4">
@@ -263,6 +528,31 @@ export function SettingsPage({ onBack, onClearData, isSyncing, trackingSystem = 
                <button onClick={() => setShowDeleteAccountConfirm(false)} className="px-4 py-2 rounded-full font-medium text-[13px] text-[#777c86] hover:bg-[#faf9f7] transition-colors cursor-pointer border border-transparent hover:border-[#efefef]">Cancel</button>
                <button onClick={handleDeleteAccount} className="px-4 py-2 rounded-full font-medium text-[13px] bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-colors cursor-pointer shadow-sm">Delete Account</button>
              </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteResumeConfirm && (
+        <div className="fixed top-0 bottom-0 right-0 left-0 md:left-[var(--sidebar-offset,0px)] bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+            <h3 className="text-lg font-bold text-[#121722] mb-2">Delete CV</h3>
+            <p className="text-[13px] text-[#777c86] mb-6">
+              Are you sure you want to remove your stored CV? The AI Evaluator will no longer have your pre-loaded CV until you upload a new one.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setShowDeleteResumeConfirm(false)} 
+                className="px-4 py-2 rounded-full font-medium text-[13px] text-[#777c86] hover:bg-[#faf9f7] transition-colors cursor-pointer border border-transparent hover:border-[#efefef]"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleDeleteStoredResume} 
+                className="px-4 py-2 rounded-full font-semibold text-xs bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-colors cursor-pointer shadow-sm"
+              >
+                Delete CV
+              </button>
+            </div>
           </div>
         </div>
       )}

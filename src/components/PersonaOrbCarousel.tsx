@@ -232,7 +232,7 @@ export function PersonaOrbCarousel({
 
       {/* 2. MAIN CONTAINER */}
       <div 
-        className="relative bg-[#faf9f7] border border-[#efefef] rounded-2xl p-4 sm:p-5 select-none overflow-hidden flex-1 min-h-[280px] flex flex-col justify-between my-auto"
+        className="relative bg-[#faf9f7] border border-[#efefef] rounded-2xl p-4 sm:p-5 select-none overflow-hidden flex-1 min-h-[280px] flex flex-col justify-center items-center my-auto"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -242,13 +242,13 @@ export function PersonaOrbCarousel({
       >
         {isCarouselMode ? (
           /* Mode A: CAROUSEL MODE (5 or more items) */
-          <>
+          <div className="w-full flex flex-col items-center justify-center my-auto">
             {/* Soft edge fade overlays */}
             <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-[#faf9f7] to-transparent z-10 pointer-events-none" />
             <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-[#faf9f7] to-transparent z-10 pointer-events-none" />
 
             {/* ORBS CAROUSEL ROW */}
-            <div className="flex-1 flex items-center justify-center gap-2 sm:gap-4">
+            <div className="w-full flex items-center justify-center gap-2 sm:gap-4">
               {visibleIndices.map(({ offset, role }) => {
                 const isCenter = offset === 0;
                 const isAdjacent1 = Math.abs(offset) === 1;
@@ -304,7 +304,7 @@ export function PersonaOrbCarousel({
             </div>
 
             {/* CENTER TITLE & DESCRIPTION WITH ARROWS */}
-            <div className="mt-1 flex items-center justify-center gap-2 sm:gap-6 text-center max-w-xl mx-auto shrink-0">
+            <div className="mt-8 flex items-center justify-center gap-2 sm:gap-6 text-center max-w-xl mx-auto shrink-0 w-full">
               <button
                 type="button"
                 onClick={handlePrev}
@@ -333,11 +333,11 @@ export function PersonaOrbCarousel({
                 <ChevronRight size={18} />
               </button>
             </div>
-          </>
+          </div>
         ) : (
           /* Mode B: EQUAL SIZE GRID MODE (Less than 5 items) */
-          <>
-            <div className="flex-1 flex items-center justify-center gap-6 sm:gap-10">
+          <div className="w-full flex flex-col items-center justify-center my-auto">
+            <div className="w-full flex items-center justify-center gap-6 sm:gap-10">
               {filteredRoles.map((role) => {
                 const isSelected = role.id === selectedRoleId;
                 return (
@@ -367,7 +367,7 @@ export function PersonaOrbCarousel({
             </div>
 
             {/* SELECTED ROLE DETAILS */}
-            <div className="mt-1 text-center max-w-xl mx-auto shrink-0">
+            <div className="mt-8 text-center max-w-xl mx-auto shrink-0 w-full">
               <h4 className="text-base font-bold text-[#121722]">
                 {currentRole.label}
               </h4>
@@ -375,7 +375,7 @@ export function PersonaOrbCarousel({
                 {currentRole.desc}
               </p>
             </div>
-          </>
+          </div>
         )}
       </div>
 
