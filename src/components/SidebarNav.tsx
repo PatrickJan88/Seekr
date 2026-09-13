@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { auth, logout } from '../lib/firebase';
 import { Kbd } from './ui/kbd';
 import { 
@@ -156,6 +156,30 @@ export function SidebarNav({
   trackingSystem?: 'industry' | 'academic';
   setTrackingSystem?: (sys: 'industry' | 'academic') => void;
 }) {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isDropdownOpen]);
   
   const topGroups: NavGroupData[] = [
     {
@@ -194,23 +218,74 @@ export function SidebarNav({
           <span className="px-2.5 mb-1 text-[11px] font-bold tracking-wider text-[#a5a5a5] uppercase">
             I AM
           </span>
-          <div className="relative group">
-            <div className="flex items-center justify-between px-2.5 py-[7px] text-[#525866] font-normal hover:bg-[#faf9f7] hover:text-[#121722] rounded-lg cursor-pointer transition-colors border border-transparent">
+          <div className="relative" ref={dropdownRef}>
+            <button
+              type="button"
+              id="sidebar-iam-dropdown-btn"
+              onClick={() => setIsDropdownOpen(prev => !prev)}
+              aria-haspopup="listbox"
+              aria-expanded={isDropdownOpen}
+              className={`w-full flex items-center justify-between px-2.5 py-[7px] text-[#525866] font-normal hover:bg-[#faf9f7] hover:text-[#121722] rounded-lg cursor-pointer transition-all border ${
+                isDropdownOpen ? 'bg-[#faf9f7] text-[#121722] border-[#efefef]' : 'border-transparent'
+              }`}
+            >
               <span className="text-[13px] tracking-wide truncate">
                 {trackingSystem === 'academic' ? 'Academic Seekr' : 'Industry Seekr'}
               </span>
-              <ChevronDown size={14} className="text-[#a5a5a5]" />
-            </div>
-            <div className="hidden group-hover:block absolute top-full mt-1 left-2 right-2 bg-white border border-[#efefef] rounded-xl shadow-lg z-50 overflow-hidden p-1">
-              <div onClick={() => { setTrackingSystem?.('industry'); }} className="flex items-center px-3 py-2 text-[13px] text-[#121722] hover:bg-[#faf9f7] cursor-pointer rounded-lg font-medium">
-                Industry Seekr
-                {trackingSystem === 'industry' && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#0068f9]" />}
+              <ChevronDown 
+                size={14} 
+                className={`text-[#a5a5a5] transition-transform duration-200 ${isDropdownOpen ? 'rotate-180 text-[#121722]' : ''}`} 
+              />
+            </button>
+            
+            {isDropdownOpen && (
+              <div 
+                id="sidebar-iam-dropdown-menu"
+                role="listbox"
+                className="absolute top-full mt-1.5 left-0 right-0 bg-white border border-[#efefef] rounded-2xl shadow-xl z-50 overflow-hidden p-1.5 animate-in fade-in zoom-in-95 duration-150"
+              >
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={trackingSystem === 'industry'}
+                  id="select-industry-seekr"
+                  onClick={() => { 
+                    setTrackingSystem?.('industry'); 
+                    setIsDropdownOpen(false); 
+                  }} 
+                  className={`w-full flex items-center justify-between px-3 py-2 text-[13px] rounded-xl font-medium transition-colors cursor-pointer text-left ${
+                    trackingSystem === 'industry'
+                      ? 'text-[#121722] bg-[#faf9f7]'
+                      : 'text-[#525866] hover:bg-[#faf9f7] hover:text-[#121722]'
+                  }`}
+                >
+                  <span>Industry Seekr</span>
+                  {trackingSystem === 'industry' && (
+                    <span className="w-2 h-2 rounded-full bg-[#0068f9] shrink-0 ml-2" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={trackingSystem === 'academic'}
+                  id="select-academic-seekr"
+                  onClick={() => { 
+                    setTrackingSystem?.('academic'); 
+                    setIsDropdownOpen(false); 
+                  }} 
+                  className={`w-full flex items-center justify-between px-3 py-2 text-[13px] rounded-xl font-medium transition-colors cursor-pointer text-left ${
+                    trackingSystem === 'academic'
+                      ? 'text-[#121722] bg-[#faf9f7]'
+                      : 'text-[#525866] hover:bg-[#faf9f7] hover:text-[#121722]'
+                  }`}
+                >
+                  <span>Academic Seekr</span>
+                  {trackingSystem === 'academic' && (
+                    <span className="w-2 h-2 rounded-full bg-[#0068f9] shrink-0 ml-2" />
+                  )}
+                </button>
               </div>
-              <div onClick={() => { setTrackingSystem?.('academic'); }} className="flex items-center px-3 py-2 text-[13px] text-[#121722] hover:bg-[#faf9f7] cursor-pointer rounded-lg font-medium">
-                Academic Seekr
-                {trackingSystem === 'academic' && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#0068f9]" />}
-              </div>
-            </div>
+            )}
           </div>
         </div>
         {topGroups.map((group, idx) => (
