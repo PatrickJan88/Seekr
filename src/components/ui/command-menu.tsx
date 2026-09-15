@@ -146,30 +146,12 @@ const CommandMenuContent = React.forwardRef<
     const [value, setValue] = React.useState("");
     const [selectedIndex, setSelectedIndex] = React.useState(0);
 
-    // Keyboard navigation
-    React.useEffect(() => {
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === "ArrowDown") {
-          e.preventDefault();
-          // Logic will be handled by CommandMenuList
-        } else if (e.key === "ArrowUp") {
-          e.preventDefault();
-          // Logic will be handled by CommandMenuList
-        } else if (e.key === "Enter") {
-          e.preventDefault();
-          // Logic will be handled by CommandMenuItem
-        }
-      };
-
-      document.addEventListener("keydown", handleKeyDown);
-      return () => document.removeEventListener("keydown", handleKeyDown);
-    }, []);
-
     return (
       <CommandMenuPortal>
         <CommandMenuOverlay />
         <DialogPrimitive.Content asChild ref={ref} {...props}>
           <motion.div
+            data-command-menu=""
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
@@ -265,6 +247,14 @@ const CommandMenuList = React.forwardRef<
   // Handle keyboard navigation
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target instanceof HTMLTextAreaElement ||
+        (target instanceof HTMLInputElement && !target.closest("[data-command-menu]"))
+      ) {
+        return;
+      }
+
       const items = document.querySelectorAll("[data-command-item]");
       const maxIndex = items.length - 1;
 
@@ -370,6 +360,14 @@ const CommandMenuItem = React.forwardRef<
 
     React.useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent) => {
+        const target = e.target as HTMLElement | null;
+        if (
+          target instanceof HTMLTextAreaElement ||
+          (target instanceof HTMLInputElement && !target.closest("[data-command-menu]"))
+        ) {
+          return;
+        }
+
         if (e.key === "Enter" && isSelected) {
           e.preventDefault();
           handleSelect();

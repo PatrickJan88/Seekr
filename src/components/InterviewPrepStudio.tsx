@@ -81,6 +81,34 @@ export function InterviewPrepStudio({ initialText, companyName, targetRole, onCl
     printWindow.document.close();
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    e.stopPropagation();
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const textarea = e.currentTarget;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const updatedText = text.substring(0, start) + '\n' + text.substring(end);
+      setText(updatedText);
+
+      requestAnimationFrame(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 1;
+      });
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      const textarea = e.currentTarget;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const updatedText = text.substring(0, start) + '    ' + text.substring(end);
+      setText(updatedText);
+
+      requestAnimationFrame(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 4;
+      });
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-[#121722]/50 backdrop-blur-xs z-[300] flex items-center justify-center p-3 sm:p-6 transition-all duration-300 animate-in fade-in duration-200">
       <div className="bg-[#faf9f7] rounded-2xl w-full max-w-5xl h-[92vh] flex flex-col shadow-2xl overflow-hidden border border-[#efefef]">
@@ -139,8 +167,10 @@ export function InterviewPrepStudio({ initialText, companyName, targetRole, onCl
             </div>
 
             <textarea 
+              id="interview-prep-textarea"
               value={text} 
               onChange={e => setText(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="w-full min-h-[9in] bg-transparent resize-none focus:outline-none font-sans text-[#121722] text-sm leading-relaxed"
               spellCheck="false"
             />
