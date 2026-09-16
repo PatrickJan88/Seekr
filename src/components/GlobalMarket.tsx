@@ -471,7 +471,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
       <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col relative">
       <div className="pb-4 sm:pb-6 border-b border-[#efefef] shrink-0">
         
-        <div className="flex flex-wrap lg:flex-nowrap items-center gap-3 w-full">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 xl:gap-3 w-full min-w-0">
           {/* Matched Up Button - arranged before all locations */}
           <div className="relative shrink-0 w-full sm:w-auto z-50">
             <button
@@ -479,7 +479,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
               id="matched-up-sort-btn"
               onClick={handleToggleMatchedUp}
               disabled={isCalculatingMatches}
-              className={`flex items-center justify-center gap-2 h-11 px-4 sm:px-5 rounded-full text-sm font-medium transition-all shadow-2xs cursor-pointer select-none w-full sm:w-auto ${
+              className={`flex items-center justify-center gap-1.5 sm:gap-2 h-10 sm:h-11 px-3 sm:px-3.5 xl:px-4 rounded-full text-xs sm:text-sm font-medium transition-all shadow-2xs cursor-pointer select-none w-full sm:w-auto shrink-0 ${
                 isMatchedUpActive
                   ? 'bg-[#0068f9] text-white hover:bg-[#024bb1] border border-[#0068f9] shadow-sm'
                   : 'bg-white text-[#121722] border border-[#efefef] hover:bg-[#faf9f7] hover:border-[#0068f9]/40'
@@ -493,13 +493,13 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
               }
             >
               {isCalculatingMatches ? (
-                <Loader2 size={16} className="animate-spin text-current" />
+                <Loader2 size={15} className="animate-spin text-current shrink-0" />
               ) : (
-                <Sparkles size={16} className={isMatchedUpActive ? 'text-amber-300' : 'text-[#0068f9]'} />
+                <Sparkles size={15} className={`shrink-0 ${isMatchedUpActive ? 'text-amber-300' : 'text-[#0068f9]'}`} />
               )}
               <span className="font-semibold whitespace-nowrap">Matched Up</span>
               {isMatchedUpActive && (
-                <span className="ml-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white/25 text-white leading-none">
+                <span className="ml-0.5 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white/25 text-white leading-none">
                   ON
                 </span>
               )}
@@ -565,8 +565,8 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
             )}
           </div>
 
-          {/* All Locations - preserves original width */}
-          <div className="shrink-0 w-full sm:w-auto z-50">
+          {/* All Locations - auto-reduces width to fit */}
+          <div className="min-w-0 flex-1 sm:flex-initial sm:w-auto z-50">
             <NestedLocationMenu
               locationTree={locationTree}
               continentFilter={continentFilter}
@@ -578,8 +578,8 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
             />
           </div>
 
-          {/* All Roles - preserves original width */}
-          <div className="shrink-0 w-full sm:w-auto z-50">
+          {/* All Roles - auto-reduces width to fit */}
+          <div className="min-w-0 flex-1 sm:flex-initial sm:w-auto z-50">
             <NestedRoleMenu
               roleCategories={trackingSystem === 'academic' ? ROLE_CATEGORIES_ACADEMIC : ROLE_CATEGORIES_INDUSTRY}
               typeFilter={typeFilter}
@@ -587,8 +587,8 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
             />
           </div>
 
-          {/* Date Posted - preserves original width */}
-          <div className="shrink-0 w-full sm:w-auto z-50">
+          {/* Date Posted - auto-reduces width to fit */}
+          <div className="min-w-0 flex-1 sm:flex-initial sm:w-auto z-50">
             <DateFilterMenu
               dateFilter={dateFilter}
               onSelectDate={setDateFilter}
@@ -596,21 +596,22 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
           </div>
 
           {/* Expanded Width Search Box & Results Counter */}
-          <div className="relative flex-1 min-w-[180px] flex items-center">
+          <div className="relative flex-1 min-w-[80px] sm:min-w-[100px] max-w-full flex items-center">
             <div className="relative w-full">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a5a5a5]" size={15} />
+              <Search className="absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 text-[#a5a5a5]" size={15} />
               <input
                 type="text"
                 placeholder="Search market"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 h-11 bg-white border border-[#efefef] rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#0068f9] transition-all shadow-2xs hover:bg-[#faf9f7]"
+                className="w-full pl-8 sm:pl-9 pr-3 sm:pr-4 h-10 sm:h-11 bg-white border border-[#efefef] rounded-full text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#0068f9] transition-all shadow-2xs hover:bg-[#faf9f7] truncate"
               />
             </div>
           </div>
 
-          <div className="text-[#777c86] text-xs sm:text-sm whitespace-nowrap font-medium shrink-0">
-            {processedJobs.length > 99 ? '99+ results' : `${processedJobs.length} results`}
+          <div className="text-[#777c86] text-xs sm:text-sm whitespace-nowrap font-medium shrink-0 px-0.5">
+            <span>{processedJobs.length > 99 ? '99+' : processedJobs.length}</span>
+            <span className="hidden min-[480px]:inline"> results</span>
           </div>
         </div>
 

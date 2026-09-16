@@ -1,10 +1,12 @@
 import React from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Clock, Check } from "lucide-react";
+import { cn } from "../lib/utils";
 
 interface DateFilterMenuProps {
   dateFilter: string;
   onSelectDate: (dateValue: string) => void;
+  className?: string;
 }
 
 const DATE_OPTIONS = [
@@ -17,6 +19,7 @@ const DATE_OPTIONS = [
 export function DateFilterMenu({
   dateFilter,
   onSelectDate,
+  className,
 }: DateFilterMenuProps) {
   const getDisplayText = () => {
     if (!dateFilter) return "Date Posted";
@@ -27,10 +30,10 @@ export function DateFilterMenu({
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <button className="flex items-center w-full sm:w-48 h-11 bg-white border border-[#efefef] rounded-full text-sm px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#faf9f7] transition-all cursor-pointer">
-          <Clock className="text-[#a5a5a5] mr-2 shrink-0" size={16} />
+        <button className={cn("flex items-center w-full sm:w-auto min-w-0 sm:min-w-[85px] sm:max-w-[135px] xl:max-w-[165px] h-10 sm:h-11 bg-white border border-[#efefef] rounded-full text-xs sm:text-sm px-2.5 sm:px-3 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#faf9f7] transition-all cursor-pointer", className)}>
+          <Clock className="text-[#a5a5a5] mr-1.5 sm:mr-2 shrink-0" size={15} />
           <span className="text-[#121722] truncate flex-1 text-left">{getDisplayText()}</span>
-          <div className="text-[#a5a5a5] shrink-0 ml-2">
+          <div className="text-[#a5a5a5] shrink-0 ml-1 sm:ml-2">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
           </div>
         </button>
