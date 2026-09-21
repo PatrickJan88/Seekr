@@ -1968,13 +1968,19 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
             }
           }));
         } catch (e) {
-          console.log("Remotive fetch error:");
+          console.warn("[Remotive] Feed temporarily unavailable, continuing.");
         }
       };
 
       const fetchArbeitnow = async () => {
         try {
-          const response = await fetch('https://www.arbeitnow.com/api/job-board-api', { signal: AbortSignal.timeout(5000) });
+          const response = await fetch('https://www.arbeitnow.com/api/job-board-api', {
+            signal: AbortSignal.timeout(8000),
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+              'Accept': 'application/json, text/plain, */*'
+            }
+          });
           if (response.ok) {
             
               const text = await response.text();
@@ -1982,7 +1988,6 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
               try {
                 data = JSON.parse(text);
               } catch (e) {
-                console.log("Invalid JSON response:", text.substring(0, 100));
                 return;
               }
 
@@ -2004,7 +2009,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
             }
           }
         } catch (e) {
-          console.log("Arbeitnow fetch error:");
+          console.warn("[Arbeitnow] Feed temporarily unavailable, continuing.");
         }
       };
 
@@ -2092,27 +2097,31 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
             }
           }));
         } catch (e) {
-          console.log("Jooble fetch error:");
+          console.warn("[Jooble] Feed temporarily unavailable, continuing.");
         }
       };
 
       
       const fetchJobicy = async () => {
         try {
-          // Fetch EMEA jobs
-          const response = await fetch('https://jobicy.com/api/v2/remote-jobs?geo=emea&count=50', { signal: AbortSignal.timeout(5000) });
+          // Fetch EMEA remote jobs with proper headers and generous timeout
+          const response = await fetch('https://jobicy.com/api/v2/remote-jobs?geo=emea&count=50', {
+            signal: AbortSignal.timeout(10000),
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+              'Accept': 'application/json, text/plain, */*'
+            }
+          });
           if (response.ok) {
-            
-              const text = await response.text();
-              let data;
-              try {
-                data = JSON.parse(text);
-              } catch (e) {
-                console.log("Invalid JSON response:", text.substring(0, 100));
-                return;
-              }
+            const text = await response.text();
+            let data: any;
+            try {
+              data = JSON.parse(text);
+            } catch (e) {
+              return;
+            }
 
-            if (data.jobs && Array.isArray(data.jobs)) {
+            if (data && data.jobs && Array.isArray(data.jobs)) {
               allJobs = allJobs.concat(data.jobs.map((job: any) => ({
                 id: `jobicy-${job.id}`,
                 url: job.url,
@@ -2130,7 +2139,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
             }
           }
         } catch (e) {
-          console.log("Jobicy fetch error:");
+          console.warn("[Jobicy] Feed unavailable, continuing gracefully.");
         }
       };
 
@@ -2174,7 +2183,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
             }
           }));
         } catch (e) {
-          console.log("Adzuna fetch error:");
+          console.warn("[Adzuna] Feed temporarily unavailable, continuing.");
         }
       };
 
@@ -2187,7 +2196,8 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
           // Reed requires basic auth with API key as username and empty password
           const authHeader = 'Basic ' + Buffer.from(reedKey + ':').toString('base64');
           
-          const response = await fetch('https://www.reed.co.uk/api/1.0/search?keywords=developer&resultsToTake=50', { signal: AbortSignal.timeout(5000), 
+          const response = await fetch('https://www.reed.co.uk/api/1.0/search?keywords=developer&resultsToTake=50', {
+            signal: AbortSignal.timeout(8000), 
             headers: {
               'Authorization': authHeader
             }
@@ -2200,7 +2210,6 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
               try {
                 data = JSON.parse(text);
               } catch (e) {
-                console.log("Invalid JSON response:", text.substring(0, 100));
                 return;
               }
 
@@ -2222,13 +2231,13 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
             }
           }
         } catch (e) {
-          console.log("Reed fetch error:");
+          console.warn("[Reed] Feed temporarily unavailable, continuing.");
         }
       };
 
       const fetchHackerNews = async () => {
         try {
-          const response = await fetch('https://hacker-news.firebaseio.com/v0/jobstories.json', { signal: AbortSignal.timeout(5000) });
+          const response = await fetch('https://hacker-news.firebaseio.com/v0/jobstories.json', { signal: AbortSignal.timeout(8000) });
           if (response.ok) {
             
             const text = await response.text();
@@ -2269,7 +2278,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
             }
           }
         } catch (e) {
-          console.log("HN fetch error:");
+          console.warn("[HN] Feed temporarily unavailable, continuing.");
         }
       };
 
@@ -2308,7 +2317,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
       marketJobsCache = uniqueJobs;
       marketJobsLastFetch = Date.now();
     } catch (error: any) {
-      console.log("Market Jobs error:");
+      console.warn("[Market Jobs] Refresh completed with fallback cache.");
     } finally {
       isFetchingJobs = false;
     }

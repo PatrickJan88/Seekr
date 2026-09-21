@@ -6,10 +6,11 @@ interface InterviewPrepStudioProps {
   initialText: string;
   companyName?: string;
   targetRole?: string;
-  onClose: () => void;
+  onClose?: () => void;
+  embedded?: boolean;
 }
 
-export function InterviewPrepStudio({ initialText, companyName, targetRole, onClose }: InterviewPrepStudioProps) {
+export function InterviewPrepStudio({ initialText, companyName, targetRole, onClose, embedded = false }: InterviewPrepStudioProps) {
   const [text, setText] = useState(initialText);
   const [copied, setCopied] = useState(false);
 
@@ -109,75 +110,87 @@ export function InterviewPrepStudio({ initialText, companyName, targetRole, onCl
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-[#121722]/50 backdrop-blur-xs z-[300] flex items-center justify-center p-3 sm:p-6 transition-all duration-300 animate-in fade-in duration-200">
-      <div className="bg-[#faf9f7] rounded-2xl w-full max-w-5xl h-[92vh] flex flex-col shadow-2xl overflow-hidden border border-[#efefef]">
-        
-        {/* Header */}
-        <div className="flex flex-wrap items-center justify-between px-6 py-4 bg-white border-b border-[#efefef] shrink-0 gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#f4f0ff] text-[#6736eb] flex items-center justify-center font-bold">
-              <BookOpen size={20} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-bold text-[#121722]">Interview Prep Studio</h2>
-                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#f4f0ff] text-[#6736eb]">
-                  Resume-Grounded
-                </span>
-              </div>
-              <p className="text-xs text-[#777c86]">
-                {companyName ? `Tailored strategy for ${companyName}` : 'Interview strategy & STAR responses'}
-              </p>
-            </div>
+  const studioBody = (
+    <div className={`bg-[#faf9f7] rounded-2xl w-full flex flex-col overflow-hidden border border-[#efefef] ${
+      embedded ? 'h-full min-h-[calc(100vh-140px)] shadow-2xs' : 'max-w-5xl h-[92vh] shadow-2xl'
+    }`}>
+      
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-4 bg-white border-b border-[#efefef] shrink-0 gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#f4f0ff] text-[#6736eb] flex items-center justify-center font-bold">
+            <BookOpen size={20} />
           </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-bold text-[#121722]">Interview Prep Studio</h2>
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#f4f0ff] text-[#6736eb]">
+                Resume-Grounded
+              </span>
+            </div>
+            <p className="text-xs text-[#777c86]">
+              {companyName ? `Tailored strategy for ${companyName}` : 'Interview strategy & STAR responses'}
+            </p>
+          </div>
+        </div>
 
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={handleCopy}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-xs font-semibold rounded-full transition-all shadow-2xs cursor-pointer"
-            >
-              {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
-              <span>{copied ? 'Copied' : 'Copy'}</span>
-            </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={handleCopy}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-xs font-semibold rounded-full transition-all shadow-2xs cursor-pointer"
+          >
+            {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+            <span>{copied ? 'Copied' : 'Copy'}</span>
+          </button>
 
-            <button 
-              onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0068f9] text-white text-xs font-semibold rounded-full hover:bg-[#024bb1] transition-all shadow-2xs cursor-pointer"
-            >
-              <Printer size={15} />
-              <span>Export PDF</span>
-            </button>
+          <button 
+            onClick={handlePrint}
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0068f9] text-white text-xs font-semibold rounded-full hover:bg-[#024bb1] transition-all shadow-2xs cursor-pointer"
+          >
+            <Printer size={15} />
+            <span>Export PDF</span>
+          </button>
 
+          {!embedded && onClose && (
             <button 
               onClick={onClose}
               className="p-2 text-[#a5a5a5] hover:text-[#121722] hover:bg-[#efefef] rounded-full transition-colors cursor-pointer"
             >
               <X size={20} />
             </button>
-          </div>
+          )}
         </div>
-
-        {/* Editor Area */}
-        <div className="flex-1 p-4 sm:p-8 overflow-y-auto flex justify-center bg-[#f4f5f6] custom-scrollbar">
-          <div className="w-full max-w-3xl bg-white shadow-md border border-[#e2e8f0] p-8 sm:p-12 min-h-[10.5in] relative rounded-sm">
-            <div className="absolute top-4 right-4 text-[#a5a5a5] pointer-events-none flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-200/60">
-              <Edit2 size={12} />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Live Document</span>
-            </div>
-
-            <textarea 
-              id="interview-prep-textarea"
-              value={text} 
-              onChange={e => setText(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="w-full min-h-[9in] bg-transparent resize-none focus:outline-none font-sans text-[#121722] text-sm leading-relaxed"
-              spellCheck="false"
-            />
-          </div>
-        </div>
-
       </div>
+
+      {/* Editor Area */}
+      <div className="flex-1 p-4 sm:p-8 overflow-y-auto flex justify-center bg-[#f4f5f6] custom-scrollbar">
+        <div className="w-full max-w-3xl bg-white shadow-md border border-[#e2e8f0] p-6 sm:p-12 min-h-[10.5in] relative rounded-sm">
+          <div className="absolute top-4 right-4 text-[#a5a5a5] pointer-events-none flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-200/60">
+            <Edit2 size={12} />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Live Document</span>
+          </div>
+
+          <textarea 
+            id="interview-prep-textarea"
+            value={text} 
+            onChange={e => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="w-full min-h-[9in] bg-transparent resize-none focus:outline-none font-sans text-[#121722] text-sm leading-relaxed"
+            spellCheck="false"
+          />
+        </div>
+      </div>
+
+    </div>
+  );
+
+  if (embedded) {
+    return studioBody;
+  }
+
+  return (
+    <div className="fixed inset-0 bg-[#121722]/50 backdrop-blur-xs z-[300] flex items-center justify-center p-3 sm:p-6 transition-all duration-300 animate-in fade-in duration-200">
+      {studioBody}
     </div>
   );
 }

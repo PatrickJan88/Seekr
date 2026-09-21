@@ -25,6 +25,10 @@ import { SettingsPage } from './SettingsPage';
 import { CVMatchAssessment } from './CVMatchAssessment';
 import { EvaluateHistoryPage } from './EvaluateHistoryPage';
 import { CompanyIntelligenceStudio } from './CompanyIntelligenceStudio';
+import { CoverLetterStudio } from './CoverLetterStudio';
+import { InterviewPrepStudio } from './InterviewPrepStudio';
+import { ResumeTemplateStudio } from './ResumeTemplateStudio';
+import { TailoredResumeData } from '../types';
 import { SidebarNav } from './SidebarNav';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Sparkles } from 'lucide-react';
@@ -32,6 +36,119 @@ import { Sparkles } from 'lucide-react';
 interface DashboardProps {
   isDemo?: boolean;
 }
+
+// Mimic placeholder content for quick manual editing in studios
+const MIMIC_COVER_LETTER = `[Your Full Name]
+[Email Address] | [Phone Number] | [City, State / Remote]
+[LinkedIn / Portfolio URL]
+
+[Date]
+
+Hiring Team
+[Target Company Name]
+
+Dear Hiring Manager,
+
+I am writing to express my strong enthusiasm for the [Target Role / Position] role at [Target Company Name]. With a solid background in [Core Specialization / Industry] and a demonstrated track record of [Key Achievement or Responsibility], I am excited about the opportunity to contribute directly to your team.
+
+In my recent experience as [Recent Role / Title] at [Previous Organization], I spearheaded initiatives that [Specific Project Highlight, e.g., improved system reliability by 35% / streamlined delivery workflows]. My technical and operational approach centers on [Key Skill 1], [Key Skill 2], and cross-functional collaboration to deliver dependable, high-quality outcomes under ambitious schedules.
+
+What draws me specifically to [Target Company Name] is your commitment to [Company Mission / Product Innovation / Engineering Quality]. I am eager to leverage my expertise in [Core Technical or Domain Skills] to support your upcoming milestones and contribute to your team culture.
+
+Thank you for your time and consideration. I welcome the opportunity to discuss how my experience and skill set align with your team's objectives.
+
+Sincerely,
+
+[Your Full Name]`;
+
+const MIMIC_INTERVIEW_PREP = `1. EXECUTIVE POSITIONING & CORE STRATEGY
+
+- Target Position: [Target Position]
+- Target Company: [Target Company]
+- Key Value Proposition: [Summarize your top 2-3 technical/domain strengths and what specific impact you bring to this team]
+- Architectural / Domain Focus: [Key frameworks, system design concepts, or operational areas relevant to the role]
+
+2. MITIGATING WEAKNESSES & PIVOT STRATEGY
+
+- Identified Gap: [e.g., Specific tooling, cloud provider, or new framework transition]
+- Pivot Strategy: [Acknowledge current familiarity, highlight adjacent mastery, and demonstrate rapid learning ramp-up with a concrete past example]
+
+3. STAR FRAMEWORK INTERVIEW RESPONSES
+
+Question 1: Walk me through a challenging problem or technical bottleneck you resolved.
+- Situation: [Describe the challenge, context, and existing constraints]
+- Task: [What was your specific responsibility or goal?]
+- Action: [Detail the exact steps and decisions you made to solve the issue]
+- Result: [Quantifiable business impact, performance gain, or outcome achieved]
+
+Question 2: Tell me about a time you handled conflicting priorities or tight delivery deadlines.
+- Situation: [Describe the competing demands, stakeholder context, and timeline]
+- Task: [What trade-offs needed to be evaluated and aligned?]
+- Action: [How you communicated with stakeholders, prioritized MVP requirements, and mitigated risk]
+- Result: [Successful delivery on schedule with team alignment and zero production regressions]
+
+4. TACTICAL QUESTIONS TO ASK THE INTERVIEWER
+
+- What are the highest priority technical initiatives and challenges the team plans to tackle over the next two quarters?
+- How does the team evaluate success for this role during the first 90 days?
+- What does the team culture look like regarding autonomy, code review, and technical decision-making?`;
+
+const MIMIC_RESUME_DATA: TailoredResumeData = {
+  fullName: 'Your Full Name',
+  title: 'Target Professional Role',
+  contact: {
+    email: 'your.email@example.com',
+    phone: '+1 (555) 012-3456',
+    location: 'City, State / Remote',
+    linkedin: 'linkedin.com/in/yourprofile',
+    github: 'github.com/yourusername',
+    website: 'yourportfolio.dev'
+  },
+  summary: 'Results-driven professional with demonstrated expertise in [Core Domain / Specialization]. Proven track record of architecting scalable solutions, optimizing performance, and collaborating cross-functionally to achieve measurable organizational goals.',
+  skills: {
+    technical: ['Primary Skill 1', 'Primary Skill 2', 'Modern Frameworks', 'System Architecture', 'Database Design'],
+    tools: ['Git', 'Docker', 'CI/CD Pipelines', 'Testing Suites', 'Cloud Infrastructure'],
+    domain: ['Problem Solving', 'Performance Optimization', 'Agile Delivery', 'Code Review & Mentorship']
+  },
+  experience: [
+    {
+      role: 'Senior / Lead Role Title',
+      company: 'Current or Recent Organization',
+      location: 'City, State',
+      period: '2022 - Present',
+      bullets: [
+        'Spearheaded key initiatives that increased operational efficiency and performance by 30%.',
+        'Architected and implemented modular, reusable components adopted across cross-functional teams.',
+        'Mentored team members and established standardized documentation and automated testing protocols.'
+      ]
+    },
+    {
+      role: 'Professional / Engineer Title',
+      company: 'Previous Organization',
+      location: 'City, State',
+      period: '2020 - 2022',
+      bullets: [
+        'Delivered scalable, high-impact features on schedule adhering to strict quality and accessibility guidelines.',
+        'Collaborated with product managers and designers to refine user stories and technical specifications.'
+      ]
+    }
+  ],
+  education: [
+    {
+      degree: 'B.S. in Your Field of Study',
+      institution: 'University Name',
+      year: '2020',
+      details: 'Academic Honors'
+    }
+  ],
+  projects: [
+    {
+      name: 'Key Project or Initiative',
+      description: 'Designed and deployed an end-to-end solution solving critical user challenges with measurable performance improvements.',
+      link: 'github.com/yourusername/project'
+    }
+  ]
+};
 
 // Keep track of which apps have already triggered an auto-ghosting notification in this session
 const recentlyGhostedIds = new Set<string>();
@@ -43,7 +160,20 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   const syncLockRef = useRef(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [view, setView] = useState<'sankey' | 'kanban' | 'analytics' | 'cv-match' | 'notifications' | 'settings' | 'eval-history' | 'global-market' | 'company-intel'>('sankey');
+  const [view, setView] = useState<
+    | 'sankey'
+    | 'kanban'
+    | 'analytics'
+    | 'cv-match'
+    | 'notifications'
+    | 'settings'
+    | 'eval-history'
+    | 'global-market'
+    | 'company-intel'
+    | 'studio-cover-letter'
+    | 'studio-interview-prep'
+    | 'studio-resume'
+  >('sankey');
   const [trackingSystem, setTrackingSystem] = useState<'industry' | 'academic'>('industry');
   const [companyIntelTarget, setCompanyIntelTarget] = useState<{ companyName?: string; websiteUrl?: string }>({});
 
@@ -628,7 +758,10 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     'company-intel': 'Company 360',
     'settings': 'Settings',
     'notifications': 'Notifications',
-    'eval-history': 'Evaluation History'
+    'eval-history': 'Evaluation History',
+    'studio-cover-letter': 'Cover Letter Studio',
+    'studio-interview-prep': 'Interview Prep Studio',
+    'studio-resume': 'Resume Studio'
   };
   const displayTitle = viewTitles[view] || view.replace('-', ' ');
   return (
@@ -645,6 +778,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
            onImport={() => isDemo ? toast.info('Demo Mode: Importing data is disabled in this portfolio preview.') : setShowImportModal(true)}
            onExport={() => exportCsv(applications)}
            onNew={() => { setEditingApp(null); setIsFormOpen(true); }}
+           onOpenStudio={(studio) => setView(`studio-${studio}` as any)}
         />
       </div>
 
@@ -684,7 +818,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
          </header>
 
          {/* Content Scrollable Area */}
-         <main className="flex-1 overflow-y-auto bg-[#faf9f7] p-6 md:p-8 w-full flex flex-col custom-scrollbar relative">
+         <main className="flex-1 overflow-y-auto bg-[#faf9f7] p-4 sm:p-6 md:p-8 w-full flex flex-col custom-scrollbar relative">
             {view === 'sankey' && <SankeyChart applications={filteredApplications} onAdd={() => { setEditingApp(null); setIsFormOpen(true); }} trackingSystem={trackingSystem} />}
             {view === 'global-market' && <GlobalMarket isDemo={isDemo} onAddToWishlist={handleSave} trackingSystem={trackingSystem} />}
             {view === 'kanban' && <Kanban applications={filteredApplications} onEdit={(app) => { setEditingApp(app); setIsFormOpen(true); }} onStatusChange={handleStatusChange as any} onDelete={handleDelete} locationFilter={locationFilter} onLocationSelect={handleLocationSelect} trackingSystem={trackingSystem} />}
@@ -710,6 +844,43 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
             {view === 'notifications' && <NotificationsPage onBack={() => setView('sankey')} />}
             {view === 'settings' && <SettingsPage onBack={() => setView('sankey')} onClearData={handleClearData} isSyncing={isSyncing} trackingSystem={trackingSystem} setTrackingSystem={setTrackingSystem} />}
             {view === 'eval-history' && <EvaluateHistoryPage onBack={() => setView('cv-match')} applications={filteredApplications} onAddToWishlist={handleSave} />}
+
+            {/* Embedded Application Studios */}
+            {view === 'studio-cover-letter' && (
+              <div className="w-full h-full flex-1 flex flex-col min-h-[calc(100vh-140px)] animate-in fade-in duration-200">
+                <CoverLetterStudio
+                  embedded={true}
+                  initialText={MIMIC_COVER_LETTER}
+                  companyName="Target Company"
+                  targetRole="Target Position"
+                  onClose={() => setView('sankey')}
+                />
+              </div>
+            )}
+
+            {view === 'studio-interview-prep' && (
+              <div className="w-full h-full flex-1 flex flex-col min-h-[calc(100vh-140px)] animate-in fade-in duration-200">
+                <InterviewPrepStudio
+                  embedded={true}
+                  initialText={MIMIC_INTERVIEW_PREP}
+                  companyName="Target Company"
+                  targetRole="Target Position"
+                  onClose={() => setView('sankey')}
+                />
+              </div>
+            )}
+
+            {view === 'studio-resume' && (
+              <div className="w-full h-full flex-1 flex flex-col min-h-[calc(100vh-140px)] animate-in fade-in duration-200">
+                <ResumeTemplateStudio
+                  embedded={true}
+                  initialData={MIMIC_RESUME_DATA}
+                  companyName="Target Company"
+                  targetRole="Target Position"
+                  onClose={() => setView('sankey')}
+                />
+              </div>
+            )}
          </main>
       </div>
       

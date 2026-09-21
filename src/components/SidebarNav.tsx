@@ -17,7 +17,11 @@ import {
   Upload,
   LogOut,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Layers,
+  FileText,
+  BookOpen,
+  Layout
 } from 'lucide-react';
 
 export type NavItemData = {
@@ -48,7 +52,14 @@ const NavItem: React.FC<{
 }) => {
   const isActive = activeId === item.id;
   const hasChildren = !!item.children;
-  const [isOpen, setIsOpen] = useState(false);
+  const isChildActive = item.children?.some(c => c.id === activeId);
+  const [isOpen, setIsOpen] = useState(true);
+
+  useEffect(() => {
+    if (isChildActive || activeId === item.id) {
+      setIsOpen(true);
+    }
+  }, [isChildActive, activeId, item.id]);
 
   const handleClick = () => {
     if (item.onClick) {
@@ -56,7 +67,7 @@ const NavItem: React.FC<{
       return;
     }
     if (hasChildren) {
-      setIsOpen(!isOpen);
+      setIsOpen(prev => !prev);
     } else {
       onSelect(item.id);
     }
@@ -98,9 +109,9 @@ const NavItem: React.FC<{
             </span>
           )}
           {hasChildren && (
-            <ChevronRight 
-              className={`w-3.5 h-3.5 text-[#a5a5a5] transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} 
-              strokeWidth={2}
+            <ChevronDown 
+              size={14}
+              className={`text-[#a5a5a5] transition-transform duration-200 ${!isOpen ? 'rotate-180 text-[#121722]' : ''}`} 
             />
           )}
         </div>
@@ -143,7 +154,8 @@ export function SidebarNav({
   onImport,
   onExport,
   onNew,
-  applicationCount
+  applicationCount,
+  onOpenStudio
 }: { 
   className?: string;
   activeId: string;
@@ -155,6 +167,7 @@ export function SidebarNav({
   applicationCount?: number;
   trackingSystem?: 'industry' | 'academic';
   setTrackingSystem?: (sys: 'industry' | 'academic') => void;
+  onOpenStudio?: (studio: 'cover-letter' | 'interview-prep' | 'resume') => void;
 }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -196,6 +209,16 @@ export function SidebarNav({
       heading: 'WORKSPACE',
       items: [
         { id: 'new-app', title: 'New Application', icon: Plus, onClick: onNew, shortcut: 'N' },
+        { 
+          id: 'application-studio', 
+          title: 'Application Studio', 
+          icon: Layers,
+          children: [
+            { id: 'studio-cover-letter', title: 'Cover Letter Studio', icon: FileText },
+            { id: 'studio-interview-prep', title: 'Interview Prep Studio', icon: BookOpen },
+            { id: 'studio-resume', title: 'Resume Studio', icon: Layout },
+          ]
+        },
         { id: 'import', title: 'Import Applications', icon: Upload, onClick: onImport },
         { id: 'export', title: 'Export Applications', icon: Download, onClick: onExport },
       ]

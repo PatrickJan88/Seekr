@@ -23,9 +23,46 @@ interface JobFormProps {
   isDemo?: boolean;
 }
 
+const isDateInPast = (dateStr?: string): boolean => {
+  if (!dateStr) return false;
+  const time = new Date(dateStr).getTime();
+  return !isNaN(time) && time < Date.now();
+};
+
+const getInitialFormData = (
+  initialData?: JobApplication,
+  trackingSystem: 'industry' | 'academic' = 'industry'
+): Partial<JobApplication> => {
+  if (!initialData) {
+    return {
+      status: 'Applied',
+      company: '',
+      position: '',
+      appliedDate: new Date().toISOString().split('T')[0],
+      trackingSystem,
+    };
+  }
+
+  // When re-opening the popup, if the previously set Next Interview time has already passed,
+  // clear the Next Interview value (and any associated reminder) so the user can set a new time.
+  const isPast = isDateInPast(initialData.nextInterviewDate);
+
+  if (isPast) {
+    return {
+      ...initialData,
+      nextInterviewDate: '',
+      reminder: 'none',
+      customReminderDate: '',
+      customReminderEndDate: '',
+    };
+  }
+
+  return { ...initialData };
+};
+
 export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = false, trackingSystem = 'industry' }: JobFormProps) {
-  const [formData, setFormData] = useState<Partial<JobApplication>>(
-    initialData || { status: 'Applied', company: '', position: '', appliedDate: new Date().toISOString().split('T')[0], trackingSystem }
+  const [formData, setFormData] = useState<Partial<JobApplication>>(() =>
+    getInitialFormData(initialData, trackingSystem)
   );
   const [links, setLinks] = useState<ApplicationLink[]>(() => {
     if (initialData?.links && Array.isArray(initialData.links) && initialData.links.length > 0) {
@@ -61,10 +98,13 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
   };
 
   useEffect(() => {
+    setFormData(getInitialFormData(initialData, trackingSystem));
     if (initialData?.location) {
       syncLocationState(initialData.location);
+    } else {
+      syncLocationState('');
     }
-  }, [initialData?.id, initialData?.location]);
+  }, [initialData?.id]);
 
   const currentCountryGroup = React.useMemo(() => {
     return LOCATION_DATA.find(g => g.country === selectedCountry);
@@ -480,8 +520,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
   // syncCalendar removed
 
   const isPastInterview = React.useMemo(() => {
-    if (!formData.nextInterviewDate) return false;
-    return new Date(formData.nextInterviewDate).getTime() < Date.now();
+    return isDateInPast(formData.nextInterviewDate);
   }, [formData.nextInterviewDate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {

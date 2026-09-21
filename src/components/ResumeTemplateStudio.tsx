@@ -54,7 +54,8 @@ interface ResumeTemplateStudioProps {
   initialData: TailoredResumeData;
   targetRole?: string;
   companyName?: string;
-  onClose: () => void;
+  onClose?: () => void;
+  embedded?: boolean;
 }
 
 function normalizeResumeData(data: Partial<TailoredResumeData> | null | undefined, fallbackRole?: string, fallbackCompany?: string): TailoredResumeData {
@@ -114,7 +115,8 @@ export function ResumeTemplateStudio({
   initialData,
   targetRole,
   companyName,
-  onClose
+  onClose,
+  embedded = false
 }: ResumeTemplateStudioProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<ResumeTemplateId>('modern-single');
   const [resumeData, setResumeData] = useState<TailoredResumeData>(() => normalizeResumeData(initialData, targetRole, companyName));
@@ -772,72 +774,75 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
     printWindow.document.close();
   };
 
-  return (
-    <div className="fixed inset-0 bg-[#121722]/50 backdrop-blur-xs z-[300] flex items-center justify-center p-3 sm:p-6 transition-all duration-300 animate-in fade-in duration-200">
-      <div className="bg-[#faf9f7] rounded-2xl w-full max-w-6xl h-[92vh] flex flex-col shadow-2xl overflow-hidden border border-[#efefef]">
-        
-        {/* Top Header */}
-        <div className="flex flex-wrap items-center justify-between px-6 py-4 bg-white border-b border-[#efefef] shrink-0 gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#e8f1ff] text-[#0068f9] flex items-center justify-center font-bold">
-              <FileText size={20} />
+  const studioBody = (
+    <div className={`bg-[#faf9f7] rounded-2xl w-full flex flex-col overflow-hidden border border-[#efefef] ${
+      embedded ? 'h-full min-h-[calc(100vh-140px)] shadow-2xs' : 'max-w-6xl h-[92vh] shadow-2xl'
+    }`}>
+      
+      {/* Top Header */}
+      <div className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-4 bg-white border-b border-[#efefef] shrink-0 gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#e8f1ff] text-[#0068f9] flex items-center justify-center font-bold">
+            <FileText size={20} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold text-[#121722]">Resume Builder & PDF Export</h2>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#e8f1ff] text-[#0068f9] border border-[#0068f9]/20">
+                4 ATS Templates
+              </span>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-[#121722]">Resume Builder & PDF Export</h2>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#e8f1ff] text-[#0068f9] border border-[#0068f9]/20">
-                  4 ATS Templates
-                </span>
-              </div>
-              <p className="text-xs text-[#777c86]">
-                Tailored for {targetRole || 'Target Role'} {companyName ? `at ${companyName}` : ''}
-              </p>
-            </div>
+            <p className="text-xs text-[#777c86]">
+              Tailored for {targetRole || 'Target Role'} {companyName ? `at ${companyName}` : ''}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* View Switcher Tabs */}
+          <div className="flex items-center gap-1 bg-[#faf9f7] p-1 border border-[#efefef] rounded-full text-xs font-medium mr-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab('preview')}
+              className={`px-3 py-1 rounded-full transition-all cursor-pointer ${activeTab === 'preview' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86]'}`}
+            >
+              Live Preview
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('edit')}
+              className={`px-3 py-1 rounded-full transition-all cursor-pointer ${activeTab === 'edit' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86]'}`}
+            >
+              Edit Content
+            </button>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* View Switcher Tabs */}
-            <div className="flex items-center gap-1 bg-[#faf9f7] p-1 border border-[#efefef] rounded-full text-xs font-medium mr-2">
-              <button
-                type="button"
-                onClick={() => setActiveTab('preview')}
-                className={`px-3 py-1 rounded-full transition-all cursor-pointer ${activeTab === 'preview' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86]'}`}
-              >
-                Live Preview
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('edit')}
-                className={`px-3 py-1 rounded-full transition-all cursor-pointer ${activeTab === 'edit' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86]'}`}
-              >
-                Edit Content
-              </button>
-            </div>
+          <button
+            onClick={handleCopyText}
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-xs font-semibold rounded-full transition-all shadow-2xs cursor-pointer"
+          >
+            {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+            <span>{copied ? 'Copied' : 'Copy Text'}</span>
+          </button>
 
-            <button
-              onClick={handleCopyText}
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-xs font-semibold rounded-full transition-all shadow-2xs cursor-pointer"
-            >
-              {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
-              <span>{copied ? 'Copied' : 'Copy Text'}</span>
-            </button>
+          <button
+            onClick={() => handlePrint()}
+            className="inline-flex items-center gap-2 px-5 py-2 bg-[#0068f9] text-white text-xs font-semibold rounded-full hover:bg-[#024bb1] transition-all shadow-2xs cursor-pointer"
+          >
+            <Printer size={15} />
+            <span>Export PDF</span>
+          </button>
 
-            <button
-              onClick={() => handlePrint()}
-              className="inline-flex items-center gap-2 px-5 py-2 bg-[#0068f9] text-white text-xs font-semibold rounded-full hover:bg-[#024bb1] transition-all shadow-2xs cursor-pointer"
-            >
-              <Printer size={15} />
-              <span>Export PDF</span>
-            </button>
-
+          {!embedded && onClose && (
             <button
               onClick={onClose}
               className="p-2 text-[#a5a5a5] hover:text-[#121722] hover:bg-[#efefef] rounded-full transition-colors cursor-pointer"
             >
               <X size={20} />
             </button>
-          </div>
+          )}
         </div>
+      </div>
 
         {/* Content Body */}
         <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
@@ -1455,8 +1460,16 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
           )}
 
         </div>
-
       </div>
+  );
+
+  if (embedded) {
+    return studioBody;
+  }
+
+  return (
+    <div className="fixed inset-0 bg-[#121722]/50 backdrop-blur-xs z-[300] flex items-center justify-center p-3 sm:p-6 transition-all duration-300 animate-in fade-in duration-200">
+      {studioBody}
     </div>
   );
 }
