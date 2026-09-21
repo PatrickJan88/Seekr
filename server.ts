@@ -966,6 +966,11 @@ const app = express();
 
   app.use(express.json({ limit: "50mb" }));
 
+  // Health check endpoint
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok" });
+  });
+
   app.post("/api/extract-text", async (req, res) => {
     try {
       const { text } = req.body;
