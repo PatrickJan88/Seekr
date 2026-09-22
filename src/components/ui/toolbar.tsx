@@ -7,6 +7,7 @@ import {
   Link,
   Heading,
   Quote,
+  List,
   Highlighter,
   AlignLeft,
   AlignCenter,
@@ -137,6 +138,32 @@ const Toolbar = ({
     const rawText = sel ? sel.toString() : "";
     const selectedText = rawText.trim();
 
+    // Check if cursor or selection is currently inside an existing anchor
+    let existingAnchor: HTMLAnchorElement | null = null;
+    let existingHref = "";
+    if (sel && sel.rangeCount > 0) {
+      let node: Node | null = sel.anchorNode;
+      while (node) {
+        if (node.nodeName === "A") {
+          existingAnchor = node as HTMLAnchorElement;
+          existingHref =
+            (node as HTMLAnchorElement).getAttribute("href") ||
+            (node as HTMLAnchorElement).href ||
+            "";
+          break;
+        }
+        node = node.parentNode;
+      }
+    }
+
+    // If text already has link effect / cursor is inside a link, clicking link button toggles it off and removes the link effect!
+    if (activeButtons.includes("link") || existingAnchor || existingHref) {
+      toggleActiveButton("unlink");
+      setShowLinkPopover(false);
+      setLinkInputUrl("");
+      return;
+    }
+
     // 1. If user selected text formatted like a link (e.g., https://pofeiportfolio.vercel.app/ or pofeiportfolio.vercel.app)
     if (isUrlLike(selectedText)) {
       const cleanUrl = normalizeUrl(selectedText);
@@ -150,23 +177,7 @@ const Toolbar = ({
       setSavedRange(sel.getRangeAt(0).cloneRange());
     }
 
-    // Check if cursor is currently inside an existing anchor
-    let existingHref = "";
-    if (sel && sel.rangeCount > 0) {
-      let node: Node | null = sel.anchorNode;
-      while (node) {
-        if (node.nodeName === "A") {
-          existingHref =
-            (node as HTMLAnchorElement).getAttribute("href") ||
-            (node as HTMLAnchorElement).href ||
-            "";
-          break;
-        }
-        node = node.parentNode;
-      }
-    }
-
-    setLinkInputUrl(existingHref || (selectedText ? "" : "https://"));
+    setLinkInputUrl(selectedText ? "" : "https://");
     setShowLinkPopover((prev) => !prev);
     setTimeout(() => linkInputRef.current?.focus(), 60);
   };
@@ -352,6 +363,15 @@ const Toolbar = ({
             icon={Quote}
             isActive={activeButtons.includes("quote")}
             onClick={() => toggleActiveButton("quote")}
+            tooltip={tooltip}
+            showTooltip={showTooltip}
+            hideTooltip={hideTooltip}
+          />
+          <ToolbarButton
+            label="Bullet List"
+            icon={List}
+            isActive={activeButtons.includes("bullet") || activeButtons.includes("list")}
+            onClick={() => toggleActiveButton("bullet")}
             tooltip={tooltip}
             showTooltip={showTooltip}
             hideTooltip={hideTooltip}

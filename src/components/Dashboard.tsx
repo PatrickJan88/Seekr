@@ -450,14 +450,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
 
   const handleStatusChange = async (appId: string, newStatus: string) => {
     if (isDemo) {
-      const updated = applications.map(a => a.id === appId ? { ...a, status: newStatus as any } : a);
-      setApplications(updated);
-      try {
-        localStorage.setItem('seekr_demo_applications', JSON.stringify(updated));
-      } catch (e) {
-        console.error('Error saving demo state', e);
-      }
-      toast.success('Status updated (Demo Mode)');
+      toast.info('Demo Mode: Updating application status is restricted in this view-only portfolio preview.');
       return;
     }
 
@@ -552,9 +545,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
 
   const handleClearData = async () => {
     if (isDemo) {
-      localStorage.removeItem('seekr_demo_applications');
-      setApplications(DEMO_APPLICATIONS);
-      toast.success('Demo sample data reset to initial 12 European applications!');
+      toast.info('Demo Mode: Clearing data is restricted in this view-only portfolio preview.');
       return;
     }
     setShowClearConfirm(true);
@@ -562,10 +553,8 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
 
   const confirmClearData = async () => {
     if (isDemo) {
-      localStorage.removeItem('seekr_demo_applications');
-      setApplications(DEMO_APPLICATIONS);
+      toast.info('Demo Mode: Clearing data is restricted in this view-only portfolio preview.');
       setShowClearConfirm(false);
-      toast.success('Demo sample data reset to initial 12 European applications!');
       return;
     }
 
@@ -754,9 +743,22 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
            activeId={view}
            onSelect={(id) => setView(id as any)}
            isDemo={isDemo}
-           onImport={() => isDemo ? toast.info('Demo Mode: Importing data is disabled in this portfolio preview.') : setShowImportModal(true)}
-           onExport={() => exportCsv(applications)}
-           onNew={() => { setEditingApp(null); setIsFormOpen(true); }}
+           onImport={() => isDemo ? toast.info('Demo Mode: Importing data is disabled in this view-only portfolio preview.') : setShowImportModal(true)}
+           onExport={() => {
+             if (isDemo) {
+               toast.info('Demo Mode: Exporting data is restricted in this view-only portfolio preview.');
+               return;
+             }
+             exportCsv(applications);
+           }}
+           onNew={() => {
+             if (isDemo) {
+               toast.info('Demo Mode: Creating new applications is restricted in this view-only portfolio preview.');
+               return;
+             }
+             setEditingApp(null);
+             setIsFormOpen(true);
+           }}
            onOpenStudio={(studio) => setView(`studio-${studio}` as any)}
         />
       </div>
@@ -798,11 +800,25 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
 
          {/* Content Scrollable Area */}
          <main className="flex-1 overflow-y-auto bg-[#faf9f7] p-4 sm:p-6 md:p-8 w-full flex flex-col custom-scrollbar relative">
-            {view === 'sankey' && <SankeyChart applications={filteredApplications} onAdd={() => { setEditingApp(null); setIsFormOpen(true); }} trackingSystem={trackingSystem} />}
+            {view === 'sankey' && (
+              <SankeyChart 
+                applications={filteredApplications} 
+                isDemo={isDemo}
+                onAdd={() => { 
+                  if (isDemo) {
+                    toast.info('Demo Mode: Creating new applications is restricted in this view-only portfolio preview.');
+                    return;
+                  }
+                  setEditingApp(null); 
+                  setIsFormOpen(true); 
+                }} 
+                trackingSystem={trackingSystem} 
+              />
+            )}
             {view === 'global-market' && <GlobalMarket isDemo={isDemo} onAddToWishlist={handleSave} trackingSystem={trackingSystem} />}
             {view === 'kanban' && <Kanban applications={filteredApplications} onEdit={(app) => { setEditingApp(app); setIsFormOpen(true); }} onStatusChange={handleStatusChange as any} onDelete={handleDelete} locationFilter={locationFilter} onLocationSelect={handleLocationSelect} trackingSystem={trackingSystem} />}
             {view === 'analytics' && <Analytics applications={filteredApplications} onLocationSelect={handleLocationSelect} trackingSystem={trackingSystem} />}
-            {view === 'cv-match' && <CVMatchAssessment applications={filteredApplications} trackingSystem={trackingSystem} onAddToWishlist={handleSave} onViewHistory={() => setView('eval-history')} setNestedBreadcrumb={setNestedBreadcrumb} />}
+            {view === 'cv-match' && <CVMatchAssessment applications={filteredApplications} isDemo={isDemo} trackingSystem={trackingSystem} onAddToWishlist={handleSave} onViewHistory={() => setView('eval-history')} setNestedBreadcrumb={setNestedBreadcrumb} />}
             {view === 'company-intel' && (
               <CompanyIntelligenceStudio 
                 applications={filteredApplications} 
@@ -821,8 +837,8 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
               />
             )}
             {view === 'notifications' && <NotificationsPage onBack={() => setView('sankey')} />}
-            {view === 'settings' && <SettingsPage onBack={() => setView('sankey')} onClearData={handleClearData} isSyncing={isSyncing} trackingSystem={trackingSystem} setTrackingSystem={setTrackingSystem} />}
-            {view === 'eval-history' && <EvaluateHistoryPage onBack={() => setView('cv-match')} applications={filteredApplications} onAddToWishlist={handleSave} />}
+            {view === 'settings' && <SettingsPage onBack={() => setView('sankey')} onClearData={handleClearData} isSyncing={isSyncing} isDemo={isDemo} trackingSystem={trackingSystem} setTrackingSystem={setTrackingSystem} />}
+            {view === 'eval-history' && <EvaluateHistoryPage onBack={() => setView('cv-match')} applications={filteredApplications} isDemo={isDemo} onAddToWishlist={handleSave} />}
 
             {/* Embedded Application Studios */}
             {view === 'studio-cover-letter' && (

@@ -406,6 +406,10 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
 
   const handleDeleteRecord = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isDemo) {
+      toast.info('Demo Mode: Deleting teardown records is restricted in this view-only portfolio preview.');
+      return;
+    }
     const userId = auth.currentUser?.uid || 'guest_user';
     try {
       await deleteSavedTeardown(id, userId);

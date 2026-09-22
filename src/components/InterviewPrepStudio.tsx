@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Printer, Copy, Check, BookOpen, Plus, Trash2, FileText, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toolbar } from './ui/toolbar';
-import { markdownOrTextToHtml, executeRichTextCommand, queryEditorState, paginateHtml } from '../lib/editor-utils';
+import { markdownOrTextToHtml, executeRichTextCommand, queryEditorState, paginateHtml, normalizeUrl } from '../lib/editor-utils';
 
 interface InterviewPrepStudioProps {
   initialText: string;
@@ -316,9 +316,14 @@ export function InterviewPrepStudio({
     setActivePageIndex(pageIndex);
     const target = e.target as HTMLElement;
     const anchor = target.closest('a');
-    if (anchor && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      window.open(anchor.href, '_blank', 'noopener,noreferrer');
+    if (anchor) {
+      const rawHref = anchor.getAttribute('href') || anchor.href;
+      if (rawHref) {
+        const validUrl = normalizeUrl(rawHref);
+        try {
+          window.open(validUrl, '_blank', 'noopener,noreferrer');
+        } catch {}
+      }
     }
     updateToolbarSelection();
   };

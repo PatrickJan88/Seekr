@@ -332,7 +332,15 @@ export function executeRichTextCommand(
 
       // If currently on an anchor and user clicks Link with no URL, unlink/remove
       if (existingAnchor) {
-        document.execCommand('unlink', false);
+        const parent = existingAnchor.parentNode;
+        if (parent) {
+          while (existingAnchor.firstChild) {
+            parent.insertBefore(existingAnchor.firstChild, existingAnchor);
+          }
+          parent.removeChild(existingAnchor);
+        } else {
+          document.execCommand('unlink', false);
+        }
         break;
       }
 
@@ -349,7 +357,31 @@ export function executeRichTextCommand(
       break;
     }
     case 'unlink': {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        let node: Node | null = sel.anchorNode;
+        while (node && node !== editorEl) {
+          if (node.nodeName === 'A') {
+            const anchor = node as HTMLAnchorElement;
+            const parent = anchor.parentNode;
+            if (parent) {
+              while (anchor.firstChild) {
+                parent.insertBefore(anchor.firstChild, anchor);
+              }
+              parent.removeChild(anchor);
+            }
+            break;
+          }
+          node = node.parentNode;
+        }
+      }
       document.execCommand('unlink', false);
+      break;
+    }
+    case 'bullet':
+    case 'list':
+    case 'insertUnorderedList': {
+      document.execCommand('insertUnorderedList', false);
       break;
     }
     case 'heading': {
@@ -491,6 +523,7 @@ export function queryEditorState(editorEl: HTMLElement): {
     if (document.queryCommandState('italic')) active.push('italic');
     if (document.queryCommandState('underline')) active.push('underline');
     if (document.queryCommandState('strikeThrough')) active.push('strikethrough');
+    if (document.queryCommandState('insertUnorderedList')) active.push('bullet');
 
     let detectedAlign: 'left' | 'center' | 'right' = 'left';
     const sel = window.getSelection();

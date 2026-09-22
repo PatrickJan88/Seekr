@@ -36,9 +36,10 @@ interface EvaluateHistoryPageProps {
   applications?: JobApplication[];
   onAddToWishlist?: (app: Partial<JobApplication>) => void;
   setNestedBreadcrumb?: (crumb: {label: string, onBack: () => void} | null) => void;
+  isDemo?: boolean;
 }
 
-export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist, setNestedBreadcrumb }: EvaluateHistoryPageProps) {
+export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist, setNestedBreadcrumb, isDemo = false }: EvaluateHistoryPageProps) {
   const [evaluations, setEvaluations] = useState<CVEvaluation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEval, setSelectedEval] = useState<CVEvaluation | null>(null);
@@ -112,6 +113,10 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
 
   const handleDeleteEval = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
+    if (isDemo) {
+      toast.info('Demo Mode: Deleting evaluations is restricted in this view-only portfolio preview.');
+      return;
+    }
     try {
       await deleteEvaluation(id);
       setEvaluations(prev => prev.filter(ev => ev.id !== id));

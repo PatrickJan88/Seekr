@@ -31,9 +31,10 @@ interface SettingsPageProps {
   onBack: () => void;
   onClearData: () => void;
   isSyncing: boolean;
+  isDemo?: boolean;
 }
 
-export function SettingsPage({ onBack, onClearData, isSyncing, trackingSystem = 'industry', setTrackingSystem }: SettingsPageProps) {
+export function SettingsPage({ onBack, onClearData, isSyncing, isDemo = false, trackingSystem = 'industry', setTrackingSystem }: SettingsPageProps) {
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState(false);
@@ -64,6 +65,11 @@ export function SettingsPage({ onBack, onClearData, isSyncing, trackingSystem = 
   }, [auth.currentUser?.uid]);
 
   const handleSettingsCvUpload = async (file: File) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Uploading new CV is restricted in this view-only portfolio preview.');
+      return;
+    }
+
     if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
       toast.error('Please upload a PDF format CV.');
       return;
@@ -106,6 +112,12 @@ export function SettingsPage({ onBack, onClearData, isSyncing, trackingSystem = 
   };
 
   const handleDeleteStoredResume = async () => {
+    if (isDemo) {
+      toast.info('Demo Mode: Deleting stored CV is restricted in this view-only portfolio preview.');
+      setShowDeleteResumeConfirm(false);
+      return;
+    }
+
     try {
       await deleteUserResume(auth.currentUser?.uid || 'guest', storedResume?.id);
       setStoredResume(null);
@@ -144,6 +156,12 @@ export function SettingsPage({ onBack, onClearData, isSyncing, trackingSystem = 
   };
 
   const handleDeleteAccount = async () => {
+    if (isDemo) {
+      toast.info('Demo Mode: Account actions are restricted in this view-only portfolio preview.');
+      setShowDeleteAccountConfirm(false);
+      return;
+    }
+
     try {
       if (auth.currentUser) {
         await auth.currentUser.delete();
