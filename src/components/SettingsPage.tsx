@@ -505,7 +505,7 @@ export function SettingsPage({ onBack, onClearData, isSyncing, isDemo = false, t
 
           <div className="mt-auto pt-12">
             <div className="text-center text-xs text-[#777c86] font-medium mb-8">
-              Version 3.0.0
+              Version 4.0.0
             </div>
             <Footer
               logo={<img src="/assets/seekr%20logo%201.webp" alt="Seekr Logo" className="h-6" />}

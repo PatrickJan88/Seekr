@@ -7,7 +7,7 @@
 **Track, evaluate, and land your next tech or academic role.**  
 *An all-in-one career intelligence platform and AI agent pipeline.*
 
-[![Version](https://img.shields.io/badge/version-3.0.0-blue.svg?style=flat-square)](https://github.com/PatrickJan88/Seekr)
+[![Version](https://img.shields.io/badge/version-4.0.0-blue.svg?style=flat-square)](https://github.com/PatrickJan88/Seekr)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&style=flat-square)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&style=flat-square)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?logo=tailwindcss&style=flat-square)](https://tailwindcss.com/)
@@ -27,12 +27,24 @@
 
 ---
 
-## What's New in Version 3.0.0
+## What's New in Version 4.0.0
 
-Version `3.0.0` represents a major milestone, introducing unified full-stack architecture, comprehensive AI studios, dual career tracking systems, and enhanced document/media attachments.
+Version `4.0.0` introduces direct left-panel access for standalone AI Studios (Company 360 and Tailored Application Studios), advanced WYSIWYG rich text document editing capabilities, intelligent link management, persistent multi-page studios, and strict view-only constraints for public demo showcases.
 
 ### Major Highlights
 
+*   **Left-Panel Access for Company 360 & Tailored Application Studios**:
+    *   **Direct Workspace Access**: Jump straight into **Company 360 Intelligence Studio**, **Cover Letter Studio**, **Interview Prep Studio**, and **Resume Tailoring Studio** directly from the collapsible left navigation bar for any standalone or ad-hoc career use case.
+    *   **Versatile Use Scenarios**: Generate strategic company teardowns, targeted resumes, or custom STAR question frameworks on demand without needing to create or bind to an existing job application entry first.
+*   **Advanced Rich Document Studio & Bullet List Engine**:
+    *   Added dedicated **Bullet Point** (`List`) list formatting directly in the studio toolbar following Quotes, complete with active state detection when navigating or editing list structures.
+*   **Interactive Link Navigation & Re-Click Removal**:
+    *   **Click-to-Open**: Direct single-click navigation for validated links to open in a secure external tab (`target="_blank" rel="noopener noreferrer"`).
+    *   **Re-Click to Unlink**: Seamlessly toggle off link styling and attributes by clicking the link tool on any active linked selection, instantly converting text back to standard body formatting.
+*   **Strict Demo Mode View-Only Safeguards**:
+    *   Comprehensive view-only protection across all dashboard views and studios during portfolio previews, gracefully guarding against accidental mutations (creation, edits, deletions, clearings, and data exports).
+*   **Persistent Multi-Page Document Studio Architecture**:
+    *   Interactive multi-page canvas with auto-pagination, real-time word counting, print-to-PDF formatting, and continuous local and cloud document synchronization.
 *   **Dual Tracking Framework (Industry & Academic Systems)**:
     *   Switch between **Industry Seekr** and **Academic Seekr** workflows with dedicated pipeline stages (e.g., Screening, Job Talks, Campus Visits, Committee Reviews, Grant proposals).
 *   **Complete AI Career Studios**:
@@ -159,7 +171,14 @@ Version `3.0.0` represents a major milestone, introducing unified full-stack arc
 
 ## Version History & Changelog
 
-### **v3.0.0** — *Current Release*
+### **v4.0.0** — *Current Release*
+*   Added **Direct Left-Panel Access** for **Company 360 Studio** and **Tailored Application Studios** (Cover Letter, Interview Prep, Resume Tailoring) for any on-demand standalone use scenario.
+*   Added **Bullet Point List Formatting** to rich text studio editor toolbar following Quotes.
+*   Added **Interactive Link Navigation & Re-Click Unlink** (open links in new tab, re-click to remove link styling).
+*   Enforced **Strict Demo Mode View-Only Constraints** to prevent accidental creation, editing, deletion, and exporting in preview mode.
+*   Added **Multi-Page Studio Auto-Pagination & Persistence** with print-to-PDF support and cloud sync.
+
+### **v3.0.0**
 *   Added **Company 360 Studio** for deep strategic company analysis and interview preparation.
 *   Added **Dual Tracking Systems** (Industry vs. Academic Seekr pipelines).
 *   Introduced **AI Cover Letter Studio**, **Interview Prep Studio**, and **Resume Tailor Studio**.
