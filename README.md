@@ -29,38 +29,28 @@
 
 ## What's New in Version 4.0.0
 
-Version `4.0.0` introduces direct left-panel access for standalone AI Studios (Company 360 and Tailored Application Studios), advanced WYSIWYG rich text document editing capabilities, intelligent link management, persistent multi-page studios, and strict view-only constraints for public demo showcases.
+Version `4.0.0` introduces standalone left-panel access for Company 360 Intelligence and Tailored Application Studios, alongside a suite of Advanced Rich Document Studio editing tools featuring interactive link management, bullet list formatting, and multi-page persistence.
 
 ### Major Highlights
 
-*   **Company 360 & Tailored Application Studios**:
-    *   **Direct Workspace Access**: Jump straight into **Company 360 Intelligence Studio**, **Cover Letter Studio**, **Interview Prep Studio**, and **Resume Tailoring Studio** directly from the collapsible left navigation bar for any standalone or ad-hoc career use case.
-    *   **Versatile Use Scenarios**: Generate strategic company teardowns, targeted resumes, or custom STAR question frameworks on demand without needing to create or bind to an existing job application entry first.
-*   **Advanced Rich Document Studio & Bullet List Engine**:
-    *   Added dedicated **Bullet Point** (`List`) list formatting directly in the studio toolbar following Quotes, complete with active state detection when navigating or editing list structures.
-*   **Interactive Link Navigation & Re-Click Removal**:
-    *   **Click-to-Open**: Direct single-click navigation for validated links to open in a secure external tab (`target="_blank" rel="noopener noreferrer"`).
-    *   **Re-Click to Unlink**: Seamlessly toggle off link styling and attributes by clicking the link tool on any active linked selection, instantly converting text back to standard body formatting.
-*   **Strict Demo Mode View-Only Safeguards**:
-    *   Comprehensive view-only protection across all dashboard views and studios during portfolio previews, gracefully guarding against accidental mutations (creation, edits, deletions, clearings, and data exports).
-*   **Persistent Multi-Page Document Studio Architecture**:
-    *   Interactive multi-page canvas with auto-pagination, real-time word counting, print-to-PDF formatting, and continuous local and cloud document synchronization.
+*   **Company 360 Intelligence Studio**:
+    *   **Direct Workspace Access**: Accessible directly from the collapsible left navigation panel for comprehensive enterprise and startup research.
+    *   **Holistic Teardowns**: Generates strategic company teardowns, core product loop analysis, SWOT matrices, AI positioning assessments, and tailored interview pitch talking points on demand.
+*   **Tailored Application Studios**:
+    *   **Direct Navigation Access**: Instant entry to **Cover Letter Studio**, **Interview Prep Studio**, and **Resume Tailoring Studio** directly from the primary left sidebar.
+    *   **Versatile Ad-Hoc Generation**: Craft tailored cover letters, targeted STAR-method question frameworks, and ATS-optimized resume sections on demand for any opportunity without needing to bind to an existing job application entry.
+*   **Advanced Rich Document Studio Tools**:
+    *   **WYSIWYG Editing Suite**: Full-featured formatting toolbar equipped with Bold, Italic, Underline, Strikethrough, Headings (H1/H2), Blockquotes, Text Color picker, Highlighter, and dedicated **Bullet Point** (`List`) list formatting with active selection state tracking.
+    *   **Interactive Link Navigation & Re-Click Removal**:
+        *   *Click-to-Open*: Direct single-click navigation for validated links to open in a secure external tab (`target="_blank" rel="noopener noreferrer"`).
+        *   *Re-Click to Unlink*: Seamlessly toggle off link styling and attributes by clicking the link tool on any active linked selection, instantly converting text back to standard body formatting.
+    *   **Multi-Page Canvas & Print Engine**: Multi-page document canvas with automatic page overflow pagination, live word counter, one-click copy, print-to-PDF formatting, and continuous local and cloud document persistence.
 *   **Dual Tracking Framework (Industry & Academic Systems)**:
     *   Switch between **Industry Seekr** and **Academic Seekr** workflows with dedicated pipeline stages (e.g., Screening, Job Talks, Campus Visits, Committee Reviews, Grant proposals).
-*   **Complete AI Career Studios**:
-    *   **Company 360 Studio**: Deep-dive holistic teardowns of any company, reverse-engineering core product loops, SWOT matrices, AI placements, and strategic interview pitches.
-    *   **Smart CV Match & Evaluator**: Real-time resume vs. job description match scoring, gap analysis, keyword heatmaps, and historical assessment tracking.
-    *   **Cover Letter Studio**: AI-generated tailored cover letters matching target role seniority and company culture.
-    *   **Interview Prep Studio**: Custom technical, behavioral, and STAR-method questions tailored to specific job postings and candidate backgrounds.
-    *   **Resume Tailoring Studio**: Section-by-section bullet point optimization and ATS keyword alignment.
 *   **Enhanced Document & Media Attachment Engine**:
     *   **Client-Side Canvas Compression**: High-res images are automatically resized and compressed client-side (~40KB–90KB) to ensure lightning-fast Firestore operations and stay well within cloud document quotas.
     *   **Instant Eye Preview & Lightbox**: Interactive preview button with full-screen lightbox modal for viewing images and document attachments.
     *   **Multi-Format File Support**: Native handling for PDF, DOC, DOCX, XLS, XLSX, CSV, and image files.
-*   **Redesigned Links & Notes Architecture**:
-    *   Seamless single-container form layout matching typographic hierarchy.
-    *   Full-width dashed *Add Link* action button for intuitive multi-link capture.
-    *   Robust Firestore serialization engine with deep data sanitization to prevent nested entity errors.
 *   **Global Job Market Explorer**:
     *   Live aggregated listings across continents and countries with remote filters and one-click pipeline import.
 *   **Interactive Sankey Pipeline & Analytics**:
@@ -172,11 +162,10 @@ Version `4.0.0` introduces direct left-panel access for standalone AI Studios (C
 ## Version History & Changelog
 
 ### **v4.0.0** — *Current Release*
-*   Added **Direct Left-Panel Access** for **Company 360 Studio** and **Tailored Application Studios** (Cover Letter, Interview Prep, Resume Tailoring) for any on-demand standalone use scenario.
-*   Added **Bullet Point List Formatting** to rich text studio editor toolbar following Quotes.
+*   Added **Left-Panel Access for Company 360 Studio** for on-demand company intelligence, business loop teardowns, SWOT analysis, and interview alignment.
+*   Added **Left-Panel Access for Tailored Application Studios** (Cover Letter, Interview Prep, Resume Tailoring) for standalone, ad-hoc career generation without pre-existing application constraints.
+*   Added **Advanced Rich Document Studio Tools** with WYSIWYG text styling, **Bullet Point List Formatting** (`List`), color palettes, highlight tools, and **Multi-Page Auto-Pagination & Persistence**.
 *   Added **Interactive Link Navigation & Re-Click Unlink** (open links in new tab, re-click to remove link styling).
-*   Enforced **Strict Demo Mode View-Only Constraints** to prevent accidental creation, editing, deletion, and exporting in preview mode.
-*   Added **Multi-Page Studio Auto-Pagination & Persistence** with print-to-PDF support and cloud sync.
 
 ### **v3.0.0**
 *   Added **Company 360 Studio** for deep strategic company analysis and interview preparation.
