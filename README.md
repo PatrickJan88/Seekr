@@ -39,6 +39,9 @@ Version `4.0.0` introduces standalone left-panel access for Company 360 Intellig
 *   **Tailored Application Studios**:
     *   **Direct Navigation Access**: Instant entry to **Cover Letter Studio**, **Interview Prep Studio**, and **Resume Tailoring Studio** directly from the primary left sidebar.
     *   **Versatile Ad-Hoc Generation**: Craft tailored cover letters, targeted STAR-method question frameworks, and ATS-optimized resume sections on demand for any opportunity without needing to bind to an existing job application entry.
+*   **Job Market "Matched Up" Intelligent Ranking & Recommendations**:
+    *   **Automated Relevance Ordering**: Compares the user's uploaded CV against live market listings, automatically sorting and ranking roles from most to least relevant.
+    *   **Tailored Opportunity Suggestions**: Highlights customized matching job suggestions based on skill alignment, domain qualifications, and experience level.
 *   **Advanced Rich Document Studio Tools**:
     *   **WYSIWYG Editing Suite**: Full-featured formatting toolbar equipped with Bold, Italic, Underline, Strikethrough, Headings (H1/H2), Blockquotes, Text Color picker, Highlighter, and dedicated **Bullet Point** (`List`) list formatting with active selection state tracking.
     *   **Interactive Link Navigation & Re-Click Removal**:
@@ -162,6 +165,7 @@ Version `4.0.0` introduces standalone left-panel access for Company 360 Intellig
 ## Version History & Changelog
 
 ### **v4.0.0** — *Current Release*
+*   Added **Job Market "Matched Up" Intelligent Ranking & Recommendations**, automatically sorting live market listings from most to least relevant and delivering tailored role matches for uploaded candidate CVs.
 *   Added **Left-Panel Access for Company 360 Studio** for on-demand company intelligence, business loop teardowns, SWOT analysis, and interview alignment.
 *   Added **Left-Panel Access for Tailored Application Studios** (Cover Letter, Interview Prep, Resume Tailoring) for standalone, ad-hoc career generation without pre-existing application constraints.
 *   Added **Advanced Rich Document Studio Tools** with WYSIWYG text styling, **Bullet Point List Formatting** (`List`), color palettes, highlight tools, and **Multi-Page Auto-Pagination & Persistence**.
