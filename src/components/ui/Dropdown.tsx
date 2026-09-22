@@ -106,10 +106,10 @@ export function Dropdown({ options, value, onChange, icon, labelPrefix, isActive
       <button 
         type="button" 
         onClick={toggle}
-        className={`flex items-center gap-2 rounded-2xl p-2 px-3 shadow-2xs transition-colors h-[34px] cursor-pointer ${isActive && activeClassName ? activeClassName : 'bg-white border border-[#efefef] hover:bg-[#faf9f7]'}`}
+        className={`flex items-center gap-2 rounded-full px-4 shadow-2xs transition-colors h-[38px] cursor-pointer ${isActive && activeClassName ? activeClassName : 'bg-white border border-[#efefef] hover:bg-[#faf9f7]'}`}
       >
         {icon && <span className={isActive ? "" : "text-[#777c86]"}>{icon}</span>}
-        <span className={`text-xs font-medium whitespace-nowrap ${isActive ? "" : "text-[#121722]"}`}>
+        <span className={`text-sm font-medium whitespace-nowrap ${isActive ? "" : "text-[#121722]"}`}>
           {labelPrefix && <span className={isActive ? "" : "text-[#777c86] font-normal mr-1"}>{labelPrefix}</span>}
           {selectedOption?.label}
         </span>

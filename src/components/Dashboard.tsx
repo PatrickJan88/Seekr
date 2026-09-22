@@ -38,60 +38,39 @@ interface DashboardProps {
 }
 
 // Mimic placeholder content for quick manual editing in studios
-const MIMIC_COVER_LETTER = `[Your Full Name]
-[Email Address] | [Phone Number] | [City, State / Remote]
-[LinkedIn / Portfolio URL]
+const MIMIC_COVER_LETTER = `Dear Hiring Manager,
 
-[Date]
+I am writing to express my strong enthusiasm for the [Target Role / Position] role at [Target Company Name]. With a solid background in [Core Specialization] and a demonstrated track record of [Key Achievement], I am excited about the opportunity to contribute directly to your team.
 
-Hiring Team
-[Target Company Name]
+In my recent experience as [Recent Role / Title] at [Previous Organization], I spearheaded initiatives that [Specific Project Highlight, e.g., improved system reliability by 35%]. My technical and operational approach centers on [Key Skill 1], [Key Skill 2], and cross-functional collaboration to deliver dependable, high-quality outcomes.
 
-Dear Hiring Manager,
+What draws me specifically to [Target Company Name] is your commitment to [Company Mission / Product Innovation]. I am eager to leverage my expertise to support your upcoming milestones and contribute to your team culture.
 
-I am writing to express my strong enthusiasm for the [Target Role / Position] role at [Target Company Name]. With a solid background in [Core Specialization / Industry] and a demonstrated track record of [Key Achievement or Responsibility], I am excited about the opportunity to contribute directly to your team.
-
-In my recent experience as [Recent Role / Title] at [Previous Organization], I spearheaded initiatives that [Specific Project Highlight, e.g., improved system reliability by 35% / streamlined delivery workflows]. My technical and operational approach centers on [Key Skill 1], [Key Skill 2], and cross-functional collaboration to deliver dependable, high-quality outcomes under ambitious schedules.
-
-What draws me specifically to [Target Company Name] is your commitment to [Company Mission / Product Innovation / Engineering Quality]. I am eager to leverage my expertise in [Core Technical or Domain Skills] to support your upcoming milestones and contribute to your team culture.
-
-Thank you for your time and consideration. I welcome the opportunity to discuss how my experience and skill set align with your team's objectives.
+Thank you for your time and consideration. I welcome the opportunity to discuss how my experience aligns with your team's objectives.
 
 Sincerely,
 
 [Your Full Name]`;
 
-const MIMIC_INTERVIEW_PREP = `1. EXECUTIVE POSITIONING & CORE STRATEGY
+const MIMIC_INTERVIEW_PREP = `1. EXECUTIVE POSITIONING & STRATEGY
 
-- Target Position: [Target Position]
-- Target Company: [Target Company]
-- Key Value Proposition: [Summarize your top 2-3 technical/domain strengths and what specific impact you bring to this team]
-- Architectural / Domain Focus: [Key frameworks, system design concepts, or operational areas relevant to the role]
+• Target Role: [Target Position] at [Target Company]
+• Core Value Proposition: [Top 2-3 technical strengths and measurable value you deliver]
+• Domain Focus: [Key frameworks, system architecture, or engineering practices]
 
-2. MITIGATING WEAKNESSES & PIVOT STRATEGY
+2. STAR FRAMEWORK INTERVIEW RESPONSE
 
-- Identified Gap: [e.g., Specific tooling, cloud provider, or new framework transition]
-- Pivot Strategy: [Acknowledge current familiarity, highlight adjacent mastery, and demonstrate rapid learning ramp-up with a concrete past example]
+Question: Walk me through a challenging problem or technical bottleneck you resolved.
+• Situation: [Describe the challenge, context, and existing constraints]
+• Task: [Your specific goal and engineering objectives]
+• Action: [Key technical decisions, implementation steps, and coordination]
+• Result: [Quantifiable performance gain, reliability improvement, or business impact]
 
-3. STAR FRAMEWORK INTERVIEW RESPONSES
+3. HIGH-IMPACT QUESTIONS TO ASK THE INTERVIEWER
 
-Question 1: Walk me through a challenging problem or technical bottleneck you resolved.
-- Situation: [Describe the challenge, context, and existing constraints]
-- Task: [What was your specific responsibility or goal?]
-- Action: [Detail the exact steps and decisions you made to solve the issue]
-- Result: [Quantifiable business impact, performance gain, or outcome achieved]
-
-Question 2: Tell me about a time you handled conflicting priorities or tight delivery deadlines.
-- Situation: [Describe the competing demands, stakeholder context, and timeline]
-- Task: [What trade-offs needed to be evaluated and aligned?]
-- Action: [How you communicated with stakeholders, prioritized MVP requirements, and mitigated risk]
-- Result: [Successful delivery on schedule with team alignment and zero production regressions]
-
-4. TACTICAL QUESTIONS TO ASK THE INTERVIEWER
-
-- What are the highest priority technical initiatives and challenges the team plans to tackle over the next two quarters?
-- How does the team evaluate success for this role during the first 90 days?
-- What does the team culture look like regarding autonomy, code review, and technical decision-making?`;
+• What are the highest priority technical initiatives planned for the next two quarters?
+• How does the team evaluate success for this role during the first 90 days?
+• How are architectural decisions, code reviews, and production releases structured?`;
 
 const MIMIC_RESUME_DATA: TailoredResumeData = {
   fullName: 'Your Full Name',
@@ -853,6 +832,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                   initialText={MIMIC_COVER_LETTER}
                   companyName="Target Company"
                   targetRole="Target Position"
+                  storageKey="studio_cover_letter_dashboard_draft"
                   onClose={() => setView('sankey')}
                 />
               </div>
@@ -865,6 +845,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                   initialText={MIMIC_INTERVIEW_PREP}
                   companyName="Target Company"
                   targetRole="Target Position"
+                  storageKey="studio_interview_prep_dashboard_draft"
                   onClose={() => setView('sankey')}
                 />
               </div>
@@ -877,6 +858,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                   initialData={MIMIC_RESUME_DATA}
                   companyName="Target Company"
                   targetRole="Target Position"
+                  storageKey="studio_resume_dashboard_draft"
                   onClose={() => setView('sankey')}
                 />
               </div>

@@ -198,6 +198,9 @@ export interface CVEvaluation {
   result: MatchResult;
   createdAt: number;
   trackingSystem?: 'industry' | 'academic';
+  coverLetter?: string;
+  interviewGuide?: string;
+  tailoredResume?: TailoredResumeData;
 }
 
 export type KeywordCategory = 'Hard Skills' | 'Soft Skills' | 'Tools & Frameworks' | 'Domain Knowledge';

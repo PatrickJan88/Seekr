@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { JobApplication, MatchResult, MatchedKeyword, MissingKeyword, TailoredResumeData, UserResume } from '../types';
 import { extractTextFromPDF, fileToBase64 } from '../lib/pdf';
-import { addEvaluation } from '../db/evaluations';
+import { addEvaluation, updateEvaluation } from '../db/evaluations';
 import { 
   getUserResume, 
   saveUserResume, 
@@ -355,21 +355,37 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
   const [tailoredResume, setTailoredResume] = useState<TailoredResumeData | null>(null);
   const [showResumeStudio, setShowResumeStudio] = useState(false);
 
-  const handleGenerateInterviewGuide = async () => {
+  // Active evaluation ID for persisting studio updates to Firestore
+  const [activeEvaluationId, setActiveEvaluationId] = useState<string | null>(null);
+
+  // Track explicit user request so background auto-generation never pops open the modal
+  const userRequestedOpenInterviewPrepRef = useRef(false);
+
+  const handleGenerateInterviewGuide = async (openModal: boolean = true) => {
+    if (openModal) {
+      userRequestedOpenInterviewPrepRef.current = true;
+    }
+
     if (interviewGuideText) {
-      setShowInterviewPrepStudio(true);
+      if (openModal) {
+        setShowInterviewPrepStudio(true);
+      }
       return;
     }
 
     if (isDemo) {
       setInterviewGuideText("1. EXECUTIVE SUMMARY\n\nFocus heavily on your React & TypeScript expertise to pivot away from any gaps in backend engineering. Emphasize component architecture and modern design systems.\n\n2. PIVOTING WEAKNESSES\n\nGap: Lack of explicit Playwright / E2E testing.\nAnswer Strategy: Acknowledge the gap but highlight that you write robust unit tests with Jest and are actively implementing Playwright pipelines in current sprints.\n\n3. DEEP DIVE QUESTIONS & STAR FRAMEWORKS\n\nQ1: How do you manage complex application state?\nA (STAR):\n- Situation: The previous dashboard suffered from cascading re-renders across 15 subcomponents.\n- Task: Modernize state management without introducing heavy boilerplate.\n- Action: Designed a modular Zustand store with shallow selectors and atomic subscriptions.\n- Result: Reduced unnecessary re-renders by 60% and improved interaction response time to sub-16ms.\n\nQ2: Walk me through a challenging performance optimization project.\nA (STAR):\n- Situation: Bundle sizes were ballooning past 3.2MB on initial load.\n- Task: Optimize first contentful paint (FCP) and total blocking time (TBT).\n- Action: Implemented route-level dynamic code splitting, tree-shook unused third-party dependencies, and added virtualized scrolling for data grids.\n- Result: Shaved initial load by 48% and achieved 98/100 Lighthouse score.");
-      setShowInterviewPrepStudio(true);
+      if (openModal) {
+        setShowInterviewPrepStudio(true);
+      }
       return;
     }
 
     if (!result) return;
     setIsGeneratingInterviewGuide(true);
-    toast.loading('Generating tailored interview strategy guide...', { id: 'interview-prep-load' });
+    if (openModal) {
+      toast.loading('Generating tailored interview strategy guide...', { id: 'interview-prep-load' });
+    }
     try {
       const effectiveCvText = cvText.trim() || storedResume?.cvText.trim() || '';
       let pdfBase64 = '';
@@ -401,7 +417,9 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
 
       const data = await res.json();
       setInterviewGuideText(data.interviewGuide);
-      setShowInterviewPrepStudio(true);
+      if (userRequestedOpenInterviewPrepRef.current) {
+        setShowInterviewPrepStudio(true);
+      }
     } catch (err: any) {
       console.warn('Interview Guide API warning, falling back to local synthesis:', err);
       const company = result?.company_name || 'Target Company';
@@ -413,9 +431,13 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
 
       const fallbackText = `# Interview Preparation Master Guide: ${targetRole || 'Professional Role'}\nTarget Company: ${company}\n\n## 1. Key Alignment Summary\n${result?.actionable_polish || 'Focus on demonstrating mastery of required competencies and metrics.'}\n\n## 2. Forecasted Questions & Tactical Frameworks\n${questionsList}`;
       setInterviewGuideText(fallbackText);
-      setShowInterviewPrepStudio(true);
+      if (userRequestedOpenInterviewPrepRef.current) {
+        setShowInterviewPrepStudio(true);
+      }
     } finally {
-      toast.dismiss('interview-prep-load');
+      if (openModal) {
+        toast.dismiss('interview-prep-load');
+      }
       setIsGeneratingInterviewGuide(false);
     }
   };
@@ -634,16 +656,22 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
 
     setCvFile(file);
     setIsExtractingPdf(true);
+    let extractedText = '';
     try {
-      const extractedText = await extractTextFromPDF(file);
-      let base64 = '';
-      try {
-        base64 = await fileToBase64(file);
-      } catch (bErr) {
-        console.warn('PDF base64 conversion warning:', bErr);
-      }
-      setCvText(extractedText);
+      extractedText = await extractTextFromPDF(file);
+    } catch (pdfErr) {
+      console.warn('Browser PDF text extraction fallback to server:', pdfErr);
+    }
+    setCvText(extractedText);
 
+    let base64 = '';
+    try {
+      base64 = await fileToBase64(file);
+    } catch (bErr) {
+      console.warn('PDF base64 conversion warning:', bErr);
+    }
+
+    try {
       // Automatically store on our platform for future reuse across the app
       const saved = await saveUserResume(auth.currentUser?.uid || 'guest', {
         fileName: file.name,
@@ -653,11 +681,14 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
         pdfBase64: base64,
       });
       setStoredResume(saved);
-
       toast.success('CV uploaded & automatically saved to My Resume for next time!');
     } catch (err) {
-      console.warn('Browser PDF text extraction fell back to server PDF parsing', err);
-      toast.info('PDF attached. AI server will analyze document directly.');
+      console.warn('Resume profile auto-save warning:', err);
+      if (extractedText) {
+        toast.info('CV attached for evaluation.');
+      } else {
+        toast.info('PDF attached. AI server will analyze document directly.');
+      }
     } finally {
       setIsExtractingPdf(false);
     }
@@ -725,9 +756,9 @@ ${app.notes || 'No extra description provided.'}`;
         setIsLoading(false);
         setResult(DEMO_RESULT);
         toast.success('Demo Mode: Simulated AI match evaluation generated!');
-        // Check auto interview prep setting
+        // Check auto interview prep setting (pre-fetch in background without opening modal)
         if (localStorage.getItem('auto_generate_interview_prep') !== 'false') {
-          handleGenerateInterviewGuide();
+          handleGenerateInterviewGuide(false);
         }
       }, 1200);
       return;
@@ -773,23 +804,24 @@ ${app.notes || 'No extra description provided.'}`;
       setResult(data);
       toast.success('CV Match analysis completed!');
       
-      // Auto interview prep if enabled
+      // Auto interview prep if enabled (pre-fetch in background without opening modal)
       if (localStorage.getItem('auto_generate_interview_prep') !== 'false') {
-        handleGenerateInterviewGuide();
+        handleGenerateInterviewGuide(false);
       }
 
-      if (auth.currentUser) {
-        try {
-          await addEvaluation({
-            userId: auth.currentUser.uid,
-            role: targetRole,
-            jobDescription,
-            trackingSystem,
-            result: data
-          });
-        } catch (e) {
-          console.error("Failed to save evaluation history", e);
+      try {
+        const created = await addEvaluation({
+          userId: auth.currentUser?.uid || 'guest',
+          role: targetRole,
+          jobDescription,
+          trackingSystem,
+          result: data
+        });
+        if (created?.id) {
+          setActiveEvaluationId(created.id);
         }
+      } catch (e) {
+        console.error("Failed to save evaluation history", e);
       }
     } catch (err: any) {
       console.error('CV Match Error:', err);
@@ -868,8 +900,9 @@ ${app.notes || 'No extra description provided.'}`;
                   setResult(null);
                   setTargetRole('');
                   setCurrentStep(1);
+                  setActiveEvaluationId(null);
                 }}
-                className="px-4 py-2 rounded-full border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                className="h-[38px] px-4 rounded-full border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] text-sm font-medium transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
               >
                 <ArrowRight size={14} className="rotate-180" />
                 <span>Re-Evaluate</span>
@@ -885,7 +918,7 @@ ${app.notes || 'No extra description provided.'}`;
                       notes: `Added from CV Evaluation. Score: ${result.score}%`,
                     });
                   }}
-                  className="px-4 py-2 rounded-full border border-[#0068f9]/20 bg-[#e8f1ff] text-[#0068f9] hover:bg-[#d1e4ff] text-xs font-bold transition-all flex items-center justify-center cursor-pointer shadow-2xs"
+                  className="h-[38px] px-4 rounded-full border border-[#0068f9]/20 bg-[#e8f1ff] text-[#0068f9] hover:bg-[#d1e4ff] text-sm font-semibold transition-all flex items-center justify-center cursor-pointer shadow-2xs"
                 >
                   <span>Add to Wishlist</span>
                 </button>
@@ -918,7 +951,7 @@ ${app.notes || 'No extra description provided.'}`;
                 <p className="text-xs text-[#777c86]">Resume-grounded STAR strategies</p>
               </div>
               <button
-                onClick={handleGenerateInterviewGuide}
+                onClick={() => handleGenerateInterviewGuide(true)}
                 disabled={isGeneratingInterviewGuide}
                 className="w-full py-2 px-3 bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-semibold rounded-full transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
               >
@@ -1458,6 +1491,15 @@ ${app.notes || 'No extra description provided.'}`;
           companyName={result?.company_name}
           targetRole={targetRole}
           onClose={() => setShowCoverLetterStudio(false)}
+          onSave={(text) => {
+            setCoverLetterText(text);
+            if (activeEvaluationId) {
+              updateEvaluation(activeEvaluationId, { coverLetter: text }).catch(err => {
+                console.error("Failed to persist updated cover letter:", err);
+              });
+            }
+          }}
+          storageKey={activeEvaluationId ? `studio_cl_${activeEvaluationId}` : `studio_cl_${(result?.company_name || 'general').replace(/\s+/g, '_')}`}
         />
       )}
 
@@ -1466,7 +1508,19 @@ ${app.notes || 'No extra description provided.'}`;
           initialText={interviewGuideText}
           companyName={result?.company_name}
           targetRole={targetRole}
-          onClose={() => setShowInterviewPrepStudio(false)}
+          onClose={() => {
+            setShowInterviewPrepStudio(false);
+            userRequestedOpenInterviewPrepRef.current = false;
+          }}
+          onSave={(text) => {
+            setInterviewGuideText(text);
+            if (activeEvaluationId) {
+              updateEvaluation(activeEvaluationId, { interviewGuide: text }).catch(err => {
+                console.error("Failed to persist updated interview guide:", err);
+              });
+            }
+          }}
+          storageKey={activeEvaluationId ? `studio_interview_prep_${activeEvaluationId}` : `studio_interview_prep_${(result?.company_name || 'general').replace(/\s+/g, '_')}`}
         />
       )}
 
@@ -1476,6 +1530,15 @@ ${app.notes || 'No extra description provided.'}`;
           targetRole={targetRole}
           companyName={result?.company_name}
           onClose={() => setShowResumeStudio(false)}
+          onSave={(data) => {
+            setTailoredResume(data);
+            if (activeEvaluationId) {
+              updateEvaluation(activeEvaluationId, { tailoredResume: data }).catch(err => {
+                console.error("Failed to persist updated tailored resume:", err);
+              });
+            }
+          }}
+          storageKey={activeEvaluationId ? `studio_resume_${activeEvaluationId}` : `studio_resume_${(result?.company_name || 'general').replace(/\s+/g, '_')}`}
         />
       )}
     </div>

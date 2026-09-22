@@ -479,7 +479,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
               id="matched-up-sort-btn"
               onClick={handleToggleMatchedUp}
               disabled={isCalculatingMatches}
-              className={`flex items-center justify-center gap-1.5 sm:gap-2 h-10 sm:h-11 px-3 sm:px-3.5 xl:px-4 rounded-full text-xs sm:text-sm font-medium transition-all shadow-2xs cursor-pointer select-none w-full sm:w-auto shrink-0 ${
+              className={`flex items-center justify-center gap-2 h-[38px] px-4 rounded-full text-sm font-medium transition-all shadow-2xs cursor-pointer select-none w-full sm:w-auto shrink-0 ${
                 isMatchedUpActive
                   ? 'bg-[#0068f9] text-white hover:bg-[#024bb1] border border-[#0068f9] shadow-sm'
                   : 'bg-white text-[#121722] border border-[#efefef] hover:bg-[#faf9f7] hover:border-[#0068f9]/40'
@@ -499,7 +499,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
               )}
               <span className="font-semibold whitespace-nowrap">Matched Up</span>
               {isMatchedUpActive && (
-                <span className="ml-0.5 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white/25 text-white leading-none">
+                <span className="ml-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white/25 text-white leading-none">
                   ON
                 </span>
               )}
@@ -598,13 +598,13 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
           {/* Expanded Width Search Box & Results Counter */}
           <div className="relative flex-1 min-w-[80px] sm:min-w-[100px] max-w-full flex items-center">
             <div className="relative w-full">
-              <Search className="absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 text-[#a5a5a5]" size={15} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a5a5a5]" size={15} />
               <input
                 type="text"
                 placeholder="Search market"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 sm:pl-9 pr-3 sm:pr-4 h-10 sm:h-11 bg-white border border-[#efefef] rounded-full text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#0068f9] transition-all shadow-2xs hover:bg-[#faf9f7] truncate"
+                className="w-full pl-9 pr-4 h-[38px] bg-white border border-[#efefef] rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#0068f9] transition-all shadow-2xs hover:bg-[#faf9f7] truncate placeholder:font-normal placeholder:text-[#a5a5a5]"
               />
             </div>
           </div>

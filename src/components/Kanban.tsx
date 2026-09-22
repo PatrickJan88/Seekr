@@ -110,19 +110,19 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
         <div className="flex gap-2">
           <button 
             onClick={() => setActiveTab('active')}
-            className={`px-4 py-2 rounded-full font-medium text-sm transition-all cursor-pointer ${activeTab === 'active' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
+            className={`h-[38px] flex items-center justify-center px-4 rounded-full font-medium text-sm transition-all cursor-pointer ${activeTab === 'active' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
           >
             Active Progress
           </button>
           <button 
             onClick={() => setActiveTab('inactive')}
-            className={`px-4 py-2 rounded-full font-medium text-sm transition-all cursor-pointer ${activeTab === 'inactive' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
+            className={`h-[38px] flex items-center justify-center px-4 rounded-full font-medium text-sm transition-all cursor-pointer ${activeTab === 'inactive' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
           >
             Closed
           </button>
           <button 
             onClick={() => setActiveTab('wishlist')}
-            className={`px-4 py-2 rounded-full font-medium text-sm transition-all cursor-pointer ${activeTab === 'wishlist' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
+            className={`h-[38px] flex items-center justify-center px-4 rounded-full font-medium text-sm transition-all cursor-pointer ${activeTab === 'wishlist' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
           >
             Wishlist
           </button>

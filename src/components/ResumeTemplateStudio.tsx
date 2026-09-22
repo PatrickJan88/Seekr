@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   X, 
   Printer, 
@@ -18,7 +18,8 @@ import {
   Briefcase,
   GraduationCap,
   FolderGit2,
-  Wrench
+  Wrench,
+  Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TailoredResumeData, ResumeTemplateId, ResumeTemplateMeta, TailoredResumeExperience, TailoredResumeEducation, TailoredResumeProject } from '../types';
@@ -56,6 +57,8 @@ interface ResumeTemplateStudioProps {
   companyName?: string;
   onClose?: () => void;
   embedded?: boolean;
+  onSave?: (savedData: TailoredResumeData) => void;
+  storageKey?: string;
 }
 
 function normalizeResumeData(data: Partial<TailoredResumeData> | null | undefined, fallbackRole?: string, fallbackCompany?: string): TailoredResumeData {
@@ -116,18 +119,114 @@ export function ResumeTemplateStudio({
   targetRole,
   companyName,
   onClose,
-  embedded = false
+  embedded = false,
+  onSave,
+  storageKey
 }: ResumeTemplateStudioProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<ResumeTemplateId>('modern-single');
   const [resumeData, setResumeData] = useState<TailoredResumeData>(() => normalizeResumeData(initialData, targetRole, companyName));
   const [activeTab, setActiveTab] = useState<'preview' | 'edit'>('preview');
   const [copied, setCopied] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving'>('saved');
 
+  const autoSaveDebounceRef = useRef<any>(null);
+  const isInitialMountRef = useRef<boolean>(true);
+  const onSaveRef = useRef(onSave);
+  onSaveRef.current = onSave;
+  const isInitializedRef = useRef<string | null>(null);
+
+  const effectiveStorageKey = storageKey || `studio_resume_${(companyName || 'general').replace(/\s+/g, '_')}_${(targetRole || 'general').replace(/\s+/g, '_')}`;
+
+  const resumeDataRef = useRef(resumeData);
+  resumeDataRef.current = resumeData;
+  const selectedTemplateRef = useRef(selectedTemplate);
+  selectedTemplateRef.current = selectedTemplate;
+
+  // Check localStorage for any stored draft on init
   useEffect(() => {
-    if (initialData) {
-      setResumeData(normalizeResumeData(initialData, targetRole, companyName));
+    if (isInitializedRef.current === effectiveStorageKey) {
+      return;
     }
-  }, [initialData, targetRole, companyName]);
+    isInitializedRef.current = effectiveStorageKey;
+
+    try {
+      const saved = localStorage.getItem(effectiveStorageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          setResumeData(normalizeResumeData(parsed, targetRole, companyName));
+        }
+      } else if (initialData) {
+        setResumeData(normalizeResumeData(initialData, targetRole, companyName));
+      }
+      const savedTmpl = localStorage.getItem(`${effectiveStorageKey}_template`);
+      if (savedTmpl && ['classic-single', 'modern-single', 'classic-two', 'modern-two'].includes(savedTmpl)) {
+        setSelectedTemplate(savedTmpl as ResumeTemplateId);
+      }
+    } catch (e) {
+      if (initialData) {
+        setResumeData(normalizeResumeData(initialData, targetRole, companyName));
+      }
+    }
+  }, [effectiveStorageKey, targetRole, companyName, initialData]);
+
+  // Debounced auto-save function
+  const triggerAutoSave = useCallback((dataToSave: TailoredResumeData, templateToSave: ResumeTemplateId) => {
+    setSaveStatus('saving');
+    if (autoSaveDebounceRef.current) clearTimeout(autoSaveDebounceRef.current);
+    autoSaveDebounceRef.current = setTimeout(() => {
+      try {
+        localStorage.setItem(effectiveStorageKey, JSON.stringify(dataToSave));
+        localStorage.setItem(`${effectiveStorageKey}_template`, templateToSave);
+      } catch (e) {
+        console.warn('ResumeTemplateStudio auto-save to localStorage failed:', e);
+      }
+      if (onSaveRef.current) {
+        onSaveRef.current(dataToSave);
+      }
+      setSaveStatus('saved');
+    }, 500);
+  }, [effectiveStorageKey]);
+
+  // Immediate manual save
+  const handleManualSave = useCallback(() => {
+    if (autoSaveDebounceRef.current) clearTimeout(autoSaveDebounceRef.current);
+    setSaveStatus('saving');
+    try {
+      localStorage.setItem(effectiveStorageKey, JSON.stringify(resumeDataRef.current));
+      localStorage.setItem(`${effectiveStorageKey}_template`, selectedTemplateRef.current);
+    } catch (e) {}
+    if (onSaveRef.current) {
+      onSaveRef.current(resumeDataRef.current);
+    }
+    setSaveStatus('saved');
+    toast.success('Resume draft auto-saved successfully!');
+  }, [effectiveStorageKey]);
+
+  // Automatically trigger debounced auto-save whenever resumeData or selectedTemplate changes
+  useEffect(() => {
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      return;
+    }
+    triggerAutoSave(resumeData, selectedTemplate);
+  }, [resumeData, selectedTemplate, triggerAutoSave]);
+
+  // Flush pending save on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveDebounceRef.current) {
+        clearTimeout(autoSaveDebounceRef.current);
+      }
+      try {
+        localStorage.setItem(effectiveStorageKey, JSON.stringify(resumeDataRef.current));
+        localStorage.setItem(`${effectiveStorageKey}_template`, selectedTemplateRef.current);
+      } catch (e) {}
+      if (onSaveRef.current) {
+        onSaveRef.current(resumeDataRef.current);
+      }
+    };
+  }, [effectiveStorageKey]);
 
   // Experience Handlers
   const handleUpdateExperience = (index: number, field: keyof TailoredResumeExperience, value: any) => {
@@ -792,8 +891,31 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                 4 ATS Templates
               </span>
             </div>
-            <p className="text-xs text-[#777c86]">
-              Tailored for {targetRole || 'Target Role'} {companyName ? `at ${companyName}` : ''}
+            <p className="text-xs text-[#777c86] flex items-center gap-1.5 flex-wrap">
+              <span>Tailored for {targetRole || 'Target Role'} {companyName ? `at ${companyName}` : ''}</span>
+              <span>•</span>
+              <button
+                type="button"
+                onClick={handleManualSave}
+                title="Auto-saves automatically. Click to save immediately."
+                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all cursor-pointer select-none active:scale-95 ${
+                  saveStatus === 'saving' 
+                    ? 'bg-amber-50 text-amber-700 border border-amber-200/80 hover:bg-amber-100' 
+                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 hover:bg-emerald-100/70'
+                }`}
+              >
+                {saveStatus === 'saving' ? (
+                  <>
+                    <Loader2 size={11} className="animate-spin text-amber-600" />
+                    <span>Auto-saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check size={11} className="text-emerald-600" />
+                    <span>Auto-saved</span>
+                  </>
+                )}
+              </button>
             </p>
           </div>
         </div>

@@ -41,7 +41,7 @@ export function CommandSearch({ applications, onSelectApplication, trackingSyste
   return (
     <CommandMenu open={open} onOpenChange={setOpen}>
       <CommandMenuTrigger asChild>
-        <button className="hidden sm:flex items-center gap-2 h-10 bg-white hover:bg-[#faf9f7] border border-[#efefef] text-[#777c86] hover:text-[#121722] px-3 rounded-full transition-all cursor-pointer shadow-2xs">
+        <button className="hidden sm:flex items-center gap-2 h-[38px] bg-white hover:bg-[#faf9f7] border border-[#efefef] text-[#777c86] hover:text-[#121722] px-3.5 rounded-full transition-all cursor-pointer shadow-2xs">
           <Search size={16} className="shrink-0" />
           <div className="flex items-center gap-1 opacity-70 shrink-0">
             <Kbd size="xs">{getModifierKey().symbol}</Kbd>

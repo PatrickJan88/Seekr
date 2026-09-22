@@ -1153,10 +1153,11 @@ Key Strengths to Highlight:
 ${strengths ? strengths.join(', ') : 'Not provided'}
 
 Instructions:
-1. Use a standard professional cover letter format (exclude physical addresses, just use placeholders like [Your Name], [Date], [Hiring Manager], etc. at the top).
-2. Write in a confident, engaging tone. Avoid overly robotic or generic AI phrases (e.g., "I am writing to express my interest", "I am a highly motivated"). Open with a strong hook.
-3. Keep it to 3-4 concise paragraphs.
-4. Return ONLY the plain text of the cover letter. Do not include markdown formatting like \`\`\`text, just the raw string.
+1. Start directly with 'Dear Hiring Manager,' (or 'Dear Hiring Team at ${companyName || 'Company'},'). Do NOT include top header placeholders like [Your Name], [Address], [Date], or [Hiring Team] at the beginning.
+2. Ensure each paragraph is separated by a blank line (one space switch).
+3. Write in a confident, engaging tone. Avoid overly robotic or generic AI phrases (e.g., "I am writing to express my interest", "I am a highly motivated"). Open with a strong hook.
+4. Keep it to 3-4 concise paragraphs.
+5. Return ONLY the plain text of the cover letter. Do not include markdown formatting like \`\`\`text, just the raw string.
 `;
 
       let coverLetterText: string | null = null;

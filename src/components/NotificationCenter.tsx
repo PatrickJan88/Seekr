@@ -50,7 +50,7 @@ export function NotificationCenter({ onViewAll }: { onViewAll: () => void }) {
       <Popover.Trigger asChild>
         <button 
           title="Notifications" 
-          className="relative w-10 h-10 rounded-full bg-white border border-[#efefef] shadow-2xs flex items-center justify-center text-[#777c86] hover:text-[#121722] hover:bg-[#faf9f7] transition-all cursor-pointer focus:outline-none"
+          className="relative w-[38px] h-[38px] rounded-full bg-white border border-[#efefef] shadow-2xs flex items-center justify-center text-[#777c86] hover:text-[#121722] hover:bg-[#faf9f7] transition-all cursor-pointer focus:outline-none"
         >
           <Bell size={16} />
           {unreadCount > 0 && (
