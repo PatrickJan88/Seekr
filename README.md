@@ -33,7 +33,7 @@ Version `4.0.0` introduces direct left-panel access for standalone AI Studios (C
 
 ### Major Highlights
 
-*   **Left-Panel Access for Company 360 & Tailored Application Studios**:
+*   **Company 360 & Tailored Application Studios**:
     *   **Direct Workspace Access**: Jump straight into **Company 360 Intelligence Studio**, **Cover Letter Studio**, **Interview Prep Studio**, and **Resume Tailoring Studio** directly from the collapsible left navigation bar for any standalone or ad-hoc career use case.
     *   **Versatile Use Scenarios**: Generate strategic company teardowns, targeted resumes, or custom STAR question frameworks on demand without needing to create or bind to an existing job application entry first.
 *   **Advanced Rich Document Studio & Bullet List Engine**:
