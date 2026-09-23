@@ -850,6 +850,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                   targetRole="Target Position"
                   storageKey="studio_cover_letter_dashboard_draft"
                   onClose={() => setView('sankey')}
+                  isDemo={isDemo}
                 />
               </div>
             )}
@@ -863,6 +864,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                   targetRole="Target Position"
                   storageKey="studio_interview_prep_dashboard_draft"
                   onClose={() => setView('sankey')}
+                  isDemo={isDemo}
                 />
               </div>
             )}
@@ -876,6 +878,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                   targetRole="Target Position"
                   storageKey="studio_resume_dashboard_draft"
                   onClose={() => setView('sankey')}
+                  isDemo={isDemo}
                 />
               </div>
             )}

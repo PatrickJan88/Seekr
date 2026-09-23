@@ -40,6 +40,127 @@ import {
   isAtsOrJobPostingUrl
 } from '../lib/linkUtils';
 
+const DEMO_COMPANY_TEARDOWN: CompanyTeardownData = {
+  companyName: "Stripe",
+  websiteUrl: "https://stripe.com",
+  logoUrl: "https://logo.clearbit.com/stripe.com",
+  tagline: "Financial infrastructure for the internet",
+  industry: "Fintech & Developer Platforms",
+  foundedYear: 2010,
+  headquarters: "San Francisco, CA & Dublin, Ireland",
+  fiscal: {
+    fundingStage: "Late Stage / Pre-IPO",
+    totalFunding: "$8.7B+",
+    leadInvestors: ["Sequoia Capital", "Andreessen Horowitz", "General Catalyst", "Founders Fund", "Thrive Capital"],
+    valuationOrMarketCap: "$70B - $95B",
+    arrEstimate: "$14B+ (Gross Volume $1T+ processed)",
+    businessModel: "Usage-based processing fees (2.9% + 30¢) + SaaS subscriptions (Billing, Tax, Radar, Issuing, Atlas)",
+    pricingGate: "Tiered pay-as-you-go with enterprise custom volume contracts and add-on modular APIs",
+    fiscalSummary: "Exceptional cash flow positive operating profile. Processing over 1% of global GDP transactions with robust enterprise expansion across Fortune 500."
+  },
+  headcount: {
+    currentHeadcount: 8200,
+    monthChangePct: 1.4,
+    oneYearGrowthPct: 14.8,
+    twoYearGrowthPct: 28.5,
+    hiringSignal: "Steady Growth",
+    departmentBreakdown: [
+      { department: "Engineering & Infrastructure", count: 3450, percentage: 42 },
+      { department: "Sales & Enterprise Success", count: 2130, percentage: 26 },
+      { department: "Product & Design", count: 980, percentage: 12 },
+      { department: "Operations & Risk/Compliance", count: 1040, percentage: 13 },
+      { department: "General & Administrative", count: 600, percentage: 7 }
+    ],
+    historicalTrend: [
+      { date: "2023-Q1", headcount: 6900 },
+      { date: "2023-Q3", headcount: 7200 },
+      { date: "2024-Q1", headcount: 7550 },
+      { date: "2024-Q3", headcount: 7900 },
+      { date: "2025-Q1", headcount: 8200 }
+    ],
+    growthAnalysis: "Healthy net headcount expansion focused on developer experience, AI payment orchestration, global multi-currency clearing rails, and enterprise compliance."
+  },
+  systemProfile: {
+    targetCustomer: "Internet startups, high-growth SaaS platforms, global marketplaces (Shopify, Amazon, Uber), and modern enterprise commerce.",
+    coreProblemSolved: "Eliminating friction in global payments, cross-border payouts, recurring subscription billing, tax compliance, and fraud detection with simple APIs.",
+    primaryMoat: "Developer ecosystem lock-in, bank-grade reliability (99.999% uptime), extensive regulatory compliance licenses worldwide, and proprietary Radar fraud models.",
+    retentionTrigger: "Deep codebase API integration, multi-product flywheel adoption (Connect + Billing + Radar), and unified ledger reconciliation across millions of merchants."
+  },
+  coreLoop: {
+    spineSummary: "Developer-Led Onboarding -> Merchant Volume Growth -> Network Data Advantage -> Multi-Product Expansion",
+    steps: [
+      { step: 1, title: "Frictionless API Integration", description: "Developers & Founders", mechanism: "Clean SDKs, pristine documentation, and instant sandbox keys enable payments in minutes." },
+      { step: 2, title: "Commerce Volume Scale", description: "Merchants & Platforms", mechanism: "As merchant sales accelerate, processed payment volume and usage fees compound naturally." },
+      { step: 3, title: "Data & Risk Flywheel", description: "Stripe Radar ML Engine", mechanism: "Billions of global payment signals feed predictive fraud prevention models, lowering decline rates." },
+      { step: 4, title: "Multi-Product Cross-Sell", description: "Finance & Operations Teams", mechanism: "Merchants adopt Stripe Billing, Tax, Invoicing, and Treasury, making off-boarding virtually impossible." }
+    ]
+  },
+  aiSpectrum: {
+    tier: "Embedded",
+    headline: "AI-Powered Payment Optimization & Automated Risk Decisioning",
+    evidence: [
+      "Radar ML evaluating 1,000+ transaction signals per millisecond with continuous feedback loops.",
+      "Adaptive Acceptance engine recovering billions in legitimate card payments dynamically.",
+      "Agentic payment protocols enabling autonomous LLMs and agent swarms to execute secure micro-transactions via Stripe APIs."
+    ],
+    defendedRationale: "Stripe embeds high-throughput machine learning directly into the critical transaction path without introducing human latency, elevating acceptance while minimizing chargebacks."
+  },
+  swot: {
+    strengths: [
+      { point: "World-Class Developer Mindshare", detail: "Gold-standard APIs, SDKs, and developer documentation creating unmatched brand loyalty." },
+      { point: "Comprehensive Financial Stack", detail: "Unified ecosystem spanning gateway, acquirer, banking-as-a-service, issuing, and corporate entity formation." },
+      { point: "Enormous Scale & Global Network", detail: "Processing trillions of dollars with 99.999% uptime and regulatory licenses in 40+ countries." }
+    ],
+    weaknesses: [
+      { point: "Interchange & Network Fee Compression", detail: "Heavy reliance on payment margins which face downward pressure from interchange regulation." },
+      { point: "Legacy Core Dependencies", detail: "Still relies on traditional card networks (Visa/Mastercard) for a large portion of rails." }
+    ],
+    opportunities: [
+      { point: "Agentic AI Commerce Rails", detail: "Becoming the default payment protocol for autonomous AI agents, API subscriptions, and machine-to-machine transactions." },
+      { point: "Global Enterprise Multi-Processor Routing", detail: "Vault & Forward technologies capturing multi-gateway Fortune 500 spend." },
+      { point: "Embedded Fintech & Banking-as-a-Service", detail: "Powering SaaS platforms to offer white-label accounts, loans, and credit cards directly." }
+    ],
+    threats: [
+      { point: "Regional Real-Time Payment Networks", detail: "Zero-fee sovereign rails (Pix in Brazil, UPI in India, FedNow in US) challenging card processing models." },
+      { point: "Fierce Enterprise Rivalry", detail: "Adyen and legacy acquirers aggressively competing on price for mega-tier merchant contracts." }
+    ]
+  },
+  interviewKit: {
+    strategicPitches: [
+      {
+        title: "Autonomous Agent Payment Orchestrator",
+        proposal: "Architect standardized cryptographic budget envelopes allowing autonomous LLM agents to conduct authenticated micro-transactions.",
+        rationale: "Aligns with Stripe's long-term mission of growing the internet GDP by unlocking the emerging agentic economy."
+      },
+      {
+        title: "Adaptive Local Rails Routing Engine",
+        proposal: "Expand smart fallback routing to instantly settle via sovereign instant-payment rails when interchange or decline friction is detected.",
+        rationale: "Directly protects merchant conversion rates and drives down transaction processing costs."
+      }
+    ],
+    reverseQuestions: [
+      {
+        question: "How is Stripe balancing developer ergonomics with the increasingly bespoke compliance requirements of Fortune 500 enterprise customers?",
+        targetPersona: "Engineering Director or Product Lead",
+        whyItWorks: "Demonstrates deep understanding of Stripe's transition from developer utility to enterprise financial backbone."
+      },
+      {
+        question: "With real-time settlement rails like FedNow and Pix gaining traction, what is the strategy for expanding Stripe's margin value above pure transport?",
+        targetPersona: "VP of Product / Business Strategy",
+        whyItWorks: "Signals acute industry awareness of macro payment margin trends."
+      }
+    ],
+    criticalKpisToMention: [
+      "Gross Payment Volume (GPV)",
+      "Net Revenue Margin (Take Rate)",
+      "Authorization / Acceptance Lift Rate",
+      "Multi-Product Merchant Attachment Rate (Connect + Billing)",
+      "Radar Chargeback Prevention Ratio"
+    ]
+  },
+  generatedAt: Date.now()
+};
+
 interface CompanyIntelligenceStudioProps {
   applications?: JobApplication[];
   onAddToWishlist?: (app: Partial<JobApplication>) => void;
@@ -149,6 +270,10 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
       setCurrentTeardown(item.report);
       toast.success(`Loaded report for ${item.name}`);
     } else {
+      if (isDemo) {
+        toast.info('Demo Mode: Generating custom Company 360 insights is restricted in this view-only showcase. An existing sample is provided.');
+        return;
+      }
       verifyAndSetUrl(item.url, item.name);
       handleGenerate(item.name, item.url);
     }
@@ -156,6 +281,10 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
 
   const handleToggleSave = async () => {
     if (!currentTeardown) return;
+    if (isDemo) {
+      toast.info('Demo Mode: Saving teardown records is prohibited in this view-only portfolio showcase.');
+      return;
+    }
     const userId = auth.currentUser?.uid || 'guest_user';
     const existing = savedRecords.find(r => r.companyName.toLowerCase() === currentTeardown.companyName.toLowerCase());
     
@@ -183,15 +312,26 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
     loadHistory();
   }, [auth.currentUser]);
 
+  // If in Demo Mode, pre-load showcase teardown
+  useEffect(() => {
+    if (isDemo) {
+      if (!companyName && !initialCompanyName) setCompanyName('Stripe');
+      if (!websiteUrl && !initialWebsiteUrl) setWebsiteUrl('https://stripe.com');
+      setCurrentTeardown(DEMO_COMPANY_TEARDOWN);
+    }
+  }, [isDemo]);
+
   // If initial props are passed, auto-run or inspect
   useEffect(() => {
     if (initialCompanyName || initialWebsiteUrl) {
       setCompanyName(initialCompanyName);
       setWebsiteUrl(initialWebsiteUrl);
       verifyAndSetUrl(initialWebsiteUrl, initialCompanyName);
-      handleGenerate(initialCompanyName, initialWebsiteUrl);
+      if (!isDemo) {
+        handleGenerate(initialCompanyName, initialWebsiteUrl);
+      }
     }
-  }, [initialCompanyName, initialWebsiteUrl]);
+  }, [initialCompanyName, initialWebsiteUrl, isDemo]);
 
   const loadHistory = async () => {
     setLoadingHistory(true);
@@ -291,6 +431,11 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
   };
 
   const handleGenerate = async (overrideName?: string, overrideUrl?: string) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Generating company intelligence is prohibited in this view-only portfolio showcase.');
+      return;
+    }
+
     const targetName = (overrideName !== undefined ? overrideName : companyName).trim();
     let targetUrl = (overrideUrl !== undefined ? overrideUrl : websiteUrl).trim();
 
@@ -407,7 +552,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
   const handleDeleteRecord = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (isDemo) {
-      toast.info('Demo Mode: Deleting teardown records is restricted in this view-only portfolio preview.');
+      toast.info('Demo Mode: Deleting teardown records is prohibited in this view-only portfolio showcase.');
       return;
     }
     const userId = auth.currentUser?.uid || 'guest_user';
@@ -431,6 +576,10 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
   };
 
   const handleExportPdf = () => {
+    if (isDemo) {
+      toast.info('Demo Mode: Exporting PDF is prohibited in this view-only portfolio showcase.');
+      return;
+    }
     if (!currentTeardown) return;
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
@@ -662,11 +811,28 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                 )}
               </div>
               <button
-                onClick={() => { setActiveTab('explorer'); handleGenerate(); }}
-                disabled={isLoading || (!companyName && !websiteUrl)}
-                className="h-10 px-5 flex items-center justify-center gap-1.5 bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-semibold rounded-full transition-all shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shrink-0 w-full sm:w-auto"
+                type="button"
+                onClick={() => {
+                  if (isDemo) {
+                    toast.info('Demo Mode: Generating company intelligence is prohibited in this view-only portfolio showcase.');
+                    return;
+                  }
+                  setActiveTab('explorer');
+                  handleGenerate();
+                }}
+                disabled={!isDemo && (isLoading || (!companyName && !websiteUrl))}
+                className={`h-10 px-5 flex items-center justify-center gap-1.5 text-xs font-semibold rounded-full transition-all shadow-2xs shrink-0 w-full sm:w-auto ${
+                  isDemo
+                    ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 hover:bg-zinc-100 cursor-not-allowed'
+                    : 'bg-[#0068f9] hover:bg-[#024bb1] text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+                }`}
+                title={isDemo ? 'Generating is prohibited in Demo Mode' : 'Generate'}
               >
-                {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin text-white" /> : <Sparkles className="w-3.5 h-3.5 text-blue-200" />}
+                {isLoading ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                ) : (
+                  <Sparkles className={`w-3.5 h-3.5 ${isDemo ? 'text-zinc-400' : 'text-blue-200'}`} />
+                )}
                 <span>{'Generate'}</span>
               </button>
             </div>
@@ -864,31 +1030,40 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                         const isSaved = savedRecords.some(r => r.companyName.toLowerCase() === currentTeardown.companyName.toLowerCase());
                         return (
                           <button
+                            type="button"
                             onClick={handleToggleSave}
-                            className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all cursor-pointer shadow-2xs ${
-                              isSaved
-                                ? 'bg-[#fff9eb] border border-[#fde68a] text-[#d97706] hover:bg-[#fef3c7]'
-                                : 'bg-[#faf9f7] hover:bg-[#f4f4f5] border border-[#efefef] text-[#525866] hover:text-[#121722]'
+                            className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all shadow-2xs ${
+                              isDemo
+                                ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 hover:bg-zinc-100 cursor-not-allowed'
+                                : isSaved
+                                  ? 'bg-[#fff9eb] border border-[#fde68a] text-[#d97706] hover:bg-[#fef3c7] cursor-pointer'
+                                  : 'bg-[#faf9f7] hover:bg-[#f4f4f5] border border-[#efefef] text-[#525866] hover:text-[#121722] cursor-pointer'
                             }`}
-                            title={isSaved ? "Remove from Saved" : "Add to Saved"}
+                            title={isDemo ? "Saving is prohibited in Demo Mode" : isSaved ? "Remove from Saved" : "Add to Saved"}
                           >
-                            <Star size={14} className={isSaved ? "fill-[#f59e0b] text-[#f59e0b]" : "text-[#777c86]"} />
+                            <Star size={14} className={isDemo ? "text-zinc-400" : isSaved ? "fill-[#f59e0b] text-[#f59e0b]" : "text-[#777c86]"} />
                             <span>{isSaved ? 'Saved' : 'Save'}</span>
                           </button>
                         );
                       })()}
 
                       <button
+                        type="button"
                         onClick={handleExportPdf}
-                        className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#525866] hover:text-[#121722] bg-[#faf9f7] hover:bg-[#f4f4f5] border border-[#efefef] rounded-full transition-all cursor-pointer shadow-2xs"
-                        title="Export PDF Report"
+                        className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all shadow-2xs ${
+                          isDemo
+                            ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 hover:bg-zinc-100 cursor-not-allowed'
+                            : 'text-[#525866] hover:text-[#121722] bg-[#faf9f7] hover:bg-[#f4f4f5] border border-[#efefef] cursor-pointer'
+                        }`}
+                        title={isDemo ? "Exporting PDF is prohibited in Demo Mode" : "Export PDF Report"}
                       >
-                        <Download size={14} className="text-[#777c86]" />
+                        <Download size={14} className={isDemo ? "text-zinc-400" : "text-[#777c86]"} />
                         <span>Export</span>
                       </button>
 
                       {matchedApp ? (
                         <button
+                          type="button"
                           onClick={() => {
                             if (onViewWishlist) {
                               onViewWishlist(matchedApp);
@@ -904,7 +1079,12 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                         </button>
                       ) : onAddToWishlist ? (
                         <button
+                          type="button"
                           onClick={() => {
+                            if (isDemo) {
+                              toast.info('Demo Mode: Adding applications to Wishlist is prohibited in this view-only portfolio showcase.');
+                              return;
+                            }
                             onAddToWishlist({
                               company: currentTeardown.companyName,
                               companyUrl: currentTeardown.websiteUrl,
@@ -914,10 +1094,14 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                             });
                             toast.success(`Added ${currentTeardown.companyName} to your Wishlist!`);
                           }}
-                          className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-full transition-all shadow-2xs cursor-pointer text-white bg-[#0068f9] hover:bg-[#024bb1]"
-                          title={`Add ${currentTeardown.companyName} to Wishlist`}
+                          className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-full transition-all shadow-2xs ${
+                            isDemo
+                              ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 hover:bg-zinc-100 cursor-not-allowed'
+                              : 'text-white bg-[#0068f9] hover:bg-[#024bb1] cursor-pointer'
+                          }`}
+                          title={isDemo ? "Adding to Wishlist is prohibited in Demo Mode" : `Add ${currentTeardown.companyName} to Wishlist`}
                         >
-                          <PlusCircle size={14} />
+                          <PlusCircle size={14} className={isDemo ? "text-zinc-400" : "text-white"} />
                           <span>Add to Wishlist</span>
                         </button>
                       ) : null}

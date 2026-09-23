@@ -29,33 +29,41 @@
 
 ## What's New in Version 4.0.0
 
-Version `4.0.0` introduces standalone left-panel access for Company 360 Intelligence and Tailored Application Studios, alongside a suite of Advanced Rich Document Studio editing tools featuring interactive link management, bullet list formatting, and multi-page persistence.
+Version `4.0.0` introduces dedicated standalone left-panel access for Company 360 Intelligence and Tailored Application Studios, alongside a suite of Advanced Rich Document Studio editing tools featuring interactive link management, bullet list formatting, and multi-page persistence, plus the new Job Market "Matched Up" intelligent ranking engine.
 
 ### Major Highlights
 
 *   **Company 360 Intelligence Studio**:
     *   **Direct Workspace Access**: Accessible directly from the collapsible left navigation panel for comprehensive enterprise and startup research.
     *   **Holistic Teardowns**: Generates strategic company teardowns, core product loop analysis, SWOT matrices, AI positioning assessments, and tailored interview pitch talking points on demand.
+    *   **Stand-Alone Exploration**: Research any global target company independently without requiring an active application entry.
+
 *   **Tailored Application Studios**:
     *   **Direct Navigation Access**: Instant entry to **Cover Letter Studio**, **Interview Prep Studio**, and **Resume Tailoring Studio** directly from the primary left sidebar.
-    *   **Versatile Ad-Hoc Generation**: Craft tailored cover letters, targeted STAR-method question frameworks, and ATS-optimized resume sections on demand for any opportunity without needing to bind to an existing job application entry.
+    *   **Versatile Ad-Hoc Generation**: Craft tailored cover letters, targeted STAR-method question frameworks, and ATS-optimized resume sections on demand for any opportunity without needing to bind to an existing job application entry first.
+
 *   **Job Market "Matched Up" Intelligent Ranking & Recommendations**:
     *   **Automated Relevance Ordering**: Compares the user's uploaded CV against live market listings, automatically sorting and ranking roles from most to least relevant.
     *   **Tailored Opportunity Suggestions**: Highlights customized matching job suggestions based on skill alignment, domain qualifications, and experience level.
+
 *   **Advanced Rich Document Studio Tools**:
-    *   **WYSIWYG Editing Suite**: Full-featured formatting toolbar equipped with Bold, Italic, Underline, Strikethrough, Headings (H1/H2), Blockquotes, Text Color picker, Highlighter, and dedicated **Bullet Point** (`List`) list formatting with active selection state tracking.
+    *   **WYSIWYG Editing Suite**: Full-featured formatting toolbar equipped with Bold, Italic, Underline, Strikethrough, Headings (H1/H2), Blockquotes, Text Color picker, Highlighter, and dedicated **Bullet Point List Formatting** (`List`) with active selection state tracking.
     *   **Interactive Link Navigation & Re-Click Removal**:
         *   *Click-to-Open*: Direct single-click navigation for validated links to open in a secure external tab (`target="_blank" rel="noopener noreferrer"`).
         *   *Re-Click to Unlink*: Seamlessly toggle off link styling and attributes by clicking the link tool on any active linked selection, instantly converting text back to standard body formatting.
     *   **Multi-Page Canvas & Print Engine**: Multi-page document canvas with automatic page overflow pagination, live word counter, one-click copy, print-to-PDF formatting, and continuous local and cloud document persistence.
+
 *   **Dual Tracking Framework (Industry & Academic Systems)**:
     *   Switch between **Industry Seekr** and **Academic Seekr** workflows with dedicated pipeline stages (e.g., Screening, Job Talks, Campus Visits, Committee Reviews, Grant proposals).
+
 *   **Enhanced Document & Media Attachment Engine**:
     *   **Client-Side Canvas Compression**: High-res images are automatically resized and compressed client-side (~40KB–90KB) to ensure lightning-fast Firestore operations and stay well within cloud document quotas.
     *   **Instant Eye Preview & Lightbox**: Interactive preview button with full-screen lightbox modal for viewing images and document attachments.
     *   **Multi-Format File Support**: Native handling for PDF, DOC, DOCX, XLS, XLSX, CSV, and image files.
+
 *   **Global Job Market Explorer**:
     *   Live aggregated listings across continents and countries with remote filters and one-click pipeline import.
+
 *   **Interactive Sankey Pipeline & Analytics**:
     *   Visual flow tracking from initial application to offer or rejection with conversion funnel analytics.
 

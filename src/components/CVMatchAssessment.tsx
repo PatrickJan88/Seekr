@@ -1500,6 +1500,7 @@ ${app.notes || 'No extra description provided.'}`;
             }
           }}
           storageKey={activeEvaluationId ? `studio_cl_${activeEvaluationId}` : `studio_cl_${(result?.company_name || 'general').replace(/\s+/g, '_')}`}
+          isDemo={isDemo}
         />
       )}
 
@@ -1521,6 +1522,7 @@ ${app.notes || 'No extra description provided.'}`;
             }
           }}
           storageKey={activeEvaluationId ? `studio_interview_prep_${activeEvaluationId}` : `studio_interview_prep_${(result?.company_name || 'general').replace(/\s+/g, '_')}`}
+          isDemo={isDemo}
         />
       )}
 
@@ -1539,6 +1541,7 @@ ${app.notes || 'No extra description provided.'}`;
             }
           }}
           storageKey={activeEvaluationId ? `studio_resume_${activeEvaluationId}` : `studio_resume_${(result?.company_name || 'general').replace(/\s+/g, '_')}`}
+          isDemo={isDemo}
         />
       )}
     </div>

@@ -12,6 +12,7 @@ interface InterviewPrepStudioProps {
   embedded?: boolean;
   onSave?: (savedText: string) => void;
   storageKey?: string;
+  isDemo?: boolean;
 }
 
 export function InterviewPrepStudio({ 
@@ -21,7 +22,8 @@ export function InterviewPrepStudio({
   onClose, 
   embedded = false,
   onSave,
-  storageKey 
+  storageKey,
+  isDemo = false
 }: InterviewPrepStudioProps) {
   const [copied, setCopied] = useState(false);
   const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right'>('left');
@@ -63,6 +65,7 @@ export function InterviewPrepStudio({
 
   // Debounced auto-save engine: persists to localStorage and invokes onSave callback
   const triggerAutoSave = useCallback(() => {
+    if (isDemo) return;
     setSaveStatus('saving');
     // Immediate synchronous persistence to localStorage so no quick navigation can ever lose it
     const currentPages = snapshotDomPages();
@@ -81,10 +84,14 @@ export function InterviewPrepStudio({
       }
       setSaveStatus('saved');
     }, 400);
-  }, [effectiveStorageKey, snapshotDomPages]);
+  }, [effectiveStorageKey, snapshotDomPages, isDemo]);
 
   // Manual save trigger for immediate persistence
   const handleManualSave = useCallback(() => {
+    if (isDemo) {
+      toast.info('Demo Mode: Saving documents is prohibited in this view-only portfolio showcase.');
+      return;
+    }
     if (autoSaveDebounceRef.current) clearTimeout(autoSaveDebounceRef.current);
     setSaveStatus('saving');
     const currentPages = snapshotDomPages();
@@ -98,7 +105,7 @@ export function InterviewPrepStudio({
     }
     setSaveStatus('saved');
     toast.success('Interview guide auto-saved successfully!');
-  }, [effectiveStorageKey, snapshotDomPages]);
+  }, [effectiveStorageKey, snapshotDomPages, isDemo]);
 
   // Initialize with initial text or stored draft ONCE per storageKey
   useEffect(() => {
@@ -255,6 +262,10 @@ export function InterviewPrepStudio({
   }, [activePageIndex]);
 
   const handlePageInput = (idx: number) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Editing document content is restricted in this view-only portfolio preview.', { id: 'demo-edit' });
+      return;
+    }
     debouncedUpdateWordCount();
     const el = pageRefs.current[idx];
     if (!el) return;
@@ -274,6 +285,11 @@ export function InterviewPrepStudio({
   };
 
   const handlePaste = (_e: React.ClipboardEvent<HTMLDivElement>, pageIndex: number) => {
+    if (isDemo) {
+      _e.preventDefault();
+      toast.info('Demo Mode: Editing document content is restricted in this view-only portfolio preview.', { id: 'demo-edit' });
+      return;
+    }
     const el = pageRefs.current[pageIndex];
     if (!el) return;
 
@@ -294,6 +310,10 @@ export function InterviewPrepStudio({
   };
 
   const handleToolbarAction = (action: string, value?: string) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Modifying document formatting is prohibited in this view-only portfolio showcase.', { id: 'demo-edit' });
+      return;
+    }
     const activeEditor = pageRefs.current[activePageIndex] || pageRefs.current[0];
     if (!activeEditor) return;
     const state = executeRichTextCommand(activeEditor, action, value);
@@ -330,6 +350,10 @@ export function InterviewPrepStudio({
 
   // Add one new page after the current active page (or at the end)
   const handleAddPage = (afterIndex?: number) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Adding new pages is prohibited in this view-only portfolio showcase.');
+      return;
+    }
     const currentDomPages = snapshotDomPages();
     const insertAt = typeof afterIndex === 'number' ? afterIndex + 1 : currentDomPages.length;
     const nextPages = [...currentDomPages];
@@ -356,6 +380,10 @@ export function InterviewPrepStudio({
 
   // Remove a specific page sheet
   const handleRemovePage = (indexToRemove: number) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Deleting pages is prohibited in this view-only portfolio showcase.');
+      return;
+    }
     if (pages.length <= 1) return;
     const currentDomPages = snapshotDomPages();
     const nextPages = currentDomPages.filter((_, idx) => idx !== indexToRemove);
@@ -389,6 +417,10 @@ export function InterviewPrepStudio({
   };
 
   const handlePrint = () => {
+    if (isDemo) {
+      toast.info('Demo Mode: Exporting PDF is prohibited in this view-only portfolio showcase.');
+      return;
+    }
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
       toast.error('Popup blocked. Please allow popups to print or save PDF.');
@@ -572,6 +604,16 @@ export function InterviewPrepStudio({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>, pageIndex: number) => {
     e.stopPropagation();
 
+    if (isDemo) {
+      const isNav = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key) ||
+        ((e.ctrlKey || e.metaKey) && ['c', 'a'].includes(e.key.toLowerCase()));
+      if (!isNav) {
+        e.preventDefault();
+        toast.info('Demo Mode: Editing document content is prohibited in this view-only portfolio showcase.', { id: 'demo-edit' });
+      }
+      return;
+    }
+
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
       handleAddPage(pageIndex);
@@ -653,14 +695,21 @@ export function InterviewPrepStudio({
               <button
                 type="button"
                 onClick={handleManualSave}
-                title="Auto-saves automatically. Click to save immediately."
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all cursor-pointer select-none active:scale-95 ${
-                  saveStatus === 'saving' 
-                    ? 'bg-amber-50 text-amber-700 border border-amber-200/80 hover:bg-amber-100' 
-                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 hover:bg-emerald-100/70'
+                title={isDemo ? "Saving is prohibited in Demo Mode" : "Auto-saves automatically. Click to save immediately."}
+                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all select-none ${
+                  isDemo
+                    ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed'
+                    : saveStatus === 'saving' 
+                      ? 'bg-amber-50 text-amber-700 border border-amber-200/80 hover:bg-amber-100 cursor-pointer active:scale-95' 
+                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 hover:bg-emerald-100/70 cursor-pointer active:scale-95'
                 }`}
               >
-                {saveStatus === 'saving' ? (
+                {isDemo ? (
+                  <>
+                    <Check size={11} className="text-zinc-400" />
+                    <span>View-only (Demo)</span>
+                  </>
+                ) : saveStatus === 'saving' ? (
                   <>
                     <Loader2 size={11} className="animate-spin text-amber-600" />
                     <span>Auto-saving...</span>
@@ -678,6 +727,7 @@ export function InterviewPrepStudio({
 
         <div className="flex items-center gap-2 flex-wrap">
           <button 
+            type="button"
             onClick={handleCopy}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-xs font-semibold rounded-full transition-all shadow-2xs cursor-pointer"
           >
@@ -686,15 +736,22 @@ export function InterviewPrepStudio({
           </button>
 
           <button 
+            type="button"
             onClick={handlePrint}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0068f9] text-white text-xs font-semibold rounded-full hover:bg-[#024bb1] transition-all shadow-2xs cursor-pointer"
+            className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-full transition-all shadow-2xs ${
+              isDemo
+                ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 hover:bg-zinc-100 cursor-not-allowed'
+                : 'bg-[#0068f9] text-white hover:bg-[#024bb1] cursor-pointer'
+            }`}
+            title={isDemo ? "Exporting PDF is prohibited in Demo Mode" : "Export PDF"}
           >
-            <Printer size={15} />
+            <Printer size={15} className={isDemo ? "text-zinc-400" : "text-white"} />
             <span>Export PDF</span>
           </button>
 
           {!embedded && onClose && (
             <button 
+              type="button"
               onClick={onClose}
               className="p-2 text-[#a5a5a5] hover:text-[#121722] hover:bg-[#efefef] rounded-full transition-colors cursor-pointer"
             >
@@ -739,10 +796,14 @@ export function InterviewPrepStudio({
                       e.stopPropagation();
                       handleRemovePage(idx);
                     }}
-                    title={`Delete Page ${idx + 1}`}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] text-rose-600 hover:bg-rose-50 border border-rose-200 transition-colors cursor-pointer"
+                    title={isDemo ? "Deleting pages is prohibited in Demo Mode" : `Delete Page ${idx + 1}`}
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] transition-colors ${
+                      isDemo
+                        ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed hover:bg-zinc-100'
+                        : 'text-rose-600 hover:bg-rose-50 border border-rose-200 cursor-pointer'
+                    }`}
                   >
-                    <Trash2 size={11} />
+                    <Trash2 size={11} className={isDemo ? "text-zinc-400" : "text-rose-600"} />
                     <span>Delete Page {idx + 1}</span>
                   </button>
                 )}
@@ -765,7 +826,7 @@ export function InterviewPrepStudio({
                   }
                 }
               }}
-              contentEditable
+              contentEditable={!isDemo}
               suppressContentEditableWarning
               onFocus={() => setActivePageIndex(idx)}
               onClick={(e) => handleEditorClick(e, idx)}
@@ -790,9 +851,14 @@ export function InterviewPrepStudio({
         <button
           type="button"
           onClick={() => handleAddPage(pages.length - 1)}
-          className="my-4 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#121722] hover:text-[#0068f9] hover:bg-black/5 rounded-md transition-colors cursor-pointer"
+          className={`my-4 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+            isDemo
+              ? 'text-zinc-400 border border-zinc-200 bg-zinc-100 cursor-not-allowed hover:bg-zinc-100'
+              : 'text-[#121722] hover:text-[#0068f9] hover:bg-black/5 cursor-pointer'
+          }`}
+          title={isDemo ? "Adding pages is prohibited in Demo Mode" : "Add new page"}
         >
-          <Plus size={15} />
+          <Plus size={15} className={isDemo ? "text-zinc-400" : ""} />
           <span>Add new page</span>
         </button>
       </div>

@@ -59,6 +59,7 @@ interface ResumeTemplateStudioProps {
   embedded?: boolean;
   onSave?: (savedData: TailoredResumeData) => void;
   storageKey?: string;
+  isDemo?: boolean;
 }
 
 function normalizeResumeData(data: Partial<TailoredResumeData> | null | undefined, fallbackRole?: string, fallbackCompany?: string): TailoredResumeData {
@@ -121,7 +122,8 @@ export function ResumeTemplateStudio({
   onClose,
   embedded = false,
   onSave,
-  storageKey
+  storageKey,
+  isDemo = false
 }: ResumeTemplateStudioProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<ResumeTemplateId>('modern-single');
   const [resumeData, setResumeData] = useState<TailoredResumeData>(() => normalizeResumeData(initialData, targetRole, companyName));
@@ -172,6 +174,7 @@ export function ResumeTemplateStudio({
 
   // Debounced auto-save function
   const triggerAutoSave = useCallback((dataToSave: TailoredResumeData, templateToSave: ResumeTemplateId) => {
+    if (isDemo) return;
     setSaveStatus('saving');
     if (autoSaveDebounceRef.current) clearTimeout(autoSaveDebounceRef.current);
     autoSaveDebounceRef.current = setTimeout(() => {
@@ -186,10 +189,14 @@ export function ResumeTemplateStudio({
       }
       setSaveStatus('saved');
     }, 500);
-  }, [effectiveStorageKey]);
+  }, [effectiveStorageKey, isDemo]);
 
   // Immediate manual save
   const handleManualSave = useCallback(() => {
+    if (isDemo) {
+      toast.info('Demo Mode: Saving resume content is prohibited in this view-only portfolio showcase.');
+      return;
+    }
     if (autoSaveDebounceRef.current) clearTimeout(autoSaveDebounceRef.current);
     setSaveStatus('saving');
     try {
@@ -201,7 +208,7 @@ export function ResumeTemplateStudio({
     }
     setSaveStatus('saved');
     toast.success('Resume draft auto-saved successfully!');
-  }, [effectiveStorageKey]);
+  }, [effectiveStorageKey, isDemo]);
 
   // Automatically trigger debounced auto-save whenever resumeData or selectedTemplate changes
   useEffect(() => {
@@ -228,14 +235,51 @@ export function ResumeTemplateStudio({
     };
   }, [effectiveStorageKey]);
 
+  // Contact and Header Handlers
+  const handleUpdateContact = (field: keyof TailoredResumeData['contact'], value: string) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Editing contact details is prohibited in this view-only portfolio showcase.');
+      return;
+    }
+    setResumeData(prev => ({ ...prev, contact: { ...prev.contact, [field]: value } }));
+  };
+
+  const handleUpdateBasic = (field: 'fullName' | 'title' | 'summary', value: string) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Editing resume content is prohibited in this view-only portfolio showcase.');
+      return;
+    }
+    setResumeData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleUpdateSkills = (type: 'technical' | 'tools' | 'domain', valueStr: string) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Editing skills is prohibited in this view-only portfolio showcase.');
+      return;
+    }
+    const list = valueStr.split(',').map(s => s.trim()).filter(Boolean);
+    setResumeData(prev => ({
+      ...prev,
+      skills: { ...prev.skills, [type]: list }
+    }));
+  };
+
   // Experience Handlers
   const handleUpdateExperience = (index: number, field: keyof TailoredResumeExperience, value: any) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Editing resume content is prohibited in this view-only portfolio showcase.');
+      return;
+    }
     const newExp = [...resumeData.experience];
     newExp[index] = { ...newExp[index], [field]: value };
     setResumeData({ ...resumeData, experience: newExp });
   };
 
   const handleAddExperience = () => {
+    if (isDemo) {
+      toast.info('Demo Mode: Adding experience items is prohibited in this view-only portfolio showcase.');
+      return;
+    }
     const newExp: TailoredResumeExperience = {
       role: 'Software Engineer',
       company: 'Company Name',
@@ -248,11 +292,19 @@ export function ResumeTemplateStudio({
   };
 
   const handleRemoveExperience = (index: number) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Removing experience items is prohibited in this view-only portfolio showcase.');
+      return;
+    }
     const newExp = resumeData.experience.filter((_, i) => i !== index);
     setResumeData({ ...resumeData, experience: newExp });
   };
 
   const handleUpdateBullet = (expIndex: number, bulletIndex: number, text: string) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Editing bullet points is prohibited in this view-only portfolio showcase.');
+      return;
+    }
     const newExp = [...resumeData.experience];
     const newBullets = [...newExp[expIndex].bullets];
     newBullets[bulletIndex] = text;
@@ -261,12 +313,20 @@ export function ResumeTemplateStudio({
   };
 
   const handleAddBullet = (expIndex: number) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Adding bullet points is prohibited in this view-only portfolio showcase.');
+      return;
+    }
     const newExp = [...resumeData.experience];
     newExp[expIndex].bullets = [...newExp[expIndex].bullets, 'Engineered high-performance module optimizing delivery speed by 25%.'];
     setResumeData({ ...resumeData, experience: newExp });
   };
 
   const handleRemoveBullet = (expIndex: number, bulletIndex: number) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Removing bullet points is prohibited in this view-only portfolio showcase.');
+      return;
+    }
     const newExp = [...resumeData.experience];
     newExp[expIndex].bullets = newExp[expIndex].bullets.filter((_, bi) => bi !== bulletIndex);
     setResumeData({ ...resumeData, experience: newExp });
@@ -274,12 +334,20 @@ export function ResumeTemplateStudio({
 
   // Education Handlers
   const handleUpdateEducation = (index: number, field: keyof TailoredResumeEducation, value: any) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Editing education content is prohibited in this view-only portfolio showcase.');
+      return;
+    }
     const newEdu = [...resumeData.education];
     newEdu[index] = { ...newEdu[index], [field]: value };
     setResumeData({ ...resumeData, education: newEdu });
   };
 
   const handleAddEducation = () => {
+    if (isDemo) {
+      toast.info('Demo Mode: Adding education items is prohibited in this view-only portfolio showcase.');
+      return;
+    }
     const newEdu: TailoredResumeEducation = {
       degree: 'B.S. in Computer Science',
       institution: 'University Name',
@@ -290,6 +358,10 @@ export function ResumeTemplateStudio({
   };
 
   const handleRemoveEducation = (index: number) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Removing education items is prohibited in this view-only portfolio showcase.');
+      return;
+    }
     const newEdu = resumeData.education.filter((_, i) => i !== index);
     setResumeData({ ...resumeData, education: newEdu });
   };
@@ -325,6 +397,10 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
 
   // PDF Export Engine
   const handlePrint = (templateId?: ResumeTemplateId) => {
+    if (isDemo) {
+      toast.info('Demo Mode: Exporting PDF is prohibited in this view-only portfolio showcase.');
+      return;
+    }
     const activeTmpl = templateId || selectedTemplate;
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
@@ -897,14 +973,21 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
               <button
                 type="button"
                 onClick={handleManualSave}
-                title="Auto-saves automatically. Click to save immediately."
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all cursor-pointer select-none active:scale-95 ${
-                  saveStatus === 'saving' 
-                    ? 'bg-amber-50 text-amber-700 border border-amber-200/80 hover:bg-amber-100' 
-                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 hover:bg-emerald-100/70'
+                title={isDemo ? "Saving is prohibited in Demo Mode" : "Auto-saves automatically. Click to save immediately."}
+                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all select-none ${
+                  isDemo
+                    ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed'
+                    : saveStatus === 'saving' 
+                      ? 'bg-amber-50 text-amber-700 border border-amber-200/80 hover:bg-amber-100 cursor-pointer active:scale-95' 
+                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 hover:bg-emerald-100/70 cursor-pointer active:scale-95'
                 }`}
               >
-                {saveStatus === 'saving' ? (
+                {isDemo ? (
+                  <>
+                    <Check size={11} className="text-zinc-400" />
+                    <span>View-only (Demo)</span>
+                  </>
+                ) : saveStatus === 'saving' ? (
                   <>
                     <Loader2 size={11} className="animate-spin text-amber-600" />
                     <span>Auto-saving...</span>
@@ -940,6 +1023,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
           </div>
 
           <button
+            type="button"
             onClick={handleCopyText}
             className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-xs font-semibold rounded-full transition-all shadow-2xs cursor-pointer"
           >
@@ -948,10 +1032,16 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
           </button>
 
           <button
+            type="button"
             onClick={() => handlePrint()}
-            className="inline-flex items-center gap-2 px-5 py-2 bg-[#0068f9] text-white text-xs font-semibold rounded-full hover:bg-[#024bb1] transition-all shadow-2xs cursor-pointer"
+            className={`inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold rounded-full transition-all shadow-2xs ${
+              isDemo
+                ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 hover:bg-zinc-100 cursor-not-allowed'
+                : 'bg-[#0068f9] text-white hover:bg-[#024bb1] cursor-pointer'
+            }`}
+            title={isDemo ? "Exporting PDF is prohibited in Demo Mode" : "Export PDF"}
           >
-            <Printer size={15} />
+            <Printer size={15} className={isDemo ? "text-zinc-400" : "text-white"} />
             <span>Export PDF</span>
           </button>
 
@@ -1000,7 +1090,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                       <input
                         type="text"
                         value={resumeData.fullName}
-                        onChange={e => setResumeData({ ...resumeData, fullName: e.target.value })}
+                        onChange={e => handleUpdateBasic('fullName', e.target.value)}
                         className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none"
                       />
                     </div>
@@ -1009,7 +1099,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                       <input
                         type="text"
                         value={resumeData.title}
-                        onChange={e => setResumeData({ ...resumeData, title: e.target.value })}
+                        onChange={e => handleUpdateBasic('title', e.target.value)}
                         className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none"
                       />
                     </div>
@@ -1018,7 +1108,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                       <input
                         type="text"
                         value={resumeData.contact.email}
-                        onChange={e => setResumeData({ ...resumeData, contact: { ...resumeData.contact, email: e.target.value } })}
+                        onChange={e => handleUpdateContact('email', e.target.value)}
                         className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none"
                       />
                     </div>
@@ -1027,7 +1117,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                       <input
                         type="text"
                         value={resumeData.contact.phone}
-                        onChange={e => setResumeData({ ...resumeData, contact: { ...resumeData.contact, phone: e.target.value } })}
+                        onChange={e => handleUpdateContact('phone', e.target.value)}
                         className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none"
                       />
                     </div>
@@ -1036,7 +1126,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                       <input
                         type="text"
                         value={resumeData.contact.location}
-                        onChange={e => setResumeData({ ...resumeData, contact: { ...resumeData.contact, location: e.target.value } })}
+                        onChange={e => handleUpdateContact('location', e.target.value)}
                         className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none"
                       />
                     </div>
@@ -1045,7 +1135,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                       <input
                         type="text"
                         value={resumeData.contact.linkedin || ''}
-                        onChange={e => setResumeData({ ...resumeData, contact: { ...resumeData.contact, linkedin: e.target.value } })}
+                        onChange={e => handleUpdateContact('linkedin', e.target.value)}
                         className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none"
                       />
                     </div>
@@ -1060,7 +1150,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                   <textarea
                     rows={4}
                     value={resumeData.summary}
-                    onChange={e => setResumeData({ ...resumeData, summary: e.target.value })}
+                    onChange={e => handleUpdateBasic('summary', e.target.value)}
                     className="w-full p-3 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none resize-none leading-relaxed"
                   />
                 </div>
@@ -1075,10 +1165,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                     <input
                       type="text"
                       value={resumeData.skills.technical.join(', ')}
-                      onChange={e => setResumeData({
-                        ...resumeData,
-                        skills: { ...resumeData.skills, technical: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }
-                      })}
+                      onChange={e => handleUpdateSkills('technical', e.target.value)}
                       className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none"
                     />
                   </div>
@@ -1087,10 +1174,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                     <input
                       type="text"
                       value={resumeData.skills.tools.join(', ')}
-                      onChange={e => setResumeData({
-                        ...resumeData,
-                        skills: { ...resumeData.skills, tools: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }
-                      })}
+                      onChange={e => handleUpdateSkills('tools', e.target.value)}
                       className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none"
                     />
                   </div>
@@ -1099,10 +1183,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                     <input
                       type="text"
                       value={resumeData.skills.domain.join(', ')}
-                      onChange={e => setResumeData({
-                        ...resumeData,
-                        skills: { ...resumeData.skills, domain: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }
-                      })}
+                      onChange={e => handleUpdateSkills('domain', e.target.value)}
                       className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none"
                     />
                   </div>
@@ -1117,9 +1198,14 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                     <button
                       type="button"
                       onClick={handleAddExperience}
-                      className="px-3 py-1 bg-[#f0f5ff] text-[#0068f9] hover:bg-[#e0edff] rounded-full text-xs font-semibold flex items-center gap-1 transition-colors"
+                      title={isDemo ? "Adding experience is prohibited in Demo Mode" : "Add Role"}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 transition-colors ${
+                        isDemo
+                          ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed hover:bg-zinc-100'
+                          : 'bg-[#f0f5ff] text-[#0068f9] hover:bg-[#e0edff] cursor-pointer'
+                      }`}
                     >
-                      <Plus size={13} />
+                      <Plus size={13} className={isDemo ? "text-zinc-400" : ""} />
                       <span>Add Role</span>
                     </button>
                   </div>
@@ -1132,7 +1218,10 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                           <button
                             type="button"
                             onClick={() => handleRemoveExperience(expIdx)}
-                            className="text-red-500 hover:text-red-700 p-1 transition-colors"
+                            title={isDemo ? "Removing experience is prohibited in Demo Mode" : "Delete Experience"}
+                            className={`p-1 transition-colors ${
+                              isDemo ? 'text-zinc-400 cursor-not-allowed hover:text-zinc-400' : 'text-red-500 hover:text-red-700 cursor-pointer'
+                            }`}
                           >
                             <Trash2 size={13} />
                           </button>
@@ -1184,9 +1273,12 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                             <button
                               type="button"
                               onClick={() => handleAddBullet(expIdx)}
-                              className="text-[11px] text-[#0068f9] hover:underline font-semibold flex items-center gap-0.5"
+                              title={isDemo ? "Adding bullets is prohibited in Demo Mode" : "Add Bullet"}
+                              className={`text-[11px] font-semibold flex items-center gap-0.5 ${
+                                isDemo ? 'text-zinc-400 cursor-not-allowed hover:no-underline' : 'text-[#0068f9] hover:underline cursor-pointer'
+                              }`}
                             >
-                              <Plus size={11} /> Add Bullet
+                              <Plus size={11} className={isDemo ? "text-zinc-400" : ""} /> Add Bullet
                             </button>
                           </div>
                           {exp.bullets.map((bullet, bIdx) => (
@@ -1200,7 +1292,10 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                               <button
                                 type="button"
                                 onClick={() => handleRemoveBullet(expIdx, bIdx)}
-                                className="text-[#a5a5a5] hover:text-red-500 p-1 transition-colors mt-1"
+                                title={isDemo ? "Removing bullets is prohibited in Demo Mode" : "Delete Bullet"}
+                                className={`p-1 transition-colors mt-1 ${
+                                  isDemo ? 'text-zinc-400 cursor-not-allowed hover:text-zinc-400' : 'text-[#a5a5a5] hover:text-red-500 cursor-pointer'
+                                }`}
                               >
                                 <Trash2 size={13} />
                               </button>
@@ -1221,9 +1316,14 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                     <button
                       type="button"
                       onClick={handleAddEducation}
-                      className="px-3 py-1 bg-[#f0f5ff] text-[#0068f9] hover:bg-[#e0edff] rounded-full text-xs font-semibold flex items-center gap-1 transition-colors"
+                      title={isDemo ? "Adding education is prohibited in Demo Mode" : "Add Degree"}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 transition-colors ${
+                        isDemo
+                          ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed hover:bg-zinc-100'
+                          : 'bg-[#f0f5ff] text-[#0068f9] hover:bg-[#e0edff] cursor-pointer'
+                      }`}
                     >
-                      <Plus size={13} />
+                      <Plus size={13} className={isDemo ? "text-zinc-400" : ""} />
                       <span>Add Degree</span>
                     </button>
                   </div>
@@ -1262,7 +1362,10 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                           <button
                             type="button"
                             onClick={() => handleRemoveEducation(eduIdx)}
-                            className="text-red-500 hover:text-red-700 p-2 transition-colors mb-0.5"
+                            title={isDemo ? "Removing education is prohibited in Demo Mode" : "Delete Degree"}
+                            className={`p-2 transition-colors mb-0.5 ${
+                              isDemo ? 'text-zinc-400 cursor-not-allowed hover:text-zinc-400' : 'text-red-500 hover:text-red-700 cursor-pointer'
+                            }`}
                           >
                             <Trash2 size={14} />
                           </button>
