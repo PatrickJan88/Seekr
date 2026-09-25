@@ -2288,12 +2288,121 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
         }
       };
 
+      const fetchSimplifyNewGrad = async () => {
+        try {
+          const endpoints = [
+            'https://raw.githubusercontent.com/SimplifyJobs/New-Grad-Positions/dev/.github/scripts/listings.json',
+            'https://raw.githubusercontent.com/SimplifyJobs/New-Grad-Positions/main/.github/scripts/listings.json'
+          ];
+          let rawData: any = null;
+          for (const ep of endpoints) {
+            try {
+              const res = await fetch(ep, { signal: AbortSignal.timeout(6000) });
+              if (res.ok) {
+                const text = await res.text();
+                const parsed = JSON.parse(text);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                  rawData = parsed;
+                  break;
+                }
+              }
+            } catch (e) {}
+          }
+
+          if (Array.isArray(rawData)) {
+            const activeListings = rawData.filter((item: any) => item.active !== false && item.title && item.company_name);
+            const mapped = activeListings.slice(0, 150).map((item: any) => {
+              let locStr = 'Remote';
+              if (Array.isArray(item.locations) && item.locations.length > 0) {
+                locStr = item.locations.join(', ');
+              } else if (typeof item.locations === 'string' && item.locations) {
+                locStr = item.locations;
+              } else if (item.location) {
+                locStr = item.location;
+              }
+
+              const tags: string[] = ['new-grad', 'early-career'];
+              if (item.sponsorship) {
+                tags.push(item.sponsorship.toLowerCase());
+              }
+              if (item.category) {
+                tags.push(item.category.toLowerCase());
+              }
+              if (locStr.toLowerCase().includes('remote')) {
+                tags.push('remote');
+              }
+
+              const titleLower = (item.title || '').toLowerCase();
+              let category = 'software-dev';
+              if (titleLower.includes('data') || titleLower.includes('analytics')) {
+                category = 'data scientist';
+              } else if (titleLower.includes('machine learning') || titleLower.includes('ml') || titleLower.includes('ai') || titleLower.includes('artificial intelligence') || titleLower.includes('deep learning')) {
+                category = 'machine learning';
+              } else if (titleLower.includes('design') || titleLower.includes('ui') || titleLower.includes('ux') || titleLower.includes('product designer')) {
+                category = 'ux ui designer';
+              } else if (titleLower.includes('product manager') || titleLower.includes('product management') || titleLower.includes('apm')) {
+                category = 'product manager';
+              } else if (titleLower.includes('security') || titleLower.includes('cyber')) {
+                category = 'security';
+              } else if (titleLower.includes('devops') || titleLower.includes('cloud') || titleLower.includes('infrastructure')) {
+                category = 'devops';
+              }
+
+              let domain = '';
+              try {
+                if (item.company_url) {
+                  domain = new URL(item.company_url.startsWith('http') ? item.company_url : `https://${item.company_url}`).hostname.replace(/^www\./, '');
+                } else if (item.url) {
+                  domain = new URL(item.url).hostname.replace(/^www\./, '');
+                }
+              } catch (e) {}
+
+              const logoUrl = domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=128` : '';
+
+              let pubDate = new Date().toISOString();
+              if (item.date_posted) {
+                if (typeof item.date_posted === 'number') {
+                  pubDate = new Date(item.date_posted > 10000000000 ? item.date_posted : item.date_posted * 1000).toISOString();
+                } else if (typeof item.date_posted === 'string') {
+                  const d = new Date(item.date_posted);
+                  if (!isNaN(d.getTime())) {
+                    pubDate = d.toISOString();
+                  }
+                }
+              }
+
+              const safeId = `simplify-${(item.company_name || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}-${(item.title || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}-${item.id || Math.random().toString(36).substring(2, 7)}`;
+
+              return {
+                id: safeId,
+                url: item.url || item.application_url || `https://github.com/SimplifyJobs/New-Grad-Positions`,
+                title: item.title,
+                company_name: item.company_name,
+                company_logo: logoUrl,
+                category: category,
+                tags: tags,
+                job_type: 'full_time',
+                publication_date: pubDate,
+                candidate_required_location: locStr,
+                salary: item.salary || '',
+                description: `${item.title} at ${item.company_name}. Category: ${item.category || 'Engineering / AI'}. ${item.sponsorship ? `Sponsorship: ${item.sponsorship}.` : ''} Location: ${locStr}.`
+              };
+            });
+
+            allJobs = allJobs.concat(mapped);
+          }
+        } catch (e) {
+          console.warn("[SimplifyJobs] Feed temporarily unavailable, continuing.");
+        }
+      };
+
       // Run all fetches in parallel
       await Promise.allSettled([
         fetchRemotive(),
         fetchArbeitnow(),
         fetchWeWorkRemotely(),
         fetchHackerNews(),
+        fetchSimplifyNewGrad(),
         fetchAdzuna(),
         fetchJobicy(),
         fetchJooble(),

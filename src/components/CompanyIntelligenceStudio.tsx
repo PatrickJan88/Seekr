@@ -233,15 +233,27 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
   }
 
   const [recentSearches, setRecentSearches] = useState<RecentSearchItem[]>([]);
+  const currentUserId = isDemo ? 'demo_user' : auth.currentUser?.uid;
+  const storageKey = currentUserId ? `seekr_recent_searches_${currentUserId}` : null;
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('seekr_recent_searches');
-      if (stored) {
-        setRecentSearches(JSON.parse(stored));
+      // Clean up legacy unscoped key so old browser sessions do not contaminate new logins
+      localStorage.removeItem('seekr_recent_searches');
+      if (storageKey) {
+        const stored = localStorage.getItem(storageKey);
+        if (stored) {
+          setRecentSearches(JSON.parse(stored));
+        } else {
+          setRecentSearches([]);
+        }
+      } else {
+        setRecentSearches([]);
       }
-    } catch (e) {}
-  }, []);
+    } catch (e) {
+      setRecentSearches([]);
+    }
+  }, [storageKey]);
 
   const addRecentSearch = (name: string, url: string, report?: CompanyTeardownData) => {
     if (!name && !url) return;
@@ -254,9 +266,11 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
     setRecentSearches(prev => {
       const filtered = prev.filter(p => p.name.toLowerCase() !== item.name.toLowerCase());
       const updated = [item, ...filtered].slice(0, 15);
-      try {
-        localStorage.setItem('seekr_recent_searches', JSON.stringify(updated));
-      } catch (e) {}
+      if (storageKey) {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(updated));
+        } catch (e) {}
+      }
       return updated;
     });
   };
@@ -879,7 +893,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
           <div className="mt-3.5 bg-[#faf9f7] rounded-xl px-3.5 py-2.5 flex items-center gap-3">
             <span className="text-[11px] text-[#777c86] font-medium shrink-0">Recent Searches:</span>
             {recentSearches.length === 0 ? (
-              <span className="text-xs text-[#a5a5a5]">No recent searches yet</span>
+              <span className="text-xs text-[#a5a5a5]">N/A</span>
             ) : (
               <>
                 <div 

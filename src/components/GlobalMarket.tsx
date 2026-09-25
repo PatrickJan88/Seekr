@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, ExternalLink, Search, MapPin, Briefcase, Clock, Building2, Plus, Sparkles, Info, Upload, X } from 'lucide-react';
+import { Loader2, ExternalLink, Search, MapPin, Briefcase, Clock, Building2, Plus, Sparkles, Info, Upload, X, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 import locationsData from '../data/locations.json';
 import { UserResume } from '../types';
@@ -129,6 +129,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
   const [cityFilter, setCityFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
+  const [newGradFilter, setNewGradFilter] = useState(false);
 
   // CV & Matched Up state
   const [storedResume, setStoredResume] = useState<UserResume | null>(() => getStoredLocalResume(auth.currentUser?.uid));
@@ -451,7 +452,15 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
           (job.tags && job.tags.some(t => t.toLowerCase().includes(typeLower)));
       }
 
-      return matchesLocation && matchesType && matchesDate;
+      // 3. New Grad match
+      let matchesNewGrad = true;
+      if (newGradFilter) {
+        matchesNewGrad =
+          Boolean(job.tags && job.tags.some(t => t.includes('new-grad') || t.includes('early-career'))) ||
+          Boolean(job.title && /\b(new grad|entry level|graduate|intern|associate|junior|university)\b/i.test(job.title));
+      }
+
+      return matchesLocation && matchesType && matchesDate && matchesNewGrad;
     });
 
     if (searchTerm) {
@@ -480,7 +489,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
     }
     
     return result;
-  }, [jobs, countryFilter, cityFilter, typeFilter, dateFilter, searchTerm, isMatchedUpActive, effectiveProfile, jobScoresMap]);
+  }, [jobs, countryFilter, cityFilter, typeFilter, dateFilter, newGradFilter, searchTerm, isMatchedUpActive, effectiveProfile, jobScoresMap]);
 
   return (
     <div className="relative w-full flex-1 flex flex-col min-h-[500px]">
@@ -609,6 +618,36 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
               dateFilter={dateFilter}
               onSelectDate={setDateFilter}
             />
+          </div>
+
+          {/* New Grad Switch Toggle */}
+          <div className="min-w-0 flex-1 sm:flex-initial sm:w-auto z-50">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={newGradFilter}
+              onClick={() => setNewGradFilter(prev => !prev)}
+              className="flex items-center justify-between gap-2.5 h-[38px] px-3.5 bg-white border border-[#efefef] hover:border-[#121722]/30 rounded-full text-sm font-medium transition-all shadow-2xs hover:bg-[#faf9f7] cursor-pointer select-none shrink-0 group"
+              title={newGradFilter ? 'New Grad filter is ON. Click to show all experience levels' : 'New Grad filter is OFF. Click to show New Grad & Early Career roles only'}
+            >
+              <div className="flex items-center gap-1.5">
+                <GraduationCap size={15} className={newGradFilter ? 'text-[#0068f9]' : 'text-[#777c86] group-hover:text-[#121722] transition-colors'} />
+                <span className="text-xs sm:text-sm font-semibold text-[#121722] whitespace-nowrap">New Grad</span>
+              </div>
+              
+              {/* Switch Track & Thumb */}
+              <span
+                className={`relative inline-flex h-4 w-7.5 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out ${
+                  newGradFilter ? 'bg-[#0068f9]' : 'bg-[#e2e4e9]'
+                }`}
+              >
+                <span
+                  className={`inline-block h-3 w-3 transform rounded-full bg-white shadow-xs transition-transform duration-200 ease-in-out ${
+                    newGradFilter ? 'translate-x-4' : 'translate-x-0.5'
+                  }`}
+                />
+              </span>
+            </button>
           </div>
 
           {/* Expanded Width Search Box & Results Counter */}
@@ -776,6 +815,33 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
                     ))}
                   </div>
                 )}
+
+                {/* Job metadata tags (New Grad, Sponsorship) */}
+                {job.tags && (job.tags.includes('new-grad') || job.tags.some(t => t.includes('sponsorship') || t.includes('citizen'))) && (
+                  <div className="mb-3 flex flex-wrap items-center gap-1.5 z-10 relative">
+                    {job.tags.includes('new-grad') && (
+                      <span className="text-[10px] font-semibold bg-[#f4f5f6] text-[#525866] px-2 py-0.5 rounded-md border border-[#efefef] inline-flex items-center gap-1">
+                        <GraduationCap size={11} className="text-[#777c86]" />
+                        <span>New Grad</span>
+                      </span>
+                    )}
+                    {job.tags.some(t => t.includes('offers sponsorship')) && (
+                      <span className="text-[10px] font-semibold bg-[#e3fcef] text-[#006644] px-2 py-0.5 rounded-md border border-[#abf5d1]">
+                        Sponsorship Available
+                      </span>
+                    )}
+                    {job.tags.some(t => t.includes('does not offer sponsorship')) && (
+                      <span className="text-[10px] font-medium bg-[#f4f5f6] text-[#777c86] px-2 py-0.5 rounded-md border border-[#efefef]">
+                        No Sponsorship
+                      </span>
+                    )}
+                    {job.tags.some(t => t.includes('citizen')) && (
+                      <span className="text-[10px] font-medium bg-[#fffae6] text-[#172b4d] px-2 py-0.5 rounded-md border border-[#ffe380]">
+                        US Citizen Only
+                      </span>
+                    )}
+                  </div>
+                )}
                 
                 <div className="mt-auto space-y-2">
                   <div className="flex items-center gap-2 text-xs text-[#777c86]">
@@ -801,8 +867,8 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
             );
           })}
             </div>
-            {processedJobs.length > 0 && (
-              <div className="text-center text-[#a5a5a5] text-sm py-8 border-t border-[#efefef]">
+            {processedJobs.length > 9 && (
+              <div className="mt-12 pt-8 pb-6 border-t border-[#efefef] text-center text-[#a5a5a5] text-sm select-none">
                 The end.
               </div>
             )}

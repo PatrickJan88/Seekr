@@ -114,6 +114,9 @@ export default function App() {
     if (e) e.preventDefault();
     setIsLoggingIn(true);
     try {
+      try {
+        localStorage.removeItem('seekr_recent_searches');
+      } catch (e) {}
       const result = await anonymousSignIn();
       if (result) {
         setUser(result.user);
