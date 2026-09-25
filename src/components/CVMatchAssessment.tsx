@@ -249,6 +249,7 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
     ]
   };
 
+  const currentUid = auth.currentUser?.uid;
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [targetRole, setTargetRole] = useState('');
   const [storedResume, setStoredResume] = useState<UserResume | null>(() => getStoredLocalResume(auth.currentUser?.uid));
@@ -264,12 +265,19 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
 
   useEffect(() => {
     const fetchResume = async () => {
-      const resume = await getUserResume(auth.currentUser?.uid || 'guest');
+      const uid = auth.currentUser?.uid;
+      if (!uid) {
+        setStoredResume(null);
+        return;
+      }
+      const resume = await getUserResume(uid);
       if (resume) {
         setStoredResume(resume);
-        if (!cvFile && (!cvText || cvText === 'Senior Frontend Engineer with 5+ years experience in React, TypeScript, and modern CSS architecture.')) {
+        if (!cvFile && !cvText) {
           setCvText(resume.cvText);
         }
+      } else {
+        setStoredResume(null);
       }
     };
     fetchResume();
@@ -672,16 +680,21 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
     }
 
     try {
-      // Automatically store on our platform for future reuse across the app
-      const saved = await saveUserResume(auth.currentUser?.uid || 'guest', {
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type || 'application/pdf',
-        cvText: extractedText,
-        pdfBase64: base64,
-      });
-      setStoredResume(saved);
-      toast.success('CV uploaded & automatically saved to My Resume for next time!');
+      const uid = auth.currentUser?.uid;
+      if (uid) {
+        // Automatically store on our platform for future reuse across the app
+        const saved = await saveUserResume(uid, {
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type || 'application/pdf',
+          cvText: extractedText,
+          pdfBase64: base64,
+        });
+        setStoredResume(saved);
+        toast.success('CV uploaded & automatically saved to My Resume for next time!');
+      } else {
+        toast.info('CV attached for evaluation.');
+      }
     } catch (err) {
       console.warn('Resume profile auto-save warning:', err);
       if (extractedText) {
@@ -703,10 +716,13 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
     setCvText('');
     setShowCvTextPreview(false);
     setStoredResume(null);
-    try {
-      await deleteUserResume(auth.currentUser?.uid || 'guest');
-    } catch (err) {
-      console.warn('Failed to delete stored resume:', err);
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+      try {
+        await deleteUserResume(uid);
+      } catch (err) {
+        console.warn('Failed to delete stored resume:', err);
+      }
     }
     const inputEl = document.getElementById('cv-file-upload') as HTMLInputElement;
     if (inputEl) inputEl.value = '';

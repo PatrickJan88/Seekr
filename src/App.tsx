@@ -10,7 +10,7 @@ import { User } from 'firebase/auth';
 import { Dashboard } from './components/Dashboard';
 import { Footer } from './components/Footer';
 
-import { Github, Linkedin } from 'lucide-react';
+import { Github, Linkedin, Info } from 'lucide-react';
 
 const checkIsDemo = () => {
   if (typeof window === 'undefined') return false;
@@ -142,7 +142,7 @@ export default function App() {
         <div className="flex-grow flex items-center justify-center p-6">
           <div className="bg-white p-8 rounded-2xl shadow-2xs max-w-md w-full text-center border border-[#efefef]">
             <img src="/assets/seekr%20logo%201.webp" alt="Seekr Logo" className="h-10 mx-auto mb-4" />
-            <p className="text-[#777c86] font-medium mb-8 text-sm">Track, evaluate, and land your next tech role.</p>
+            <p className="text-[#777c86] font-medium mb-8 text-sm">Track, evaluate, and land your next tech or academic role.</p>
             
             <div className="space-y-3">
               <button onClick={handleLogin} disabled={isLoggingIn} className="w-full flex items-center justify-center gap-3 bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium py-3 px-6 rounded-full transition-all shadow-2xs cursor-pointer">
@@ -155,9 +155,24 @@ export default function App() {
                 </svg>
                 {isLoggingIn ? 'Signing in...' : 'Sign in with Google'}
               </button>
-              <button onClick={handleAnonymousLogin} disabled={isLoggingIn} className="w-full flex items-center justify-center gap-3 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] font-medium py-3 px-6 rounded-full transition-all shadow-2xs cursor-pointer">
-                Continue as Guest
-              </button>
+
+              <div className="relative group/guest w-full">
+                <button 
+                  onClick={handleAnonymousLogin} 
+                  disabled={isLoggingIn} 
+                  className="w-full flex items-center justify-center gap-2 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] font-medium py-3 px-6 rounded-full transition-all shadow-2xs cursor-pointer"
+                >
+                  <span>Continue as Guest</span>
+                  <span className="inline-flex items-center text-[#9ca3af] group-hover/guest:text-[#121722] transition-colors">
+                    <Info size={15} className="shrink-0" />
+                  </span>
+                </button>
+                {/* Information hover tooltip using design system */}
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-64 p-2.5 bg-[#121722] text-white text-xs font-normal leading-relaxed rounded-xl opacity-0 invisible group-hover/guest:opacity-100 group-hover/guest:visible transition-all duration-150 z-50 pointer-events-none shadow-xl text-center border border-zinc-700/50">
+                  Your account will be automatically deleted if you remain inactive for more than 30 days.
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-[#121722]" />
+                </div>
+              </div>
             </div>
           </div>
         </div>

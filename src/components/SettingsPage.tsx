@@ -10,7 +10,8 @@ import {
   ChevronDown,
   FileText,
   Upload,
-  RefreshCw
+  RefreshCw,
+  Info
 } from 'lucide-react';
 import { auth, logout } from '../lib/firebase';
 import { SupportForm } from './SupportForm';
@@ -47,9 +48,16 @@ export function SettingsPage({ onBack, onClearData, isSyncing, isDemo = false, t
 
   useEffect(() => {
     const fetchResume = async () => {
-      const resume = await getUserResume(auth.currentUser?.uid || 'guest');
+      const uid = auth.currentUser?.uid;
+      if (!uid) {
+        setStoredResume(null);
+        return;
+      }
+      const resume = await getUserResume(uid);
       if (resume) {
         setStoredResume(resume);
+      } else {
+        setStoredResume(null);
       }
     };
     fetchResume();
@@ -67,6 +75,12 @@ export function SettingsPage({ onBack, onClearData, isSyncing, isDemo = false, t
   const handleSettingsCvUpload = async (file: File) => {
     if (isDemo) {
       toast.info('Demo Mode: Uploading new CV is restricted in this view-only portfolio preview.');
+      return;
+    }
+
+    const uid = auth.currentUser?.uid;
+    if (!uid) {
+      toast.error('Please sign in to upload your master CV.');
       return;
     }
 
@@ -93,7 +107,7 @@ export function SettingsPage({ onBack, onClearData, isSyncing, isDemo = false, t
         console.warn('PDF base64 fallback:', err);
       }
 
-      const saved = await saveUserResume(auth.currentUser?.uid || 'guest', {
+      const saved = await saveUserResume(uid, {
         fileName: file.name,
         fileSize: file.size,
         fileType: file.type || 'application/pdf',
@@ -118,8 +132,15 @@ export function SettingsPage({ onBack, onClearData, isSyncing, isDemo = false, t
       return;
     }
 
+    const uid = auth.currentUser?.uid;
+    if (!uid) {
+      setStoredResume(null);
+      setShowDeleteResumeConfirm(false);
+      return;
+    }
+
     try {
-      await deleteUserResume(auth.currentUser?.uid || 'guest', storedResume?.id);
+      await deleteUserResume(uid, storedResume?.id);
       setStoredResume(null);
       setShowDeleteResumeConfirm(false);
       setShowScannedText(false);
@@ -219,9 +240,18 @@ export function SettingsPage({ onBack, onClearData, isSyncing, isDemo = false, t
                 </div>
                 <div>
                   {auth.currentUser?.isAnonymous ? (
-                    <p className="text-xs font-semibold text-[#121722]">
-                      Signed in as Guest <span className="text-[#777c86] font-normal text-[11px] ml-1">#Guest{auth.currentUser?.uid.substring(0, 5).toLowerCase()}</span>
-                    </p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="text-xs font-semibold text-[#121722]">
+                        Signed in as Guest <span className="text-[#777c86] font-normal text-[11px] ml-1">#Guest{auth.currentUser?.uid.substring(0, 5).toLowerCase()}</span>
+                      </p>
+                      <div className="relative group/guest-settings-info inline-flex items-center">
+                        <Info size={14} className="text-[#9ca3af] hover:text-[#121722] cursor-help transition-colors shrink-0" />
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 bg-[#121722] text-white text-xs font-normal leading-relaxed rounded-xl opacity-0 invisible group-hover/guest-settings-info:opacity-100 group-hover/guest-settings-info:visible transition-all duration-150 z-50 pointer-events-none shadow-xl text-center border border-zinc-700/50">
+                          Your account will be automatically deleted if you remain inactive for more than 30 days.
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-[#121722]" />
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     <p className="text-xs font-semibold text-[#121722]">Synced with {auth.currentUser?.email || 'Google'}</p>
                   )}

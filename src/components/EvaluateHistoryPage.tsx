@@ -86,22 +86,15 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
 
   const loadEvaluations = async () => {
     setLoading(true);
-    if (!auth.currentUser) {
-      // Fallback sample evaluations for unauthenticated or demo mode
-      const cached = localStorage.getItem('demo_evaluations_cache');
-      if (cached) {
-        try {
-          setEvaluations(JSON.parse(cached));
-        } catch {
-          setEvaluations([]);
-        }
-      }
+    const uid = auth.currentUser?.uid;
+    if (!uid) {
+      setEvaluations([]);
       setLoading(false);
       return;
     }
 
     try {
-      const data = await getEvaluations(auth.currentUser.uid);
+      const data = await getEvaluations(uid);
       setEvaluations(data);
     } catch (err) {
       console.error('Failed to load evaluation history:', err);

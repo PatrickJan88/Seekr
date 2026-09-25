@@ -140,9 +140,16 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
 
   useEffect(() => {
     const fetchResume = async () => {
-      const resume = await getUserResume(auth.currentUser?.uid || 'guest');
+      const uid = auth.currentUser?.uid;
+      if (!uid) {
+        setStoredResume(null);
+        return;
+      }
+      const resume = await getUserResume(uid);
       if (resume) {
         setStoredResume(resume);
+      } else {
+        setStoredResume(null);
       }
     };
     fetchResume();
@@ -171,6 +178,12 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
 
   // Direct CV upload handler from the Matched Up notice popover
   const handleDirectCvUpload = async (file: File) => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) {
+      toast.error('Please sign in to upload your CV.');
+      return;
+    }
+
     if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
       toast.error('Please upload a PDF format CV.');
       return;
@@ -194,7 +207,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
         console.warn('PDF base64 conversion error:', err);
       }
 
-      const saved = await saveUserResume(auth.currentUser?.uid || 'guest', {
+      const saved = await saveUserResume(uid, {
         fileName: file.name,
         fileSize: file.size,
         fileType: file.type || 'application/pdf',
@@ -357,14 +370,17 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
 
     // Read the user's CV text freshly from Firestore or local storage first
     let currentResume = storedResume;
-    try {
-      const latest = await getUserResume(auth.currentUser?.uid || 'guest');
-      if (latest) {
-        currentResume = latest;
-        setStoredResume(latest);
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+      try {
+        const latest = await getUserResume(uid);
+        if (latest) {
+          currentResume = latest;
+          setStoredResume(latest);
+        }
+      } catch {
+        // fallback to current storedResume in memory
       }
-    } catch {
-      // fallback to current storedResume in memory
     }
 
     if (!currentResume?.cvText?.trim()) {

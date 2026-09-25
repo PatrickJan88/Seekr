@@ -4,7 +4,6 @@ import { CVEvaluation } from '../types';
 
 const COLLECTION_NAME = 'evaluations';
 const LOCAL_STORAGE_KEY_PREFIX = 'seekr_evaluations_cache_';
-const DEMO_KEY = 'demo_evaluations_cache';
 
 // Helper to deep-clean any undefined values from objects before writing to Firestore
 function sanitizeForFirestore<T>(data: T): T {
@@ -13,15 +12,19 @@ function sanitizeForFirestore<T>(data: T): T {
   }));
 }
 
-// Local cache helper to get evaluations
+// Local cache helper to get evaluations strictly for a given userId
 function getLocalEvaluations(userId?: string): CVEvaluation[] {
   if (typeof window === 'undefined') return [];
+  if (!userId || userId === 'guest' || userId === 'default') return [];
+
   try {
-    const key = userId ? `${LOCAL_STORAGE_KEY_PREFIX}${userId}` : `${LOCAL_STORAGE_KEY_PREFIX}guest`;
-    const data = localStorage.getItem(key) || localStorage.getItem(DEMO_KEY);
+    const key = `${LOCAL_STORAGE_KEY_PREFIX}${userId}`;
+    const data = localStorage.getItem(key);
     if (data) {
       const parsed = JSON.parse(data);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed)) {
+        return parsed.filter(item => item && item.userId === userId);
+      }
     }
   } catch (e) {
     console.warn('Error reading local evaluations:', e);
@@ -29,21 +32,26 @@ function getLocalEvaluations(userId?: string): CVEvaluation[] {
   return [];
 }
 
-// Local cache helper to save evaluations
+// Local cache helper to save evaluations strictly for a given userId
 function setLocalEvaluations(userId: string, evals: CVEvaluation[]) {
   if (typeof window === 'undefined') return;
+  if (!userId || userId === 'guest' || userId === 'default') return;
+
   try {
-    const key = `${LOCAL_STORAGE_KEY_PREFIX}${userId || 'guest'}`;
+    const key = `${LOCAL_STORAGE_KEY_PREFIX}${userId}`;
     localStorage.setItem(key, JSON.stringify(evals));
-    localStorage.setItem(DEMO_KEY, JSON.stringify(evals));
   } catch (e) {
     console.warn('Error saving local evaluations:', e);
   }
 }
 
 export const getEvaluations = async (userId: string): Promise<CVEvaluation[]> => {
-  // Try Firestore first if authenticated
-  if (auth.currentUser && userId && userId !== 'guest') {
+  if (!userId || userId === 'guest' || userId === 'default') {
+    return [];
+  }
+
+  // Try Firestore first if authenticated and not anonymous guest without remote records
+  if (auth.currentUser && auth.currentUser.uid === userId && !auth.currentUser.isAnonymous) {
     try {
       const q = query(
         collection(db, COLLECTION_NAME),
@@ -59,7 +67,7 @@ export const getEvaluations = async (userId: string): Promise<CVEvaluation[]> =>
     }
   }
 
-  // Fallback to local storage cache
+  // Fallback to user-scoped local cache
   const localList = getLocalEvaluations(userId);
   return localList.sort((a, b) => b.createdAt - a.createdAt);
 };
@@ -77,17 +85,19 @@ export const addEvaluation = async (evaluation: Omit<CVEvaluation, 'id' | 'creat
 
   const sanitized = sanitizeForFirestore(newEval);
 
-  // Always persist locally
-  const currentLocal = getLocalEvaluations(evaluation.userId);
-  const updatedLocal = [sanitized, ...currentLocal.filter(e => e.id !== evalId)];
-  setLocalEvaluations(evaluation.userId, updatedLocal);
+  if (evaluation.userId && evaluation.userId !== 'guest') {
+    // Persist locally for this user
+    const currentLocal = getLocalEvaluations(evaluation.userId);
+    const updatedLocal = [sanitized, ...currentLocal.filter(e => e.id !== evalId)];
+    setLocalEvaluations(evaluation.userId, updatedLocal);
 
-  // If authenticated user, persist to Firestore
-  if (auth.currentUser && evaluation.userId && evaluation.userId !== 'guest') {
-    try {
-      await setDoc(newRef, sanitized);
-    } catch (e) {
-      console.warn('Firestore setDoc failed, persisted locally:', e);
+    // If authenticated user, persist to Firestore
+    if (auth.currentUser && auth.currentUser.uid === evaluation.userId && !auth.currentUser.isAnonymous) {
+      try {
+        await setDoc(newRef, sanitized);
+      } catch (e) {
+        console.warn('Firestore setDoc failed, persisted locally:', e);
+      }
     }
   }
 
@@ -96,39 +106,25 @@ export const addEvaluation = async (evaluation: Omit<CVEvaluation, 'id' | 'creat
 
 export const updateEvaluation = async (evalId: string, updates: Partial<CVEvaluation>): Promise<void> => {
   const sanitizedUpdates = sanitizeForFirestore(updates);
+  const currentUserId = auth.currentUser?.uid;
 
-  // Update in local cache across guest and user keys
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && currentUserId) {
     try {
-      const allKeys = Object.keys(localStorage).filter(k => k.startsWith(LOCAL_STORAGE_KEY_PREFIX) || k === DEMO_KEY);
-      allKeys.forEach(k => {
-        try {
-          const raw = localStorage.getItem(k);
-          if (raw) {
-            const list = JSON.parse(raw);
-            if (Array.isArray(list)) {
-              let updated = false;
-              const nextList = list.map(item => {
-                if (item.id === evalId) {
-                  updated = true;
-                  return { ...item, ...sanitizedUpdates };
-                }
-                return item;
-              });
-              if (updated) {
-                localStorage.setItem(k, JSON.stringify(nextList));
-              }
-            }
-          }
-        } catch {}
+      const list = getLocalEvaluations(currentUserId);
+      const nextList = list.map(item => {
+        if (item.id === evalId) {
+          return { ...item, ...sanitizedUpdates };
+        }
+        return item;
       });
+      setLocalEvaluations(currentUserId, nextList);
     } catch (e) {
       console.warn('Error updating local evaluation cache:', e);
     }
   }
 
   // If authenticated, persist to Firestore
-  if (auth.currentUser && evalId) {
+  if (auth.currentUser && evalId && !auth.currentUser.isAnonymous) {
     try {
       await updateDoc(doc(db, COLLECTION_NAME, evalId), sanitizedUpdates);
     } catch (err) {
@@ -138,27 +134,21 @@ export const updateEvaluation = async (evalId: string, updates: Partial<CVEvalua
 };
 
 export const deleteEvaluation = async (evalId: string, userId?: string): Promise<void> => {
-  // Update local cache
-  if (typeof window !== 'undefined') {
+  const effectiveUserId = userId || auth.currentUser?.uid;
+
+  // Update user-scoped local cache
+  if (typeof window !== 'undefined' && effectiveUserId) {
     try {
-      const allKeys = Object.keys(localStorage).filter(k => k.startsWith(LOCAL_STORAGE_KEY_PREFIX) || k === DEMO_KEY);
-      allKeys.forEach(k => {
-        try {
-          const raw = localStorage.getItem(k);
-          if (raw) {
-            const list = JSON.parse(raw);
-            if (Array.isArray(list)) {
-              const nextList = list.filter(item => item.id !== evalId);
-              localStorage.setItem(k, JSON.stringify(nextList));
-            }
-          }
-        } catch {}
-      });
-    } catch {}
+      const list = getLocalEvaluations(effectiveUserId);
+      const nextList = list.filter(item => item.id !== evalId);
+      setLocalEvaluations(effectiveUserId, nextList);
+    } catch (e) {
+      console.warn('Error deleting from local evaluation cache:', e);
+    }
   }
 
   // Firestore delete
-  if (auth.currentUser && evalId) {
+  if (auth.currentUser && evalId && !auth.currentUser.isAnonymous) {
     try {
       await deleteDoc(doc(db, COLLECTION_NAME, evalId));
     } catch (err) {
@@ -166,4 +156,3 @@ export const deleteEvaluation = async (evalId: string, userId?: string): Promise
     }
   }
 };
-
