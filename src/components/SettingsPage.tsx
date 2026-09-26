@@ -8,6 +8,7 @@ import {
   GraduationCap, 
   Check, 
   ChevronDown,
+  ChevronRight,
   FileText,
   Upload,
   RefreshCw,
@@ -25,17 +26,29 @@ import {
   RESUME_UPDATED_EVENT 
 } from '../db/resumes';
 import { UserResume } from '../types';
+import { getRoleCategories, getRoleLabel, isRoleInTrackingSystem } from '../data/roles';
 
 interface SettingsPageProps {
   trackingSystem?: 'industry' | 'academic';
   setTrackingSystem?: (sys: 'industry' | 'academic') => void;
+  selectedRole?: string;
+  setSelectedRole?: (role: string) => void;
   onBack: () => void;
   onClearData: () => void;
   isSyncing: boolean;
   isDemo?: boolean;
 }
 
-export function SettingsPage({ onBack, onClearData, isSyncing, isDemo = false, trackingSystem = 'industry', setTrackingSystem }: SettingsPageProps) {
+export function SettingsPage({ 
+  onBack, 
+  onClearData, 
+  isSyncing, 
+  isDemo = false, 
+  trackingSystem = 'industry', 
+  setTrackingSystem,
+  selectedRole = '',
+  setSelectedRole
+}: SettingsPageProps) {
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState(false);
@@ -299,7 +312,9 @@ export function SettingsPage({ onBack, onClearData, isSyncing, isDemo = false, t
                   >
                     <DropdownMenu.Item 
                       className="flex items-center gap-3 px-3.5 py-2.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none transition-colors"
-                      onClick={() => setTrackingSystem?.('industry')}
+                      onClick={() => {
+                        setTrackingSystem?.('industry');
+                      }}
                     >
                       <Briefcase size={15} className="text-[#777c86] shrink-0" />
                       <div className="flex-1 min-w-0">
@@ -311,7 +326,9 @@ export function SettingsPage({ onBack, onClearData, isSyncing, isDemo = false, t
                     
                     <DropdownMenu.Item 
                       className="flex items-center gap-3 px-3.5 py-2.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none transition-colors mt-0.5"
-                      onClick={() => setTrackingSystem?.('academic')}
+                      onClick={() => {
+                        setTrackingSystem?.('academic');
+                      }}
                     >
                       <GraduationCap size={15} className="text-[#777c86] shrink-0" />
                       <div className="flex-1 min-w-0">
@@ -320,6 +337,94 @@ export function SettingsPage({ onBack, onClearData, isSyncing, isDemo = false, t
                       </div>
                       {trackingSystem === 'academic' && <Check size={16} className="ml-auto text-[#0068f9] shrink-0" />}
                     </DropdownMenu.Item>
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
+            </div>
+          </div>
+
+          {/* ROLE - Placed strictly after Tracking System */}
+          <div className="p-6">
+            <h3 className="text-sm font-semibold text-[#121722] mb-1">Role</h3>
+            <p className="text-[13px] text-[#777c86] mb-4">
+              Select your primary role. This customizes the default job posts and suggestions in the Job Market.
+            </p>
+            <div className="flex items-center gap-4">
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
+                  <button className="flex items-center justify-between w-full sm:w-64 h-11 bg-white border border-[#efefef] rounded-full text-xs sm:text-sm px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#faf9f7] transition-all cursor-pointer">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {trackingSystem === 'academic' ? (
+                        <GraduationCap className="text-[#0068f9] shrink-0" size={16} />
+                      ) : (
+                        <Briefcase className="text-[#0068f9] shrink-0" size={16} />
+                      )}
+                      <span className="text-[#121722] font-medium truncate">
+                        {getRoleLabel(selectedRole, trackingSystem)}
+                      </span>
+                    </div>
+                    <ChevronDown size={14} className="text-[#777c86] shrink-0 ml-2" />
+                  </button>
+                </DropdownMenu.Trigger>
+                
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content 
+                    className="z-[100] min-w-[260px] max-h-[60vh] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-lg p-1.5 animate-in fade-in-80 zoom-in-95"
+                    sideOffset={6}
+                    align="start"
+                  >
+                    <DropdownMenu.Item 
+                      className="flex items-center justify-between px-3.5 py-2.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none transition-colors"
+                      onClick={() => {
+                        setSelectedRole?.('');
+                        toast.success('Role reset to All Roles (Default)');
+                      }}
+                    >
+                      <div className="min-w-0">
+                        <p className="font-semibold text-[#121722]">All Roles (Default)</p>
+                        <p className="text-[11px] text-[#777c86]">No role filtering applied by default</p>
+                      </div>
+                      {!selectedRole && <Check size={16} className="text-[#0068f9] shrink-0 ml-2" />}
+                    </DropdownMenu.Item>
+                    
+                    <DropdownMenu.Separator className="h-px bg-[#efefef] my-1 mx-2" />
+
+                    {Object.entries(getRoleCategories(trackingSystem)).map(([category, roles]) => {
+                      const hasActiveRole = roles.some(r => r.value === selectedRole);
+
+                      return (
+                        <DropdownMenu.Sub key={category}>
+                          <DropdownMenu.SubTrigger className="flex items-center justify-between px-3.5 py-2.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none data-[state=open]:bg-[#faf9f7] transition-colors">
+                            <span className="font-medium truncate">{category}</span>
+                            <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                              {hasActiveRole && <Check size={14} className="text-[#0068f9]" />}
+                              <ChevronRight size={14} className="text-[#a5a5a5]" />
+                            </div>
+                          </DropdownMenu.SubTrigger>
+                          
+                          <DropdownMenu.Portal>
+                            <DropdownMenu.SubContent 
+                              className="z-[100] min-w-[260px] max-h-[50vh] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-lg p-1.5 animate-in fade-in-80 zoom-in-95"
+                              sideOffset={4}
+                            >
+                              {roles.map(role => (
+                                <DropdownMenu.Item 
+                                  key={role.value}
+                                  className="flex items-center justify-between px-3 py-2 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none transition-colors"
+                                  onClick={() => {
+                                    setSelectedRole?.(role.value);
+                                    toast.success(`Role set to ${role.label}`);
+                                  }}
+                                >
+                                  <span className="font-medium">{role.label}</span>
+                                  {selectedRole === role.value && <Check size={14} className="text-[#0068f9] shrink-0 ml-2" />}
+                                </DropdownMenu.Item>
+                              ))}
+                            </DropdownMenu.SubContent>
+                          </DropdownMenu.Portal>
+                        </DropdownMenu.Sub>
+                      );
+                    })}
                   </DropdownMenu.Content>
                 </DropdownMenu.Portal>
               </DropdownMenu.Root>
@@ -535,7 +640,7 @@ export function SettingsPage({ onBack, onClearData, isSyncing, isDemo = false, t
 
           <div className="mt-auto pt-12">
             <div className="text-center text-xs text-[#777c86] font-medium mb-8">
-              Version 4.0.0
+              Version 4.1.0
             </div>
             <Footer
               logo={<img src="/assets/seekr%20logo%201.webp" alt="Seekr Logo" className="h-6" />}

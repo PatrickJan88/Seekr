@@ -7,7 +7,7 @@
 **Track, evaluate, and land your next tech or academic role.**  
 *An all-in-one career intelligence platform and AI agent pipeline.*
 
-[![Version](https://img.shields.io/badge/version-4.0.0-blue.svg?style=flat-square)](https://github.com/PatrickJan88/Seekr)
+[![Version](https://img.shields.io/badge/version-4.1.0-blue.svg?style=flat-square)](https://github.com/PatrickJan88/Seekr)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&style=flat-square)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&style=flat-square)](https://www.typescriptlang.org/)
@@ -25,6 +25,29 @@
 ## Overview
 
 **Seekr** bridges the gap between passive job application tracking and active, AI-assisted career strategy. Engineered for software engineers, data scientists, researchers, and tech professionals, Seekr combines high-performance client-side visual pipelines with server-side AI engines to analyze job postings, evaluate CV compatibility, generate tailored application materials, and track interview milestones.
+
+---
+
+## What's New in Version 4.1.0
+
+Version `4.1.0` introduces a guided **New User 3-Step Onboarding Experience**, dedicated **Role Preferences in Settings**, independent multi-track role persistence, and automated alignment between selected candidate roles and default Job Market algorithmic feeds.
+
+### Major Highlights
+
+*   **New User 3-Step Guided Onboarding Experience**:
+    *   **Step 1: Select Seekr**: Interactive track selection between **Industry Seekr** and **Academic Seekr** cards with direct primary blue highlighting.
+    *   **Step 2: Target Role**: Dynamic role selection displaying roles matching the chosen sector, organized by clear category groups with single-selection radio buttons and an **All Roles (Default)** option.
+    *   **Step 3: Upload CV**: Encourages uploading a PDF CV for automated Matched Up rankings and AI intelligence. Starts completely blank and clean from scratch, ensuring zero mock or personal data leaks.
+    *   **Flexible Navigation**: Every step supports **Back**, **Next**, **Skip**, and **Close (X)**, with a celebratory toast notification upon completing via **Done**.
+    *   **Strict First-Time Login Gating**: Appears strictly once for genuine new registrations and new guest sessions. Safely skipped for established accounts, returning users, and accounts with existing data or applications.
+
+*   **Role Preference Management in Settings**:
+    *   **Direct Role Configuration**: Configured directly beneath the Tracking System section in Settings.
+    *   **Dynamic Sector Matching**: Strictly displays only the career roles relevant to the active system (Industry or Academic).
+    *   **Job Market Algorithm Synchronization**: When a role is selected, the Job Market feed automatically defaults to filtered listings matching that specific role; clearing to "All Roles" reverts to the full chronological feed.
+
+*   **Independent Track Role Persistence**:
+    *   Switching between Industry Seekr and Academic Seekr in the sidebar navigation preserves each track's pre-selected role preferences independently without accidental resets or overwriting.
 
 ---
 
@@ -173,7 +196,14 @@ Version `4.0.0` introduces dedicated standalone left-panel access for Company 36
 
 ## Version History & Changelog
 
-### **v4.0.0** — *Current Release*
+### **v4.1.0** — *Current Release*
+*   Added **New User 3-Step Guided Onboarding Experience** with animated stepper progress line, track selection (Industry Seekr vs. Academic Seekr), single-selection role preferences grouped by parent categories, and blank CV upload dropzone.
+*   Implemented **Strict First-Time Login Gating** ensuring the onboarding pop-up only displays once for brand new user signups and fresh guest sessions, and automatically stays hidden for established users with existing data or applications.
+*   Added **Role Preference Selection in Settings** positioned immediately after the Tracking System, strictly matched to Industry and Academic role classifications.
+*   Integrated **Job Market Feed Role Algorithm Synchronization** defaulting live job listings to the user's selected role with full keyword matching.
+*   Added **Independent Track Role Isolation & Persistence** preserving separate Industry and Academic role selections across view transitions.
+
+### **v4.0.0**
 *   Added **Job Market "Matched Up" Intelligent Ranking & Recommendations**, automatically sorting live market listings from most to least relevant and delivering tailored role matches for uploaded candidate CVs.
 *   Added **Left-Panel Access for Company 360 Studio** for on-demand company intelligence, business loop teardowns, SWOT analysis, and interview alignment.
 *   Added **Left-Panel Access for Tailored Application Studios** (Cover Letter, Interview Prep, Resume Tailoring) for standalone, ad-hoc career generation without pre-existing application constraints.

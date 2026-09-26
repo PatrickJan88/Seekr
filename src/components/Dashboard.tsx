@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { JobApplication, JobStatus } from '../types';
+import { JobApplication, JobStatus, UserResume } from '../types';
 import { getApplications, addApplication, updateApplication, deleteApplication, addApplicationsBatch, deleteAllApplications } from '../db/applications';
 import { Kanban } from './Kanban';
 import { Analytics } from './Analytics';
@@ -13,7 +13,7 @@ import { exportCsv } from '../lib/csv';
 import { Footer } from './Footer';
 import { NotificationCenter } from './NotificationCenter';
 import { CommandSearch } from './CommandSearch';
-import { Plus, Download, Upload, LayoutDashboard, BarChart3, LogOut, Loader2, Calendar, Trash2, Settings, X, Twitter, Github, Linkedin, Globe } from 'lucide-react';
+import { Plus, Download, Upload, LayoutDashboard, BarChart3, LogOut, Loader2, Calendar, Trash2, Settings, X, Twitter, Github, Linkedin, Globe, Clock } from 'lucide-react';
 import { auth, logout } from '../lib/firebase';
 import Papa from 'papaparse';
 import { addNotification } from '../lib/notifications';
@@ -32,6 +32,9 @@ import { TailoredResumeData } from '../types';
 import { SidebarNav } from './SidebarNav';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Sparkles } from 'lucide-react';
+import { isRoleInTrackingSystem } from '../data/roles';
+import { getStoredLocalResume, getUserResume, RESUME_UPDATED_EVENT } from '../db/resumes';
+import { OnboardingModal } from './OnboardingModal';
 
 interface DashboardProps {
   isDemo?: boolean;
@@ -154,6 +157,105 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     | 'studio-resume'
   >('sankey');
   const [trackingSystem, setTrackingSystem] = useState<'industry' | 'academic'>('industry');
+  const [industryRole, setIndustryRole] = useState<string>(() => {
+    try {
+      const uid = isDemo ? 'demo' : (auth.currentUser?.uid || 'guest');
+      return localStorage.getItem(`seekr_selected_role_industry_${uid}`) || '';
+    } catch {
+      return '';
+    }
+  });
+
+  const [academicRole, setAcademicRole] = useState<string>(() => {
+    try {
+      const uid = isDemo ? 'demo' : (auth.currentUser?.uid || 'guest');
+      return localStorage.getItem(`seekr_selected_role_academic_${uid}`) || '';
+    } catch {
+      return '';
+    }
+  });
+
+  const selectedRole = trackingSystem === 'academic' ? academicRole : industryRole;
+
+  const handleSetSelectedRole = (role: string) => {
+    const uid = isDemo ? 'demo' : (auth.currentUser?.uid || 'guest');
+    if (trackingSystem === 'academic') {
+      setAcademicRole(role);
+      try {
+        if (role) {
+          localStorage.setItem(`seekr_selected_role_academic_${uid}`, role);
+          localStorage.setItem('seekr_selected_role_academic', role);
+        } else {
+          localStorage.removeItem(`seekr_selected_role_academic_${uid}`);
+          localStorage.removeItem('seekr_selected_role_academic');
+        }
+      } catch (e) {}
+    } else {
+      setIndustryRole(role);
+      try {
+        if (role) {
+          localStorage.setItem(`seekr_selected_role_industry_${uid}`, role);
+          localStorage.setItem('seekr_selected_role_industry', role);
+          localStorage.setItem(`seekr_selected_role_${uid}`, role);
+          localStorage.setItem('seekr_selected_role', role);
+        } else {
+          localStorage.removeItem(`seekr_selected_role_industry_${uid}`);
+          localStorage.removeItem('seekr_selected_role_industry');
+          localStorage.removeItem(`seekr_selected_role_${uid}`);
+          localStorage.removeItem('seekr_selected_role');
+        }
+      } catch (e) {}
+    }
+  };
+
+  const handleSetTrackingSystem = (sys: 'industry' | 'academic') => {
+    setTrackingSystem(sys);
+    // Never remove or reset pre-selected roles when switching Seekr back and forth
+  };
+
+  // Onboarding state strictly for genuine new users
+  // Initialized to false so existing accounts and returning users never see the pop-up
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
+
+  const [storedResume, setStoredResume] = useState<UserResume | null>(() => {
+    const uid = auth.currentUser?.uid;
+    return uid ? getStoredLocalResume(uid) : null;
+  });
+
+  useEffect(() => {
+    const fetchResume = async () => {
+      const uid = auth.currentUser?.uid;
+      if (uid) {
+        const resume = await getUserResume(uid);
+        if (resume) {
+          setStoredResume(resume);
+          // Existing CV in database indicates existing user
+          try {
+            localStorage.setItem(`seekr_onboarded_${uid}`, 'true');
+          } catch {}
+          setShowOnboarding(false);
+        }
+      }
+    };
+    fetchResume();
+
+    const handleResumeUpdated = (e: any) => {
+      setStoredResume(e.detail as UserResume | null);
+    };
+    window.addEventListener(RESUME_UPDATED_EVENT, handleResumeUpdated);
+    return () => {
+      window.removeEventListener(RESUME_UPDATED_EVENT, handleResumeUpdated);
+    };
+  }, [auth.currentUser?.uid]);
+
+  const handleCloseOnboarding = () => {
+    setShowOnboarding(false);
+    try {
+      const uid = isDemo ? 'demo' : (auth.currentUser?.uid || 'guest');
+      localStorage.setItem(`seekr_onboarded_${uid}`, 'true');
+    } catch {}
+  };
+
   const [companyIntelTarget, setCompanyIntelTarget] = useState<{ companyName?: string; websiteUrl?: string }>({});
 
   const handleNavigateToTeardown = (companyName: string, websiteUrl?: string) => {
@@ -307,7 +409,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
             }
             
             toast(msg, {
-              icon: '⏰',
+              icon: <Clock size={16} className="text-[#0068f9]" />,
             });
             
             await updateApplication(app.id, { reminderSent: true });
@@ -441,6 +543,36 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
       
       const updatedData = await applyAutoGhosting(normalizedData);
       setApplications(updatedData);
+
+      // Onboarding evaluation strictly for genuine new users
+      const uid = auth.currentUser.uid;
+      const userEmail = auth.currentUser.email;
+      const meta = auth.currentUser.metadata;
+      const creationTime = meta.creationTime ? new Date(meta.creationTime).getTime() : 0;
+      const lastSignInTime = meta.lastSignInTime ? new Date(meta.lastSignInTime).getTime() : 0;
+      // If created more than 45 seconds before last sign-in, it's an existing user account
+      const isExistingAccount = creationTime > 0 && lastSignInTime > 0 && (lastSignInTime - creationTime > 45000);
+      const hasApplications = updatedData.length > 0;
+      const alreadyOnboarded = localStorage.getItem(`seekr_onboarded_${uid}`) === 'true';
+
+      if (isDemo || userEmail === 'ranpofei@gmail.com' || isExistingAccount || hasApplications || alreadyOnboarded) {
+        setShowOnboarding(false);
+        try {
+          localStorage.setItem(`seekr_onboarded_${uid}`, 'true');
+        } catch {}
+      } else {
+        // Genuine new user with 0 applications: check if they have a resume in the DB
+        const resume = await getUserResume(uid);
+        if (resume) {
+          setShowOnboarding(false);
+          try {
+            localStorage.setItem(`seekr_onboarded_${uid}`, 'true');
+          } catch {}
+        } else {
+          // Clean new user, first time login, no data input
+          setShowOnboarding(true);
+        }
+      }
     } catch (err) {
       console.error('Failed to load apps', err);
     } finally {
@@ -738,7 +870,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
       <div className={`h-full transition-all duration-300 ease-in-out shrink-0 overflow-hidden bg-white border-r border-[#efefef] z-20 ${isSidebarOpen ? 'w-[260px] opacity-100' : 'w-0 opacity-0 border-none'}`}>
         <SidebarNav
             trackingSystem={trackingSystem}
-            setTrackingSystem={setTrackingSystem}
+            setTrackingSystem={handleSetTrackingSystem}
            className="w-[260px] border-none bg-transparent"
            activeId={view}
            onSelect={(id) => setView(id as any)}
@@ -815,7 +947,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                 trackingSystem={trackingSystem} 
               />
             )}
-            {view === 'global-market' && <GlobalMarket isDemo={isDemo} onAddToWishlist={handleSave} trackingSystem={trackingSystem} />}
+            {view === 'global-market' && <GlobalMarket isDemo={isDemo} onAddToWishlist={handleSave} trackingSystem={trackingSystem} selectedRole={selectedRole} />}
             {view === 'kanban' && <Kanban applications={filteredApplications} onEdit={(app) => { setEditingApp(app); setIsFormOpen(true); }} onStatusChange={handleStatusChange as any} onDelete={handleDelete} locationFilter={locationFilter} onLocationSelect={handleLocationSelect} trackingSystem={trackingSystem} />}
             {view === 'analytics' && <Analytics applications={filteredApplications} onLocationSelect={handleLocationSelect} trackingSystem={trackingSystem} />}
             {view === 'cv-match' && <CVMatchAssessment applications={filteredApplications} isDemo={isDemo} trackingSystem={trackingSystem} onAddToWishlist={handleSave} onViewHistory={() => setView('eval-history')} setNestedBreadcrumb={setNestedBreadcrumb} />}
@@ -837,7 +969,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
               />
             )}
             {view === 'notifications' && <NotificationsPage onBack={() => setView('sankey')} />}
-            {view === 'settings' && <SettingsPage onBack={() => setView('sankey')} onClearData={handleClearData} isSyncing={isSyncing} isDemo={isDemo} trackingSystem={trackingSystem} setTrackingSystem={setTrackingSystem} />}
+            {view === 'settings' && <SettingsPage onBack={() => setView('sankey')} onClearData={handleClearData} isSyncing={isSyncing} isDemo={isDemo} trackingSystem={trackingSystem} setTrackingSystem={handleSetTrackingSystem} selectedRole={selectedRole} setSelectedRole={handleSetSelectedRole} />}
             {view === 'eval-history' && <EvaluateHistoryPage onBack={() => setView('cv-match')} applications={filteredApplications} isDemo={isDemo} onAddToWishlist={handleSave} />}
 
             {/* Embedded Application Studios */}
@@ -995,6 +1127,19 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
           </div>
         </div>
       )}
+
+      {/* New User Onboarding Stepper Modal */}
+      <OnboardingModal
+        isOpen={showOnboarding}
+        onClose={handleCloseOnboarding}
+        trackingSystem={trackingSystem}
+        setTrackingSystem={handleSetTrackingSystem}
+        selectedRole={selectedRole}
+        setSelectedRole={handleSetSelectedRole}
+        storedResume={storedResume}
+        setStoredResume={setStoredResume}
+        isDemo={isDemo}
+      />
     </div>
   );
 }

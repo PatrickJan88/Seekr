@@ -33,65 +33,12 @@ import { NestedLocationMenu } from './NestedLocationMenu';
 import { NestedRoleMenu } from './NestedRoleMenu';
 import { DateFilterMenu } from './DateFilterMenu';
 import { NoDataState } from './NoDataState';
-
-
-const ROLE_CATEGORIES_ACADEMIC = {
-  "Academic & Research": [
-    { label: "Postdoctoral Researcher", value: "postdoc" },
-    { label: "PhD Candidate", value: "phd" },
-    { label: "Assistant Professor", value: "assistant professor" },
-    { label: "Lecturer", value: "lecturer" },
-    { label: "Research Scientist", value: "research scientist" },
-    { label: "Teaching Fellow", value: "teaching fellow" }
-  ]
-};
-
-const ROLE_CATEGORIES_INDUSTRY = {
-  "Development & Engineering": [
-    { label: "Front-End Developer", value: "front-end" },
-    { label: "Back-End Developer", value: "back-end" },
-    { label: "Full-Stack Developer", value: "full-stack" },
-    { label: "Mobile App Developer", value: "mobile" },
-    { label: "Game Developer", value: "game" },
-    { label: "Embedded Systems Engineer", value: "embedded" },
-    { label: "AI/LLM Engineer", value: "ai llm engineer" },
-    { label: "Machine Learning (ML) Engineer", value: "machine learning" },
-    { label: "Agent Systems Engineer", value: "agent systems engineer" },
-    { label: "Fine-Tuning & Optimization Engineer", value: "fine-tuning optimization" },
-  ],
-  "Data": [
-    { label: "Data Scientist", value: "data scientist" },
-    { label: "Data Analyst", value: "data analyst" },
-    { label: "Data Architect", value: "data architect" },
-    { label: "Database Administrator (DBA)", value: "database" },
-    { label: "Business Intelligence (BI) Analyst", value: "business intelligence" },
-  ],
-  "Infrastructure & Reliability": [
-    { label: "DevOps Engineer", value: "devops" },
-    { label: "Cloud Engineer", value: "cloud" },
-    { label: "Site Reliability Engineer (SRE)", value: "site reliability" },
-    { label: "MLOps / Platform Engineer", value: "mlops platform" },
-    { label: "AI Reliability Engineer (SRE)", value: "ai reliability" },
-    { label: "AI Safety & Evaluation Engineer", value: "ai safety" },
-    { label: "Systems Administrator", value: "systems administrator" },
-    { label: "Network Engineer", value: "network engineer" },
-  ],
-  "Product & Design": [
-    { label: "Product/Program Manager", value: "product manager" },
-    { label: "AI Product Manager", value: "ai product manager" },
-    { label: "UX / UI Designer", value: "ux ui designer" },
-  ],
-  "Governance": [
-    { label: "AI Ethics & Compliance Officer", value: "ai ethics" },
-  ],
-  "QA": [
-    { label: "QA Engineer", value: "qa" },
-  ],
-  "Security & Support": [
-    { label: "Security Professionals", value: "security" },
-    { label: "IT Support Specialist", value: "support" },
-  ]
-};
+import { 
+  ROLE_CATEGORIES_ACADEMIC, 
+  ROLE_CATEGORIES_INDUSTRY, 
+  getRoleCategories, 
+  matchJobRole 
+} from '../data/roles';
 
 interface MarketJob {
   id: string | number;
@@ -111,6 +58,7 @@ interface MarketJob {
 
 interface GlobalMarketProps {
   trackingSystem?: 'industry' | 'academic';
+  selectedRole?: string;
   isDemo: boolean;
   onAddToWishlist?: (app: any) => void;
 }
@@ -118,7 +66,7 @@ interface GlobalMarketProps {
 
 const ACADEMIC_JOBS: any[] = [];
 
-export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'industry' }: GlobalMarketProps) {
+export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'industry', selectedRole = '' }: GlobalMarketProps) {
   const [jobs, setJobs] = useState<MarketJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -127,9 +75,14 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
   const [continentFilter, setContinentFilter] = useState('');
   const [countryFilter, setCountryFilter] = useState('');
   const [cityFilter, setCityFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState(() => selectedRole || '');
   const [dateFilter, setDateFilter] = useState('');
   const [newGradFilter, setNewGradFilter] = useState(false);
+
+  // Sync role filter when selectedRole or trackingSystem updates
+  useEffect(() => {
+    setTypeFilter(selectedRole || '');
+  }, [selectedRole, trackingSystem]);
 
   // CV & Matched Up state
   const [storedResume, setStoredResume] = useState<UserResume | null>(() => getStoredLocalResume(auth.currentUser?.uid));
@@ -444,12 +397,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
       // 2. Type match
       let matchesType = true;
       if (typeFilter) {
-        const typeLower = typeFilter.toLowerCase();
-        matchesType = 
-          (job.category && job.category.toLowerCase().includes(typeLower)) || 
-          (job.job_type && job.job_type.toLowerCase().includes(typeLower)) ||
-          (job.title && job.title.toLowerCase().includes(typeLower)) ||
-          (job.tags && job.tags.some(t => t.toLowerCase().includes(typeLower)));
+        matchesType = matchJobRole(job, typeFilter);
       }
 
       // 3. New Grad match
@@ -606,7 +554,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
           {/* All Roles - auto-reduces width to fit */}
           <div className="min-w-0 flex-1 sm:flex-initial sm:w-auto z-50">
             <NestedRoleMenu
-              roleCategories={trackingSystem === 'academic' ? ROLE_CATEGORIES_ACADEMIC : ROLE_CATEGORIES_INDUSTRY}
+              roleCategories={getRoleCategories(trackingSystem)}
               typeFilter={typeFilter}
               onSelectType={setTypeFilter}
             />
