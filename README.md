@@ -8,6 +8,7 @@
 *An all-in-one career intelligence platform and AI agent pipeline.*
 
 [![Version](https://img.shields.io/badge/version-4.0.0-blue.svg?style=flat-square)](https://github.com/PatrickJan88/Seekr)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&style=flat-square)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&style=flat-square)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?logo=tailwindcss&style=flat-square)](https://tailwindcss.com/)
@@ -205,6 +206,14 @@ Version `4.0.0` introduces dedicated standalone left-panel access for Company 36
 *   **Zero-Leak PDF Extraction**: All resume text parsing runs entirely client-side inside Web Workers using `pdfjs-dist`. Raw PDF files never leave your browser unless explicitly saved as an attachment.
 *   **Server-Side AI Proxies**: API keys (`GEMINI_API_KEY`) remain strictly on the backend and are never exposed to browser clients.
 *   **Granular Firestore Security Rules**: Ensures users can only query, write, and mutate their own personal records.
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+Seekr is an open-sourced research project and is free for everyone to use, study, enhance, and build upon in order to improve the career exploration experience and contribute to the community.
 
 ---
 
