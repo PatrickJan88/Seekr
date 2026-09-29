@@ -3,6 +3,12 @@ import path from 'path';
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
+import {
+  fetchAllTopCompanyJobs,
+  getQSUniversityAcademicJobs,
+  fetchLiveAcademicAdzuna,
+  getInitialIndustrySeedJobs
+} from './src/services/jobAggregator';
 
 function safeParseJSON(text: string, fallback: any) {
   if (!text) return fallback;
@@ -886,79 +892,89 @@ const getContinent = (countryName: string) => {
     return 'Other';
 };
 
-const parseLocation = (loc: string) => {
-    let raw = loc || '';
-    let lower = raw.toLowerCase();
-    
-    if (!raw || lower === 'remote' || lower === 'anywhere' || lower === 'worldwide' || lower === 'unknown' || lower === 'homeoffice' || lower.includes('remote job')) {
-      return { continent: 'Remote', country: 'Remote', city: '' };
-    }
-    
-    if (lower.includes('europe, emea, uk, germany, france')) return { continent: 'Europe', country: 'Multiple Locations', city: 'Europe (Multiple)' };
-    if (lower.includes('northern america, europe, uk, france')) return { continent: 'Multiple Continents', country: 'Multiple Locations', city: 'US & Europe' };
-    if (lower.includes('usa, canada, usa timezones')) return { continent: 'Americas', country: 'Multiple Locations', city: 'US & Canada' };
-    if (lower.includes('americas, europe, asia, africa, oceania')) return { continent: 'Remote', country: 'Remote', city: 'Worldwide' };
-    if (lower.includes('americas, europe, israel')) return { continent: 'Multiple Continents', country: 'Multiple Locations', city: 'Americas, Europe, Israel' };
-    if (lower.includes('mobiles arbeiten - deutschland') || lower.includes('deutschlandweit')) return { continent: 'Europe', country: 'Germany', city: 'Germany (Remote)' };
-
-    raw = raw.replace(/[\uD83C][\uDDE6-\uDDFF][\uD83C][\uDDE6-\uDDFF]/g, '').trim(); 
-    raw = raw.replace(/\([^)]+\)/g, '').trim();
-    raw = raw.replace(/\bHQ\b/gi, '').trim();
-    raw = raw.replace(/\boffice\b/gi, '').trim(); 
-    raw = raw.replace(/\bhybrid\b/gi, '').trim(); 
-    raw = raw.replace(/^-|-$/g, '').trim(); 
-    
-    if (raw.includes(';') || raw.includes('/')) {
-       return { continent: 'Multiple Continents', country: 'Multiple Locations', city: raw };
-    }
-
-    let parts = raw.split(',').map(s => s.trim()).filter(Boolean);
-    let single = parts[0] || '';
-    let singleLower = single.toLowerCase();
-    
-    if (parts.length >= 2) {
-      let potentialCountry = parts[parts.length - 1];
-      let pLower = potentialCountry.toLowerCase();
-      let cName = countryMap.get(pLower);
-      if (cName) {
-         let country = cName;
-         let city = parts.slice(0, parts.length - 1).join(', ');
-         if (countryMap.has(city.toLowerCase())) {
-             let temp = country;
-             country = countryMap.get(city.toLowerCase())!;
-             city = temp;
-         }
-         return { continent: getContinent(country), country, city };
+const parseLocation = (loc: any) => {
+    try {
+      let raw = '';
+      if (typeof loc === 'string') {
+        raw = loc;
+      } else if (loc && typeof loc === 'object') {
+        raw = loc.name || loc.display_name || loc.city || loc.location || '';
+      }
+      raw = (raw || '').trim();
+      let lower = raw.toLowerCase();
+      
+      if (!raw || lower === 'remote' || lower === 'anywhere' || lower === 'worldwide' || lower === 'unknown' || lower === 'homeoffice' || lower.includes('remote job')) {
+        return { continent: 'Remote', country: 'Remote', city: '' };
       }
       
-      // Check if any part is a known city
-      for (const part of parts) {
-         let p = part.toLowerCase();
-         let cityObj = cityMap.get(p);
-         if (cityObj) {
-            let countryName = cityObj.country;
-            if (countryName) return { continent: getContinent(countryName), country: countryName, city: cityObj.city };
-         }
-      }
-    }
-    
-    if (!single) return { continent: 'Other', country: 'Other', city: '' };
-    
-    let cName = countryMap.get(singleLower);
-    if (cName) return { continent: getContinent(cName), country: cName, city: '' };
-    
-    let cityObj = cityMap.get(singleLower);
-    if (cityObj) {
-       let countryName = cityObj.country;
-       if (countryName) return { continent: getContinent(countryName), country: countryName, city: cityObj.city };
-    }
-    
-    if (['europe', 'emea', 'eu'].includes(singleLower)) return { continent: 'Europe', country: 'Europe', city: '' };
-    if (['asia', 'apac'].includes(singleLower)) return { continent: 'Asia', country: 'Asia', city: '' };
-    if (['americas'].includes(singleLower)) return { continent: 'Americas', country: 'Americas', city: '' };
-    if (singleLower.includes('remote')) return { continent: 'Remote', country: 'Remote', city: single };
+      if (lower.includes('europe, emea, uk, germany, france')) return { continent: 'Europe', country: 'Multiple Locations', city: 'Europe (Multiple)' };
+      if (lower.includes('northern america, europe, uk, france')) return { continent: 'Multiple Continents', country: 'Multiple Locations', city: 'US & Europe' };
+      if (lower.includes('usa, canada, usa timezones')) return { continent: 'Americas', country: 'Multiple Locations', city: 'US & Canada' };
+      if (lower.includes('americas, europe, asia, africa, oceania')) return { continent: 'Remote', country: 'Remote', city: 'Worldwide' };
+      if (lower.includes('americas, europe, israel')) return { continent: 'Multiple Continents', country: 'Multiple Locations', city: 'Americas, Europe, Israel' };
+      if (lower.includes('mobiles arbeiten - deutschland') || lower.includes('deutschlandweit')) return { continent: 'Europe', country: 'Germany', city: 'Germany (Remote)' };
 
-    return { continent: getContinent(single), country: single, city: '' };
+      raw = raw.replace(/[\uD83C][\uDDE6-\uDDFF][\uD83C][\uDDE6-\uDDFF]/g, '').trim(); 
+      raw = raw.replace(/\([^)]+\)/g, '').trim();
+      raw = raw.replace(/\bHQ\b/gi, '').trim();
+      raw = raw.replace(/\boffice\b/gi, '').trim(); 
+      raw = raw.replace(/\bhybrid\b/gi, '').trim(); 
+      raw = raw.replace(/^-|-$/g, '').trim(); 
+      
+      if (raw.includes(';') || raw.includes('/')) {
+         return { continent: 'Multiple Continents', country: 'Multiple Locations', city: raw };
+      }
+
+      let parts = raw.split(',').map(s => s.trim()).filter(Boolean);
+      let single = parts[0] || '';
+      let singleLower = single.toLowerCase();
+      
+      if (parts.length >= 2) {
+        let potentialCountry = parts[parts.length - 1];
+        let pLower = potentialCountry.toLowerCase();
+        let cName = countryMap.get(pLower);
+        if (cName) {
+           let country = cName;
+           let city = parts.slice(0, parts.length - 1).join(', ');
+           if (countryMap.has(city.toLowerCase())) {
+               let temp = country;
+               country = countryMap.get(city.toLowerCase())!;
+               city = temp;
+           }
+           return { continent: getContinent(country), country, city };
+        }
+        
+        // Check if any part is a known city
+        for (const part of parts) {
+           let p = part.toLowerCase();
+           let cityObj = cityMap.get(p);
+           if (cityObj) {
+              let countryName = cityObj.country;
+              if (countryName) return { continent: getContinent(countryName), country: countryName, city: cityObj.city };
+           }
+        }
+      }
+      
+      if (!single) return { continent: 'Other', country: 'Other', city: '' };
+      
+      let cName = countryMap.get(singleLower);
+      if (cName) return { continent: getContinent(cName), country: cName, city: '' };
+      
+      let cityObj = cityMap.get(singleLower);
+      if (cityObj) {
+         let countryName = cityObj.country;
+         if (countryName) return { continent: getContinent(countryName), country: countryName, city: cityObj.city };
+      }
+      
+      if (['europe', 'emea', 'eu'].includes(singleLower)) return { continent: 'Europe', country: 'Europe', city: '' };
+      if (['asia', 'apac'].includes(singleLower)) return { continent: 'Asia', country: 'Asia', city: '' };
+      if (['americas'].includes(singleLower)) return { continent: 'Americas', country: 'Americas', city: '' };
+      if (singleLower.includes('remote')) return { continent: 'Remote', country: 'Remote', city: single };
+
+      return { continent: getContinent(single), country: single, city: '' };
+    } catch {
+      return { continent: 'Other', country: 'Other', city: '' };
+    }
 };
 
 const app = express();
@@ -1895,8 +1911,15 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
     }
   });
 
-  // In-memory cache for global market jobs to avoid rate limits
-  let marketJobsCache: any[] = [];
+  // In-memory cache for global market jobs to avoid rate limits, seeded immediately for 0ms initial availability
+  let marketJobsCache: any[] = getInitialIndustrySeedJobs().map(j => ({
+    ...j,
+    parsed_location: parseLocation(j.candidate_required_location)
+  }));
+  let academicJobsCache: any[] = getQSUniversityAcademicJobs().map(j => ({
+    ...j,
+    parsed_location: parseLocation(j.candidate_required_location)
+  }));
   let marketJobsLastFetch = 0;
   let isFetchingJobs = false;
   const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
@@ -1941,6 +1964,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
     isFetchingJobs = true;
     try {
       let allJobs: any[] = [];
+      let allAcademicJobs: any[] = [];
       
       const fetchRemotive = async () => {
         try {
@@ -2396,6 +2420,37 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
         }
       };
 
+      const fetchTopCompanies = async () => {
+        try {
+          const companyJobs = await fetchAllTopCompanyJobs();
+          if (Array.isArray(companyJobs) && companyJobs.length > 0) {
+            allJobs = allJobs.concat(companyJobs);
+          }
+        } catch (e) {
+          console.warn("[TopCompanies ATS] Feed temporarily unavailable, continuing.");
+        }
+      };
+
+      const fetchAcademicFeeds = async () => {
+        try {
+          // 1. QS Top 100/500 university verified listings
+          const qsJobs = getQSUniversityAcademicJobs();
+          if (Array.isArray(qsJobs)) {
+            allAcademicJobs = allAcademicJobs.concat(qsJobs);
+          }
+
+          // 2. Live Adzuna academic postings
+          const appId = process.env.ADZUNA_APP_ID || "bbb9bf36";
+          const appKey = process.env.ADZUNA_APP_KEY || "912639b735ecfa6e7699135fbc31a469";
+          const liveAdzunaAcad = await fetchLiveAcademicAdzuna(appId, appKey);
+          if (Array.isArray(liveAdzunaAcad) && liveAdzunaAcad.length > 0) {
+            allAcademicJobs = allAcademicJobs.concat(liveAdzunaAcad);
+          }
+        } catch (e) {
+          console.warn("[Academic Feeds] Feed temporarily unavailable, continuing.");
+        }
+      };
+
       // Run all fetches in parallel
       await Promise.allSettled([
         fetchRemotive(),
@@ -2406,33 +2461,82 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
         fetchAdzuna(),
         fetchJobicy(),
         fetchJooble(),
-        fetchReed()
+        fetchReed(),
+        fetchTopCompanies(),
+        fetchAcademicFeeds()
       ]);
 
-      // Sort by newest first
+      // Sort industry jobs by newest first
       allJobs.sort((a, b) => {
         const timeA = new Date(a.publication_date).getTime() || 0;
         const timeB = new Date(b.publication_date).getTime() || 0;
         return timeB - timeA;
       });
       
-      // Deduplicate by ID
+      // Deduplicate industry by ID
       const seenIds = new Set();
       const uniqueJobs = [];
       
       for (const job of allJobs) {
+        if (!job || !job.id) continue;
         if (!seenIds.has(job.id)) {
           seenIds.add(job.id);
-          job.parsed_location = parseLocation(job.candidate_required_location);
+          try {
+            job.parsed_location = parseLocation(job.candidate_required_location);
+          } catch {
+            job.parsed_location = { continent: 'Other', country: 'Other', city: '' };
+          }
           uniqueJobs.push(job);
+        }
+      }
+
+      // Also ensure foundational seed jobs are included
+      try {
+        const seedJobs = getInitialIndustrySeedJobs();
+        for (const sj of seedJobs) {
+          if (!seenIds.has(sj.id)) {
+            seenIds.add(sj.id);
+            sj.parsed_location = parseLocation(sj.candidate_required_location);
+            uniqueJobs.push(sj);
+          }
+        }
+      } catch {}
+
+      // Sort academic jobs by newest first
+      allAcademicJobs.sort((a, b) => {
+        const timeA = new Date(a.publication_date).getTime() || 0;
+        const timeB = new Date(b.publication_date).getTime() || 0;
+        return timeB - timeA;
+      });
+
+      // Deduplicate academic by ID
+      const seenAcadIds = new Set();
+      const uniqueAcadJobs = [];
+
+      for (const job of allAcademicJobs) {
+        if (!job || !job.id) continue;
+        if (!seenAcadIds.has(job.id)) {
+          seenAcadIds.add(job.id);
+          try {
+            job.parsed_location = parseLocation(job.candidate_required_location);
+          } catch {
+            job.parsed_location = { continent: 'Other', country: 'Other', city: '' };
+          }
+          uniqueAcadJobs.push(job);
         }
       }
       
       // Update cache
-      marketJobsCache = uniqueJobs;
+      if (uniqueJobs.length > 0) {
+        marketJobsCache = uniqueJobs;
+      }
+      if (uniqueAcadJobs.length > 0) {
+        academicJobsCache = uniqueAcadJobs;
+      }
       marketJobsLastFetch = Date.now();
+      console.log(`[Market Jobs] Aggregated ${marketJobsCache.length} industry jobs and ${academicJobsCache.length} academic jobs.`);
     } catch (error: any) {
-      console.warn("[Market Jobs] Refresh completed with fallback cache.");
+      console.warn("[Market Jobs] Refresh error:", error);
     } finally {
       isFetchingJobs = false;
     }
@@ -2444,28 +2548,157 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
   app.get("/api/market-jobs", async (req, res) => {
     try {
       const now = Date.now();
-      
-      // If cache is empty and we are fetching, wait up to 4 seconds for it to finish
-      if (marketJobsCache.length === 0 && isFetchingJobs) {
-         let waitTime = 0;
-         while (marketJobsCache.length === 0 && isFetchingJobs && waitTime < 4000) {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            waitTime += 500;
-         }
+      const system = req.query.system as string;
+
+      // If cache TTL expired and not currently fetching, refresh in background
+      if (now - marketJobsLastFetch > CACHE_TTL && !isFetchingJobs) {
+        refreshMarketJobsCache().catch(err => console.warn("[Market Jobs] Background refresh error:", err));
       }
 
-      if (marketJobsCache.length === 0) {
-        // Fallback: if still empty after waiting, return an empty array or a retry instruction
-        return res.json({ jobs: [], status: "fetching_in_progress" });
+      if (system === 'academic') {
+        return res.json({ jobs: academicJobsCache, academicJobs: academicJobsCache, total: academicJobsCache.length });
+      }
+      if (system === 'industry') {
+        return res.json({ jobs: marketJobsCache, academicJobs: academicJobsCache, total: marketJobsCache.length });
       }
 
-      if (now - marketJobsLastFetch > CACHE_TTL) {
-        refreshMarketJobsCache(); // trigger background refresh
-      }
-
-      return res.json({ jobs: marketJobsCache });
+      return res.json({
+        jobs: marketJobsCache,
+        academicJobs: academicJobsCache,
+        total: marketJobsCache.length + academicJobsCache.length
+      });
     } catch (error: any) {
       res.status(500).json({ error: error.message || "Failed to fetch market jobs" });
+    }
+  });
+
+  // Complete QS World University Directory endpoint (1,422 global institutions)
+  app.get("/api/qs-universities", async (req, res) => {
+    try {
+      const search = (req.query.search as string || '').toLowerCase().trim();
+      const tier = (req.query.tier as string || 'all').toLowerCase().trim();
+      const country = (req.query.country as string || '').toLowerCase().trim();
+      const limit = parseInt(req.query.limit as string || '100', 10);
+      const offset = parseInt(req.query.offset as string || '0', 10);
+
+      const qsDataModule = await import('./src/data/qsWorldUniversities.json');
+      const qsData = qsDataModule.default || qsDataModule;
+      
+      let filtered = (qsData as any[]).filter(u => {
+        if (tier === 'top50' && u.rankNum > 50) return false;
+        if (tier === 'top100' && u.rankNum > 100) return false;
+        if (tier === 'top250' && u.rankNum > 250) return false;
+        if (tier === 'top500' && u.rankNum > 500) return false;
+
+        if (country && u.country.toLowerCase() !== country && u.countryCode.toLowerCase() !== country) {
+          return false;
+        }
+
+        if (search) {
+          const matchName = (u.institution || '').toLowerCase().includes(search);
+          const matchCountry = (u.country || '').toLowerCase().includes(search);
+          const matchRank = (u.rank || '').toLowerCase().includes(search);
+          if (!matchName && !matchCountry && !matchRank) return false;
+        }
+
+        return true;
+      });
+
+      const total = filtered.length;
+      const paginated = filtered.slice(offset, offset + limit);
+
+      return res.json({
+        total,
+        universities: paginated,
+        tier,
+        limit,
+        offset
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message || "Failed to load QS universities" });
+    }
+  });
+
+  // Dynamically resolve & validate official university website and career portal
+  app.post("/api/resolve-university-portal", async (req, res) => {
+    try {
+      const { universityName } = req.body;
+      if (!universityName) {
+        return res.status(400).json({ error: "universityName is required" });
+      }
+
+      // Step 1: Query Research Organization Registry (ROR) for canonical official institution info
+      const rorRes = await fetch(`https://api.ror.org/v2/organizations?query=${encodeURIComponent(universityName)}`, {
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(5000)
+      });
+      
+      let officialWebsite = '';
+      let domain = '';
+      let country = '';
+      let rorId = '';
+
+      if (rorRes.ok) {
+        const rorData = await rorRes.json();
+        const top = rorData.items?.[0];
+        if (top) {
+          officialWebsite = top.links?.[0]?.value || top.website || '';
+          country = top.locations?.[0]?.geonames_details?.country_name || '';
+          rorId = top.id || '';
+          if (officialWebsite) {
+            domain = officialWebsite.replace(/^https?:\/\/(www\.)?/, '').split('/')[0];
+          }
+        }
+      }
+
+      // Step 2: Test candidate career links and validate with HTTP status
+      const candidatePaths = [
+        domain ? `https://careers.${domain}` : '',
+        domain ? `https://jobs.${domain}` : '',
+        officialWebsite ? `${officialWebsite.replace(/\/$/, '')}/careers` : '',
+        officialWebsite ? `${officialWebsite.replace(/\/$/, '')}/jobs` : '',
+        officialWebsite ? `${officialWebsite.replace(/\/$/, '')}/about/careers` : '',
+        officialWebsite ? `${officialWebsite.replace(/\/$/, '')}/about/jobs` : ''
+      ].filter(Boolean);
+
+      let validatedCareerUrl = '';
+      let validationStatus = 'unverified';
+
+      for (const candidate of candidatePaths) {
+        try {
+          const testRes = await fetch(candidate, {
+            method: 'GET',
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            },
+            redirect: 'follow',
+            signal: AbortSignal.timeout(3000)
+          });
+          if (testRes.ok) {
+            validatedCareerUrl = candidate;
+            validationStatus = 'validated';
+            break;
+          }
+        } catch {}
+      }
+
+      // If no candidate directly returns 200 (due to anti-bot, SPA, or custom path), provide targeted portal query
+      if (!validatedCareerUrl) {
+        validatedCareerUrl = `https://www.google.com/search?q=${encodeURIComponent(universityName + ' university academic careers jobs portal')}`;
+        validationStatus = 'fallback_search';
+      }
+
+      return res.json({
+        universityName,
+        officialWebsite,
+        domain,
+        country,
+        rorId,
+        validatedCareerUrl,
+        validationStatus
+      });
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message || "Failed to resolve university portal" });
     }
   });
 

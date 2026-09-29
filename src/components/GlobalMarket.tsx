@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Loader2, ExternalLink, Search, MapPin, Briefcase, Clock, Building2, Plus, Sparkles, Info, Upload, X, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 import locationsData from '../data/locations.json';
@@ -33,6 +33,17 @@ import { NestedLocationMenu } from './NestedLocationMenu';
 import { NestedRoleMenu } from './NestedRoleMenu';
 import { DateFilterMenu } from './DateFilterMenu';
 import { NoDataState } from './NoDataState';
+import { QSTierDropdownMenu, QSTier } from './QSTierDropdownMenu';
+import qsWorldUniversities from '../data/qsWorldUniversities.json';
+
+const uniRankLookup = new Map<string, number>();
+(qsWorldUniversities as any[]).forEach((u) => {
+  if (u.institution) {
+    uniRankLookup.set(u.institution.toLowerCase(), u.rankNum);
+    const clean = u.institution.replace(/\s*\([^)]*\)/g, '').trim().toLowerCase();
+    if (clean) uniRankLookup.set(clean, u.rankNum);
+  }
+});
 import { 
   ROLE_CATEGORIES_ACADEMIC, 
   ROLE_CATEGORIES_INDUSTRY, 
@@ -64,10 +75,9 @@ interface GlobalMarketProps {
 }
 
 
-const ACADEMIC_JOBS: any[] = [];
-
 export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'industry', selectedRole = '' }: GlobalMarketProps) {
   const [jobs, setJobs] = useState<MarketJob[]>([]);
+  const [academicJobs, setAcademicJobs] = useState<MarketJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -78,6 +88,41 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
   const [typeFilter, setTypeFilter] = useState(() => selectedRole || '');
   const [dateFilter, setDateFilter] = useState('');
   const [newGradFilter, setNewGradFilter] = useState(false);
+  const [qsTierFilter, setQsTierFilter] = useState<QSTier>('all');
+  const [showUniSuggestions, setShowUniSuggestions] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // Close university suggestions when clicking outside search container
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setShowUniSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Compute matching universities for the right search box autocomplete
+  const matchingUniversities = useMemo(() => {
+    if (trackingSystem !== 'academic') return [];
+    const q = searchTerm.toLowerCase().trim();
+    return (qsWorldUniversities as any[])
+      .filter((u) => {
+        // If QS Tier is active, respect tier filtering in suggestions
+        if (qsTierFilter === 'top50' && u.rankNum > 50) return false;
+        if (qsTierFilter === 'top100' && u.rankNum > 100) return false;
+        if (qsTierFilter === 'top250' && u.rankNum > 250) return false;
+        if (qsTierFilter === 'top500' && u.rankNum > 500) return false;
+
+        if (!q) return u.rankNum <= 15;
+        const matchName = (u.institution || '').toLowerCase().includes(q);
+        const matchCountry = (u.country || '').toLowerCase().includes(q);
+        const matchRank = (u.rank || '').toLowerCase().includes(q);
+        return matchName || matchCountry || matchRank;
+      })
+      .slice(0, 15);
+  }, [searchTerm, trackingSystem, qsTierFilter]);
 
   // Sync role filter when selectedRole or trackingSystem updates
   useEffect(() => {
@@ -203,7 +248,16 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
           console.error("Failed to parse market jobs. Server returned:", text.substring(0, 500));
           throw new Error(`Failed to parse server response: ${text.substring(0, 50)}`);
         }
-        setJobs(data.jobs || []);
+        if (Array.isArray(data.jobs) && data.jobs.length > 0) {
+          setJobs(data.jobs);
+        }
+        if (Array.isArray(data.academicJobs) && data.academicJobs.length > 0) {
+          setAcademicJobs(data.academicJobs);
+        }
+        if ((!data.jobs || data.jobs.length === 0) && (!data.academicJobs || data.academicJobs.length === 0)) {
+          setTimeout(fetchJobs, 2000);
+          return;
+        }
       } catch (err: any) {
         console.error(err);
         setError(err.message || 'An error occurred while fetching jobs.');
@@ -304,13 +358,13 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
     const map = new Map<string | number, JobMatchScore>();
     if (!effectiveProfile || !isMatchedUpActive) return map;
 
-    const baseJobs = trackingSystem === 'academic' ? ACADEMIC_JOBS : jobs;
+    const baseJobs = trackingSystem === 'academic' ? academicJobs : jobs;
     for (const job of baseJobs) {
       const score = scoreJobMatch(job, effectiveProfile);
       map.set(job.id, score);
     }
     return map;
-  }, [jobs, effectiveProfile, trackingSystem, isMatchedUpActive]);
+  }, [jobs, academicJobs, effectiveProfile, trackingSystem, isMatchedUpActive]);
 
   const handleToggleMatchedUp = async () => {
     if (isMatchedUpActive) {
@@ -356,7 +410,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
   };
 
   const processedJobs = React.useMemo(() => {
-    let baseJobs = trackingSystem === 'academic' ? ACADEMIC_JOBS : jobs;
+    let baseJobs = trackingSystem === 'academic' ? academicJobs : jobs;
     let result = baseJobs.filter((job) => {
       // 1. Location match
       const { continent, country, city } = job.parsed_location || { continent: "Other", country: "Other", city: "" };
@@ -408,7 +462,39 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
           Boolean(job.title && /\b(new grad|entry level|graduate|intern|associate|junior|university)\b/i.test(job.title));
       }
 
-      return matchesLocation && matchesType && matchesDate && matchesNewGrad;
+      // 4. QS Tier and University filter (Academic Seekr)
+      let matchesQSTier = true;
+      if (trackingSystem === 'academic' && qsTierFilter !== 'all') {
+        let maxRank = 9999;
+        if (qsTierFilter === 'top50') maxRank = 50;
+        else if (qsTierFilter === 'top100') maxRank = 100;
+        else if (qsTierFilter === 'top250') maxRank = 250;
+        else if (qsTierFilter === 'top500') maxRank = 500;
+
+        let jobRank: number | undefined;
+        const rankTag = job.tags?.find(t => t.startsWith('rank-#'));
+        if (rankTag) {
+          const parsed = parseInt(rankTag.replace('rank-#', ''), 10);
+          if (!isNaN(parsed)) jobRank = parsed;
+        }
+
+        if (jobRank === undefined) {
+          const compLower = (job.company_name || '').toLowerCase();
+          jobRank = uniRankLookup.get(compLower);
+          if (jobRank === undefined) {
+            for (const [uniName, r] of uniRankLookup.entries()) {
+              if (compLower.includes(uniName) || uniName.includes(compLower)) {
+                jobRank = r;
+                break;
+              }
+            }
+          }
+        }
+
+        matchesQSTier = jobRank !== undefined && jobRank <= maxRank;
+      }
+
+      return matchesLocation && matchesType && matchesDate && matchesNewGrad && matchesQSTier;
     });
 
     if (searchTerm) {
@@ -437,7 +523,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
     }
     
     return result;
-  }, [jobs, countryFilter, cityFilter, typeFilter, dateFilter, newGradFilter, searchTerm, isMatchedUpActive, effectiveProfile, jobScoresMap]);
+  }, [jobs, academicJobs, trackingSystem, continentFilter, countryFilter, cityFilter, typeFilter, dateFilter, newGradFilter, qsTierFilter, searchTerm, isMatchedUpActive, effectiveProfile, jobScoresMap]);
 
   return (
     <div className="relative w-full flex-1 flex flex-col min-h-[500px]">
@@ -568,47 +654,135 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
             />
           </div>
 
-          {/* New Grad Switch Toggle */}
-          <div className="min-w-0 flex-1 sm:flex-initial sm:w-auto z-50">
-            <button
-              type="button"
-              role="switch"
-              aria-checked={newGradFilter}
-              onClick={() => setNewGradFilter(prev => !prev)}
-              className="flex items-center justify-between gap-2.5 h-[38px] px-3.5 bg-white border border-[#efefef] hover:border-[#121722]/30 rounded-full text-sm font-medium transition-all shadow-2xs hover:bg-[#faf9f7] cursor-pointer select-none shrink-0 group"
-              title={newGradFilter ? 'New Grad filter is ON. Click to show all experience levels' : 'New Grad filter is OFF. Click to show New Grad & Early Career roles only'}
-            >
-              <div className="flex items-center gap-1.5">
-                <GraduationCap size={15} className={newGradFilter ? 'text-[#0068f9]' : 'text-[#777c86] group-hover:text-[#121722] transition-colors'} />
-                <span className="text-xs sm:text-sm font-semibold text-[#121722] whitespace-nowrap">New Grad</span>
-              </div>
-              
-              {/* Switch Track & Thumb */}
-              <span
-                className={`relative inline-flex h-4 w-7.5 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out ${
-                  newGradFilter ? 'bg-[#0068f9]' : 'bg-[#e2e4e9]'
-                }`}
-              >
-                <span
-                  className={`inline-block h-3 w-3 transform rounded-full bg-white shadow-xs transition-transform duration-200 ease-in-out ${
-                    newGradFilter ? 'translate-x-4' : 'translate-x-0.5'
-                  }`}
-                />
-              </span>
-            </button>
-          </div>
+          {/* QS Tier & University Dropdown Filter (Academic Seekr) */}
+          {trackingSystem === 'academic' && (
+            <div className="min-w-0 flex-1 sm:flex-initial sm:w-auto z-50">
+              <QSTierDropdownMenu
+                selectedTier={qsTierFilter}
+                onSelectTier={setQsTierFilter}
+              />
+            </div>
+          )}
 
-          {/* Expanded Width Search Box & Results Counter */}
-          <div className="relative flex-1 min-w-[80px] sm:min-w-[100px] max-w-full flex items-center">
+          {/* New Grad Switch Toggle (Industry Seekr) */}
+          {trackingSystem === 'industry' && (
+            <div className="min-w-0 flex-1 sm:flex-initial sm:w-auto z-50">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={newGradFilter}
+                onClick={() => setNewGradFilter(prev => !prev)}
+                className="flex items-center justify-between gap-2.5 h-[38px] px-3.5 bg-white border border-[#efefef] hover:border-[#121722]/30 rounded-full text-sm font-medium transition-all shadow-2xs hover:bg-[#faf9f7] cursor-pointer select-none shrink-0 group"
+                title={newGradFilter ? 'New Grad filter is ON. Click to show all experience levels' : 'New Grad filter is OFF. Click to show New Grad & Early Career roles only'}
+              >
+                <div className="flex items-center gap-1.5">
+                  <GraduationCap size={15} className={newGradFilter ? 'text-[#0068f9]' : 'text-[#777c86] group-hover:text-[#121722] transition-colors'} />
+                  <span className="text-xs sm:text-sm font-semibold text-[#121722] whitespace-nowrap">New Grad</span>
+                </div>
+                
+                {/* Switch Track & Thumb */}
+                <span
+                  className={`relative inline-flex h-4 w-7.5 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out ${
+                    newGradFilter ? 'bg-[#0068f9]' : 'bg-[#e2e4e9]'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-3 w-3 transform rounded-full bg-white shadow-xs transition-transform duration-200 ease-in-out ${
+                      newGradFilter ? 'translate-x-4' : 'translate-x-0.5'
+                    }`}
+                  />
+                </span>
+              </button>
+            </div>
+          )}
+
+          {/* Expanded Width Search Box & Results Counter with Integrated QS University Search */}
+          <div className="relative flex-1 min-w-[120px] sm:min-w-[160px] max-w-full flex items-center" ref={searchContainerRef}>
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a5a5a5]" size={15} />
               <input
                 type="text"
-                placeholder="Search market"
+                placeholder={trackingSystem === 'academic' ? "Search university" : "Search market"}
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 h-[38px] bg-white border border-[#efefef] rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#0068f9] transition-all shadow-2xs hover:bg-[#faf9f7] truncate placeholder:font-normal placeholder:text-[#a5a5a5]"
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  if (trackingSystem === 'academic') setShowUniSuggestions(true);
+                }}
+                onFocus={() => {
+                  if (trackingSystem === 'academic') setShowUniSuggestions(true);
+                }}
+                className="w-full pl-9 pr-8 h-[38px] bg-white border border-[#efefef] rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#0068f9] transition-all shadow-2xs hover:bg-[#faf9f7] truncate placeholder:font-normal placeholder:text-[#a5a5a5]"
               />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchTerm('');
+                    setShowUniSuggestions(false);
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a5a5a5] hover:text-[#121722] cursor-pointer"
+                  aria-label="Clear search"
+                >
+                  <X size={14} />
+                </button>
+              )}
+
+              {/* Integrated University Suggestions Dropdown (matching Screenshot 2026-09-28 at 17.26.56.png) */}
+              {showUniSuggestions && trackingSystem === 'academic' && (
+                <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-[#efefef] rounded-2xl shadow-xl z-[100] overflow-hidden animate-in fade-in-80 zoom-in-95 min-w-[280px]">
+                  <div className="flex items-center justify-between px-3 py-2 border-b border-[#f0f0f0] bg-slate-50/70">
+                    <span className="text-xs font-semibold text-[#777c86]">
+                      {searchTerm ? 'University Name:' : 'Top QS Universities:'}
+                    </span>
+                    {searchTerm && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchTerm('');
+                          setShowUniSuggestions(false);
+                        }}
+                        className="text-[11px] font-medium text-rose-500 hover:underline cursor-pointer flex items-center gap-0.5"
+                      >
+                        <X size={11} />
+                        <span>Clear selection</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="max-h-[220px] overflow-y-auto p-1.5 flex flex-col gap-0.5">
+                    {matchingUniversities.length === 0 ? (
+                      <div className="py-3 px-3 text-xs text-[#a5a5a5] text-center">
+                        No universities found matching "{searchTerm}"
+                      </div>
+                    ) : (
+                      matchingUniversities.map((uni: any) => (
+                        <button
+                          key={uni.institution}
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setSearchTerm(uni.institution);
+                            setShowUniSuggestions(false);
+                          }}
+                          className="w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-left text-xs transition-colors hover:bg-[#faf9f7] cursor-pointer group"
+                        >
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 group-hover:bg-[#0068f9]/10 group-hover:text-[#0068f9] text-[#777c86] shrink-0 transition-colors">
+                              #{uni.rank.replace('=', '')}
+                            </span>
+                            <span className="text-[#121722] font-medium truncate group-hover:text-[#0068f9] transition-colors">
+                              {uni.institution}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-semibold text-[#a5a5a5] shrink-0 uppercase">
+                            {uni.countryCode}
+                          </span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

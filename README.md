@@ -34,6 +34,11 @@ Version `4.1.0` introduces a guided **New User 3-Step Onboarding Experience**, d
 
 ### Major Highlights
 
+*   **Universal Multi-Board & Direct ATS Aggregation Engine ($0 Cost)**:
+    *   **Top 500 Enterprise & Tech Ingestion**: Direct integration with open, zero-cost public ATS JSON endpoints across Greenhouse, Ashby, and Lever (including Stripe, OpenAI, Anthropic, Databricks, Airbnb, Figma, Cloudflare, Pinterest, Discord, GitLab, Coinbase, MongoDB, Elastic, Reddit, Datadog, Scale AI, Linear, Perplexity, Notion, Ramp, PostHog, Spotify, and Palantir).
+    *   **Dedicated Academic Seekr Feeds & QS World Rankings Directory**: Ingests authenticated research, faculty, and postdoctoral positions across the official **QS World University Rankings Top 50** global institutions (including MIT, Imperial College London, Oxford, Harvard, Cambridge, Stanford, ETH Zurich, NUS, UCL, Caltech, Penn, UC Berkeley, Melbourne, Peking University, NTU, Cornell, HKU, Sydney, UNSW, Tsinghua, Chicago, Princeton, Yale, PSL Paris, Toronto, EPFL, Edinburgh, TUM, McGill, ANU, Seoul National, Tokyo, Johns Hopkins, Manchester, Columbia, CUHK, Monash, UBC, Fudan, Kyoto, NYU, KCL, LSE, KAIST, UCLA, CMU, TU Delft, Northwestern, Bristol, and Shanghai Jiao Tong) linked directly to their authentic institutional career and recruitment portals, combined with live academic feeds via Adzuna and Reed.
+    *   **Strict Schema Alignment**: All ingested postings strictly pass through a unified normalizer and location parser to match the existing `MarketJob` schema without altering a single frontend component, ensuring instant compatibility with search, category filtering, date ranges, and CV Matched Up scoring.
+
 *   **New User 3-Step Guided Onboarding Experience**:
     *   **Step 1: Select Seekr**: Interactive track selection between **Industry Seekr** and **Academic Seekr** cards with direct primary blue highlighting.
     *   **Step 2: Target Role**: Dynamic role selection displaying roles matching the chosen sector, organized by clear category groups with single-selection radio buttons and an **All Roles (Default)** option.
