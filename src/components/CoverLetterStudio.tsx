@@ -115,6 +115,138 @@ export function CoverLetterStudio({
     toast.success('Draft auto-saved successfully!');
   }, [effectiveStorageKey, style, snapshotDomPages, isDemo]);
 
+  // High-performance debounced stats calculator across all page sheets
+  const debouncedUpdateWordCount = useCallback(() => {
+    if (statsDebounceRef.current) clearTimeout(statsDebounceRef.current);
+    statsDebounceRef.current = setTimeout(() => {
+      let totalWords = 0;
+      pageRefs.current.forEach(el => {
+        if (el) {
+          const text = el.innerText || '';
+          totalWords += text.trim().split(/\s+/).filter(Boolean).length;
+        }
+      });
+      setWordCount(totalWords);
+    }, 250);
+  }, []);
+
+  // Undo & Redo History Management
+  const historyRef = useRef<{ pages: string[]; activePageIndex: number }[]>([]);
+  const redoRef = useRef<{ pages: string[]; activePageIndex: number }[]>([]);
+  const isUndoRedoActionRef = useRef(false);
+
+  const recordHistorySnapshot = useCallback(() => {
+    if (isUndoRedoActionRef.current) return;
+    const currentDomPages = snapshotDomPages();
+    const lastSnap = historyRef.current[historyRef.current.length - 1];
+    
+    if (lastSnap && JSON.stringify(lastSnap.pages) === JSON.stringify(currentDomPages)) {
+      return;
+    }
+
+    historyRef.current.push({
+      pages: [...currentDomPages],
+      activePageIndex
+    });
+    if (historyRef.current.length > 50) {
+      historyRef.current.shift();
+    }
+    redoRef.current = [];
+  }, [snapshotDomPages, activePageIndex]);
+
+  // Debounced history snapshot for continuous typing
+  const debouncedRecordHistoryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debouncedRecordHistory = useCallback(() => {
+    if (debouncedRecordHistoryRef.current) {
+      clearTimeout(debouncedRecordHistoryRef.current);
+    }
+    debouncedRecordHistoryRef.current = setTimeout(() => {
+      recordHistorySnapshot();
+    }, 450);
+  }, [recordHistorySnapshot]);
+
+  const handleUndo = useCallback(() => {
+    if (isDemo) {
+      toast.info('Demo Mode: Modifying content is restricted in this view-only portfolio preview.');
+      return;
+    }
+    const currentDomPages = snapshotDomPages();
+    const lastSnap = historyRef.current[historyRef.current.length - 1];
+    if (!lastSnap || JSON.stringify(lastSnap.pages) !== JSON.stringify(currentDomPages)) {
+      historyRef.current.push({
+        pages: [...currentDomPages],
+        activePageIndex
+      });
+    }
+
+    if (historyRef.current.length <= 1) {
+      toast.info('Nothing to undo');
+      return;
+    }
+
+    isUndoRedoActionRef.current = true;
+    const current = historyRef.current.pop()!;
+    redoRef.current.push(current);
+
+    const targetState = historyRef.current[historyRef.current.length - 1];
+    if (targetState) {
+      pageRefs.current.length = targetState.pages.length;
+      pagesContentRef.current = [...targetState.pages];
+      lastValidHtmlRef.current = [...targetState.pages];
+      setPages([...targetState.pages]);
+      const targetIdx = Math.min(targetState.activePageIndex, targetState.pages.length - 1);
+      setActivePageIndex(targetIdx);
+
+      setTimeout(() => {
+        targetState.pages.forEach((html, i) => {
+          const el = pageRefs.current[i];
+          if (el) el.innerHTML = html;
+        });
+        const activeEl = pageRefs.current[targetIdx];
+        if (activeEl) activeEl.focus();
+        debouncedUpdateWordCount();
+        triggerAutoSave();
+        isUndoRedoActionRef.current = false;
+      }, 30);
+    } else {
+      isUndoRedoActionRef.current = false;
+    }
+  }, [isDemo, snapshotDomPages, activePageIndex, debouncedUpdateWordCount, triggerAutoSave]);
+
+  const handleRedo = useCallback(() => {
+    if (isDemo) {
+      toast.info('Demo Mode: Modifying content is restricted in this view-only portfolio preview.');
+      return;
+    }
+    if (redoRef.current.length === 0) {
+      toast.info('Nothing to redo');
+      return;
+    }
+
+    isUndoRedoActionRef.current = true;
+    const nextState = redoRef.current.pop()!;
+    historyRef.current.push(nextState);
+
+    pageRefs.current.length = nextState.pages.length;
+    pagesContentRef.current = [...nextState.pages];
+    lastValidHtmlRef.current = [...nextState.pages];
+    setPages([...nextState.pages]);
+    const targetIdx = Math.min(nextState.activePageIndex, nextState.pages.length - 1);
+    setActivePageIndex(targetIdx);
+
+    setTimeout(() => {
+      nextState.pages.forEach((html, i) => {
+        const el = pageRefs.current[i];
+        if (el) el.innerHTML = html;
+      });
+      const activeEl = pageRefs.current[targetIdx];
+      if (activeEl) activeEl.focus();
+      debouncedUpdateWordCount();
+      triggerAutoSave();
+      isUndoRedoActionRef.current = false;
+    }, 30);
+  }, [isDemo, debouncedUpdateWordCount, triggerAutoSave]);
+
   // Initialize with initial text or stored draft ONCE per storageKey
   useEffect(() => {
     if (isInitializedRef.current === effectiveStorageKey) {
@@ -147,6 +279,11 @@ export function CoverLetterStudio({
       pagesContentRef.current = [...savedPagesList];
       lastValidHtmlRef.current = [...savedPagesList];
       setActivePageIndex(0);
+      historyRef.current = [{
+        pages: [...savedPagesList],
+        activePageIndex: 0
+      }];
+      redoRef.current = [];
       setTimeout(() => {
         savedPagesList!.forEach((html, i) => {
           const el = pageRefs.current[i];
@@ -166,6 +303,11 @@ export function CoverLetterStudio({
     pagesContentRef.current = [initialHtml];
     lastValidHtmlRef.current = [initialHtml];
     setActivePageIndex(0);
+    historyRef.current = [{
+      pages: [initialHtml],
+      activePageIndex: 0
+    }];
+    redoRef.current = [];
 
     const timer = setTimeout(() => {
       const el0 = pageRefs.current[0];
@@ -175,6 +317,11 @@ export function CoverLetterStudio({
           setPages(paginatedPages);
           pagesContentRef.current = [...paginatedPages];
           lastValidHtmlRef.current = [...paginatedPages];
+          historyRef.current = [{
+            pages: [...paginatedPages],
+            activePageIndex: 0
+          }];
+          redoRef.current = [];
           setTimeout(() => {
             paginatedPages.forEach((html, i) => {
               const el = pageRefs.current[i];
@@ -251,21 +398,6 @@ export function CoverLetterStudio({
 
   const readTime = Math.max(1, Math.ceil(wordCount / 200));
 
-  // High-performance debounced stats calculator across all page sheets
-  const debouncedUpdateWordCount = useCallback(() => {
-    if (statsDebounceRef.current) clearTimeout(statsDebounceRef.current);
-    statsDebounceRef.current = setTimeout(() => {
-      let totalWords = 0;
-      pageRefs.current.forEach(el => {
-        if (el) {
-          const text = el.innerText || '';
-          totalWords += text.trim().split(/\s+/).filter(Boolean).length;
-        }
-      });
-      setWordCount(totalWords);
-    }, 250);
-  }, []);
-
   const updateToolbarSelection = useCallback(() => {
     const activeEditor = pageRefs.current[activePageIndex] || pageRefs.current[0];
     if (!activeEditor) return;
@@ -323,13 +455,14 @@ export function CoverLetterStudio({
     const el = pageRefs.current[idx];
     if (!el) return;
 
-    if (el.scrollHeight > 990) {
+    if (el.scrollHeight > 1010) {
       autoPaginatePageIfOverflow(idx);
     } else {
       lastValidHtmlRef.current[idx] = el.innerHTML;
       pagesContentRef.current[idx] = el.innerHTML;
       debouncedUpdateWordCount();
       triggerAutoSave();
+      debouncedRecordHistory();
     }
   };
 
@@ -350,6 +483,18 @@ export function CoverLetterStudio({
       toast.info('Demo Mode: Modifying document formatting is prohibited in this view-only portfolio showcase.', { id: 'demo-edit' });
       return;
     }
+
+    if (action === 'undo') {
+      handleUndo();
+      return;
+    }
+    if (action === 'redo') {
+      handleRedo();
+      return;
+    }
+
+    recordHistorySnapshot();
+
     const activeEditor = pageRefs.current[activePageIndex] || pageRefs.current[0];
     if (!activeEditor) return;
     const state = executeRichTextCommand(activeEditor, action, value);
@@ -390,6 +535,7 @@ export function CoverLetterStudio({
       toast.info('Demo Mode: Adding new pages is prohibited in this view-only portfolio showcase.');
       return;
     }
+    recordHistorySnapshot();
     const currentDomPages = snapshotDomPages();
     const insertAt = typeof afterIndex === 'number' ? afterIndex + 1 : currentDomPages.length;
     const nextPages = [...currentDomPages];
@@ -424,6 +570,7 @@ export function CoverLetterStudio({
       toast.warning('A document must have at least one page.');
       return;
     }
+    recordHistorySnapshot();
     const currentDomPages = snapshotDomPages();
     const nextPages = currentDomPages.filter((_, idx) => idx !== indexToRemove);
 
@@ -656,6 +803,23 @@ export function CoverLetterStudio({
       return;
     }
 
+    // Undo: Ctrl+Z / Cmd+Z | Redo: Ctrl+Shift+Z / Cmd+Shift+Z / Ctrl+Y
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      e.preventDefault();
+      if (e.shiftKey) {
+        handleRedo();
+      } else {
+        handleUndo();
+      }
+      return;
+    }
+
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+      e.preventDefault();
+      handleRedo();
+      return;
+    }
+
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
       handleAddPage(pageIndex);
@@ -828,10 +992,10 @@ export function CoverLetterStudio({
             onClick={() => setActivePageIndex(idx)}
             className={`w-full max-w-[794px] h-[1123px] max-h-[1123px] min-h-[1123px] bg-white shadow-md border ${
               activePageIndex === idx ? 'border-blue-400 ring-2 ring-blue-500/15' : 'border-[#e2e8f0]'
-            } p-6 sm:px-12 sm:pt-6 sm:pb-5 relative rounded-xs flex flex-col justify-between overflow-hidden transition-all`}
+            } p-6 sm:px-12 sm:pt-5 sm:pb-4 relative rounded-xs flex flex-col justify-between overflow-hidden transition-all`}
           >
             {/* Top Sheet Header */}
-            <div className="shrink-0 flex items-center justify-between text-[11px] text-slate-400 font-medium pb-2 mb-2 border-b border-slate-100 select-none">
+            <div className="shrink-0 flex items-center justify-between text-[11px] text-slate-400 font-medium pb-1.5 mb-1.5 border-b border-slate-100 select-none">
               <div className="flex items-center gap-1.5 text-slate-500">
                 <FileText size={13} className="text-[#0068f9]" />
                 <span>Page {idx + 1} of {pages.length} (A4 • 210 × 297 mm)</span>
@@ -892,8 +1056,8 @@ export function CoverLetterStudio({
                 style === 'classic' ? 'font-serif' : style === 'executive' ? 'font-serif' : 'font-sans'
               }`}
               style={{
-                minHeight: '970px',
-                maxHeight: '990px'
+                minHeight: '1000px',
+                maxHeight: '1015px'
               }}
               spellCheck="false"
             />

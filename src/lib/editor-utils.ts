@@ -90,8 +90,8 @@ export function paginateHtml(
   document.body.appendChild(sandbox);
 
   // Target maximum height per page (true usable text area before footer boundary)
-  // For A4 (1123px total sheet height - 150px padding/header/footer) ~ 960px
-  const maxPageHeight = containerEl.clientHeight > 500 ? containerEl.clientHeight - 10 : 960;
+  // For A4 (1123px total sheet height - ~110px padding/header/footer) = 1005px
+  const maxPageHeight = 1005;
 
   sandbox.innerHTML = fullHtml;
 
@@ -173,7 +173,7 @@ export function paginateHtml(
       return;
     }
 
-    // Paragraph or generic block: add sentence by sentence to fully utilize every space on this page
+    // Paragraph or generic block: add piece-by-piece to fully utilize all space right to the edge
     const fullText = el.innerHTML;
     const chunks = fullText.match(/<[^>]+>|[^<>.!?\n]+[.!?\n]*|[^<>.!?\n]+$/g) || [fullText];
 
@@ -186,9 +186,30 @@ export function paginateHtml(
       currentChunkEl.innerHTML = prevHtml ? `${prevHtml} ${chunk}` : chunk;
 
       if (currentPageDiv.offsetHeight > maxPageHeight) {
-        // Revert last chunk: this page is now 100% full!
+        // Sentence overflowed! Try fitting as many words as possible on this page
         currentChunkEl.innerHTML = prevHtml;
 
+        const words = chunk.split(/\s+/).filter(Boolean);
+        let overflowWords: string[] = [];
+
+        for (let w = 0; w < words.length; w++) {
+          const word = words[w];
+          const testHtml = currentChunkEl.innerHTML 
+            ? `${currentChunkEl.innerHTML} ${word}` 
+            : word;
+          currentChunkEl.innerHTML = testHtml;
+
+          if (currentPageDiv.offsetHeight > maxPageHeight) {
+            // Revert last word: this page is now 100% completely full!
+            currentChunkEl.innerHTML = prevHtml 
+              ? `${prevHtml} ${words.slice(0, w).join(' ')}`.trim()
+              : words.slice(0, w).join(' ').trim();
+            overflowWords = words.slice(w);
+            break;
+          }
+        }
+
+        // Finalize the current full page
         if (currentChunkEl.innerHTML.trim()) {
           startNewPage();
         } else {
@@ -198,10 +219,11 @@ export function paginateHtml(
           startNewPage();
         }
 
-        // Continue with the remaining content on the next page
+        // Start next page with leftover words
+        const leftover = overflowWords.length > 0 ? overflowWords.join(' ') : chunk;
         currentChunkEl = document.createElement(tagName);
         currentPageDiv.appendChild(currentChunkEl);
-        currentChunkEl.innerHTML = chunk;
+        currentChunkEl.innerHTML = leftover;
       }
     }
 
