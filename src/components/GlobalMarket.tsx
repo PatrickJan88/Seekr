@@ -33,7 +33,6 @@ import { NestedLocationMenu } from './NestedLocationMenu';
 import { NestedRoleMenu } from './NestedRoleMenu';
 import { DateFilterMenu } from './DateFilterMenu';
 import { NoDataState } from './NoDataState';
-import { QSTierDropdownMenu, QSTier } from './QSTierDropdownMenu';
 import cwurWorldUniversities from '../data/cwurWorldUniversities.json';
 
 const uniRankLookup = new Map<string, number>();
@@ -88,7 +87,6 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
   const [typeFilter, setTypeFilter] = useState(() => selectedRole || '');
   const [dateFilter, setDateFilter] = useState('');
   const [newGradFilter, setNewGradFilter] = useState(false);
-  const [qsTierFilter, setQsTierFilter] = useState<QSTier>('all');
   const [showUniSuggestions, setShowUniSuggestions] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
@@ -109,12 +107,6 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
     const q = searchTerm.toLowerCase().trim();
     return (cwurWorldUniversities as any[])
       .filter((u) => {
-        // If QS Tier is active, respect tier filtering in suggestions
-        if (qsTierFilter === 'top50' && u.rankNum > 50) return false;
-        if (qsTierFilter === 'top100' && u.rankNum > 100) return false;
-        if (qsTierFilter === 'top250' && u.rankNum > 250) return false;
-        if (qsTierFilter === 'top500' && u.rankNum > 500) return false;
-
         if (!q) return u.rankNum <= 15;
         const matchName = (u.institution || '').toLowerCase().includes(q);
         const matchCountry = (u.country || '').toLowerCase().includes(q);
@@ -122,7 +114,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
         return matchName || matchCountry || matchRank;
       })
       .slice(0, 15);
-  }, [searchTerm, trackingSystem, qsTierFilter]);
+  }, [searchTerm, trackingSystem]);
 
   // Sync role filter when selectedRole or trackingSystem updates
   useEffect(() => {
@@ -462,39 +454,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
           Boolean(job.title && /\b(new grad|entry level|graduate|intern|associate|junior|university)\b/i.test(job.title));
       }
 
-      // 4. QS Tier and University filter (Academic Seekr)
-      let matchesQSTier = true;
-      if (trackingSystem === 'academic' && qsTierFilter !== 'all') {
-        let maxRank = 9999;
-        if (qsTierFilter === 'top50') maxRank = 50;
-        else if (qsTierFilter === 'top100') maxRank = 100;
-        else if (qsTierFilter === 'top250') maxRank = 250;
-        else if (qsTierFilter === 'top500') maxRank = 500;
-
-        let jobRank: number | undefined;
-        const rankTag = job.tags?.find(t => t.startsWith('rank-#'));
-        if (rankTag) {
-          const parsed = parseInt(rankTag.replace('rank-#', ''), 10);
-          if (!isNaN(parsed)) jobRank = parsed;
-        }
-
-        if (jobRank === undefined) {
-          const compLower = (job.company_name || '').toLowerCase();
-          jobRank = uniRankLookup.get(compLower);
-          if (jobRank === undefined) {
-            for (const [uniName, r] of uniRankLookup.entries()) {
-              if (compLower.includes(uniName) || uniName.includes(compLower)) {
-                jobRank = r;
-                break;
-              }
-            }
-          }
-        }
-
-        matchesQSTier = jobRank !== undefined && jobRank <= maxRank;
-      }
-
-      return matchesLocation && matchesType && matchesDate && matchesNewGrad && matchesQSTier;
+      return matchesLocation && matchesType && matchesDate && matchesNewGrad;
     });
 
     if (searchTerm) {
@@ -523,7 +483,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
     }
     
     return result;
-  }, [jobs, academicJobs, trackingSystem, continentFilter, countryFilter, cityFilter, typeFilter, dateFilter, newGradFilter, qsTierFilter, searchTerm, isMatchedUpActive, effectiveProfile, jobScoresMap]);
+  }, [jobs, academicJobs, trackingSystem, continentFilter, countryFilter, cityFilter, typeFilter, dateFilter, newGradFilter, searchTerm, isMatchedUpActive, effectiveProfile, jobScoresMap]);
 
   return (
     <div className="relative w-full flex-1 flex flex-col min-h-[500px]">
@@ -653,16 +613,6 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
               onSelectDate={setDateFilter}
             />
           </div>
-
-          {/* QS Tier & University Dropdown Filter (Academic Seekr) */}
-          {trackingSystem === 'academic' && (
-            <div className="min-w-0 flex-1 sm:flex-initial sm:w-auto z-50">
-              <QSTierDropdownMenu
-                selectedTier={qsTierFilter}
-                onSelectTier={setQsTierFilter}
-              />
-            </div>
-          )}
 
           {/* New Grad Switch Toggle (Industry Seekr) */}
           {trackingSystem === 'industry' && (

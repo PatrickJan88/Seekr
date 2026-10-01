@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TailoredResumeData, ResumeTemplateId, ResumeTemplateMeta, TailoredResumeExperience, TailoredResumeEducation, TailoredResumeProject } from '../types';
+import { triggerDirectPdfExport } from '../lib/pdf-export';
 
 export const RESUME_TEMPLATES: ResumeTemplateMeta[] = [
   {
@@ -395,19 +396,13 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // PDF Export Engine
+  // PDF Export Engine (Direct print preview without opening a new browser tab)
   const handlePrint = (templateId?: ResumeTemplateId) => {
     if (isDemo) {
       toast.info('Demo Mode: Exporting PDF is prohibited in this view-only portfolio showcase.');
       return;
     }
     const activeTmpl = templateId || selectedTemplate;
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      toast.error('Popup blocked. Please allow popups in your browser to print or export PDF.');
-      return;
-    }
-
     const { fullName, title, contact, summary, skills, experience, education, projects } = resumeData;
 
     let templateSpecificStyles = '';
@@ -913,7 +908,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
       `;
     }
 
-    printWindow.document.write(`
+    const fullHtml = `
       <!DOCTYPE html>
       <html>
         <head>
@@ -938,15 +933,19 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
         <body>
           ${renderedHtml}
           <script>
-            window.onload = () => {
+            window.onload = function() {
+              window.focus();
               window.print();
-              setTimeout(() => window.close(), 500);
+            };
+            window.onafterprint = function() {
+              window.close();
             };
           </script>
         </body>
       </html>
-    `);
-    printWindow.document.close();
+    `;
+
+    triggerDirectPdfExport(fullHtml);
   };
 
   const studioBody = (

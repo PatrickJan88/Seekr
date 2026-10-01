@@ -869,7 +869,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   return (
     <div className="flex w-full h-screen bg-[#faf9f7] overflow-hidden text-[#121722] font-sans">
       {/* Sidebar */}
-      <div className={`h-full transition-all duration-300 ease-in-out shrink-0 overflow-hidden bg-white border-r border-[#efefef] z-20 ${isSidebarOpen ? 'w-[260px] opacity-100' : 'w-0 opacity-0 border-none'}`}>
+      <div className={`h-full transition-all duration-300 ease-in-out shrink-0 overflow-hidden bg-white border-r border-[#efefef] ${isSidebarOpen ? 'w-[260px] opacity-100' : 'w-0 opacity-0 border-none'}`}>
         <SidebarNav
             trackingSystem={trackingSystem}
             setTrackingSystem={handleSetTrackingSystem}
@@ -898,7 +898,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 relative bg-[#faf9f7] z-10">
+      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 relative bg-[#faf9f7]">
          {/* Top Navbar */}
          <header className="h-16 border-b border-[#efefef] flex items-center px-6 md:px-8 justify-between bg-white shrink-0 z-30 sticky top-0">
            <div className="flex items-center gap-3">

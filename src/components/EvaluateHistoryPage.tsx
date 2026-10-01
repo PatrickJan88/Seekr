@@ -614,16 +614,6 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                     return true;
                   }).length} evaluations
                 </div>
-
-                {evaluations.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={onBack}
-                    className="h-[38px] px-4 rounded-full border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] text-sm font-medium transition-all flex items-center justify-center cursor-pointer shadow-2xs shrink-0"
-                  >
-                    <span>New Evaluation</span>
-                  </button>
-                )}
               </div>
             </div>
           )}
@@ -1118,6 +1108,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
           onClose={handleCloseStudio}
           onSave={handleSaveCoverLetter}
           storageKey={studioEvalId ? `studio_cl_${studioEvalId}` : `studio_cl_${activeStudio.evalKey}`}
+          isDemo={isDemo}
         />
       )}
 
@@ -1129,6 +1120,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
           onClose={handleCloseStudio}
           onSave={handleSaveInterviewGuide}
           storageKey={studioEvalId ? `studio_interview_prep_${studioEvalId}` : `studio_interview_prep_${activeStudio.evalKey}`}
+          isDemo={isDemo}
         />
       )}
 
@@ -1140,6 +1132,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
           onClose={handleCloseStudio}
           onSave={handleSaveResume}
           storageKey={studioEvalId ? `studio_resume_${studioEvalId}` : `studio_resume_${activeStudio.evalKey}`}
+          isDemo={isDemo}
         />
       )}
     </div>

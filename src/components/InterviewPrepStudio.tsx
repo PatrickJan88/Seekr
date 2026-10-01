@@ -23,6 +23,7 @@ import {
   paginateHtml
 } from '../lib/editor-utils';
 import { PersonalStory } from '../types';
+import { triggerDirectPdfExport } from '../lib/pdf-export';
 import { auth } from '../lib/firebase';
 
 export interface InterviewPrepStudioProps {
@@ -635,7 +636,7 @@ export function InterviewPrepStudio({
     const el = pageRefs.current[idx];
     if (!el) return;
 
-    if (el.scrollHeight > 1010) {
+    if (el.scrollHeight > 980) {
       autoPaginatePageIfOverflow(idx);
     } else {
       lastValidHtmlRef.current[idx] = el.innerHTML;
@@ -882,6 +883,15 @@ export function InterviewPrepStudio({
     });
   };
 
+  const handleManualSave = () => {
+    if (isDemo) {
+      toast.info('Demo Mode: Saving is prohibited in this view-only portfolio showcase.');
+      return;
+    }
+    persistDocuments(documents);
+    toast.success('Document saved successfully');
+  };
+
   // Copy active document content to clipboard
   const handleCopy = () => {
     const texts = pageRefs.current
@@ -900,20 +910,30 @@ export function InterviewPrepStudio({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Export individual document as pristine printable PDF
+  // Export individual document as pristine printable PDF (Direct print preview without opening a new browser tab)
   const handleExportPDF = () => {
     if (isDemo) {
       toast.info('Demo Mode: Exporting PDF is prohibited in this view-only portfolio showcase.');
       return;
     }
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      toast.error('Popup blocked. Please allow popups to print or save PDF.');
-      return;
-    }
+
+    const sanitizePrintHtml = (rawHtml: string): string => {
+      if (!rawHtml) return '';
+      return rawHtml
+        .replace(/<h[1-6][^>]*>\s*(?:<br\s*\/?>|&nbsp;|\s)*<\/h[1-6]>/gi, '')
+        .replace(/<blockquote[^>]*>\s*(?:<br\s*\/?>|&nbsp;|\s)*<\/blockquote>/gi, '')
+        .replace(/<li[^>]*>\s*(?:<br\s*\/?>|&nbsp;|\s)*<\/li>/gi, '')
+        .replace(/<ul[^>]*>\s*<\/ul>/gi, '')
+        .replace(/<ol[^>]*>\s*<\/ol>/gi, '')
+        .replace(/(?:<p[^>]*>\s*(?:<br\s*\/?>|&nbsp;|\s)*<\/p>\s*){2,}/gi, '<p><br></p>')
+        .replace(/^(?:\s*<p[^>]*>\s*(?:<br\s*\/?>|&nbsp;|\s)*<\/p>\s*)+/gi, '')
+        .trim();
+    };
 
     const currentDomPages = snapshotDomPages();
-    const pagesHtml = currentDomPages.map((content, i) => `
+    const pagesHtml = currentDomPages.map((content, i) => {
+      const sanitized = sanitizePrintHtml(content);
+      return `
       <div class="a4-page-sheet">
         ${i === 0 ? `
           <div class="story-header-print">
@@ -925,26 +945,28 @@ export function InterviewPrepStudio({
             <h1 class="story-title-print">${activeStory.title}</h1>
           </div>
         ` : ''}
-        <div class="content">${content}</div>
+        <div class="content">${sanitized}</div>
         <div class="page-footer-print">
           <span>Powered by Seekr <a href="https://seekr-v5am.onrender.com/" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">https://seekr-v5am.onrender.com/</a></span>
           <span>Page ${i + 1} of ${currentDomPages.length}</span>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
-    printWindow.document.write(`
+    const fullHtml = `
       <!DOCTYPE html>
       <html>
         <head>
-          <title>${activeStory.title} - Interview Prep</title>
+          <title>${activeStory.title || 'Interview Strategy'} - Seekr</title>
           <style>
             @page {
-              size: A4;
+              size: A4 portrait;
               margin: 0;
             }
             * { box-sizing: border-box; }
-            body {
+            html, body {
+              width: 210mm;
               margin: 0;
               padding: 0;
               font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -955,14 +977,21 @@ export function InterviewPrepStudio({
             }
             .a4-page-sheet {
               width: 210mm;
-              height: 297mm;
+              height: 296mm;
+              max-height: 296mm;
               padding: 22mm 22mm 18mm 22mm;
+              box-sizing: border-box;
               position: relative;
               page-break-after: always;
+              break-after: page;
               display: flex;
               flex-direction: column;
               justify-content: space-between;
               overflow: hidden;
+            }
+            .a4-page-sheet:last-child {
+              page-break-after: avoid;
+              break-after: avoid;
             }
             .story-header-print {
               border-bottom: 2px solid #e2e8f0;
@@ -991,6 +1020,20 @@ export function InterviewPrepStudio({
               font-size: 10.5pt;
               line-height: 1.65;
               color: #334155;
+            }
+            .content h1:empty,
+            .content h2:empty,
+            .content h3:empty,
+            .content p:empty,
+            .content blockquote:empty,
+            .content ul:empty,
+            .content ol:empty,
+            .content li:empty {
+              display: none !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              border: none !important;
+              height: 0 !important;
             }
             .content h2 {
               font-size: 13.5pt;
@@ -1033,19 +1076,29 @@ export function InterviewPrepStudio({
               justify-content: space-between;
               margin-top: 10pt;
             }
+            @media print {
+              html, body {
+                width: 210mm;
+              }
+            }
           </style>
         </head>
         <body>
           ${pagesHtml}
+          <script>
+            window.onload = function() {
+              window.focus();
+              window.print();
+            };
+            window.onafterprint = function() {
+              window.close();
+            };
+          </script>
         </body>
       </html>
-    `);
+    `;
 
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => {
-      printWindow.print();
-    }, 450);
+    triggerDirectPdfExport(fullHtml);
   };
 
   // Create new document
@@ -1161,21 +1214,21 @@ export function InterviewPrepStudio({
   }, [documents, searchQuery]);
 
   const studioBody = (
-    <div className={`bg-white rounded-2xl w-full flex flex-col overflow-hidden border border-[#efefef] ${
+    <div className={`bg-[#faf9f7] rounded-2xl w-full flex flex-col overflow-hidden border border-[#efefef] ${
       embedded 
         ? 'h-full min-h-[calc(100vh-140px)] shadow-2xs' 
-        : 'max-w-[96vw] xl:max-w-7xl h-[92vh] max-h-[94vh] shadow-2xl ring-1 ring-black/5'
+        : 'max-w-6xl h-[92vh] shadow-2xl'
     }`}>
       {/* Studio Header Bar */}
-      <div className="bg-white border-b border-[#efefef] px-4 sm:px-6 py-3 flex items-center justify-between shrink-0 z-30 shadow-2xs">
+      <div className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-4 bg-white border-b border-[#efefef] shrink-0 gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#0068f9] flex items-center justify-center border border-blue-100 shadow-2xs shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-[#e8f1ff] text-[#0068f9] flex items-center justify-center font-bold shrink-0">
             <BookOpen size={20} />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="text-base sm:text-lg font-bold text-[#121722] tracking-tight truncate">Interview Prep Studio</h1>
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#eef5ff] text-[#0068f9] shrink-0">
+              <h2 className="text-lg font-bold text-[#121722] truncate">Interview Prep Studio</h2>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#e8f1ff] text-[#0068f9] border border-[#0068f9]/20 shrink-0">
                 {documents.length} {documents.length === 1 ? 'Document' : 'Documents'}
               </span>
             </div>
@@ -1188,12 +1241,28 @@ export function InterviewPrepStudio({
               <span>•</span>
               <span>{wordCount} words</span>
               <span>•</span>
-              <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded text-[11px]">
+              <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded text-[11px] shrink-0">
                 {pages.length === 1 ? '1 A4 Page' : `${pages.length} A4 Pages`}
               </span>
               <span>•</span>
-              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80">
-                {saveStatus === 'saving' ? (
+              <button
+                type="button"
+                onClick={handleManualSave}
+                title={isDemo ? "Saving is prohibited in Demo Mode" : "Auto-saves automatically. Click to save immediately."}
+                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all select-none ${
+                  isDemo
+                    ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed'
+                    : saveStatus === 'saving' 
+                      ? 'bg-amber-50 text-amber-700 border border-amber-200/80 hover:bg-amber-100 cursor-pointer active:scale-95' 
+                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 hover:bg-emerald-100/70 cursor-pointer active:scale-95'
+                }`}
+              >
+                {isDemo ? (
+                  <>
+                    <Check size={11} className="text-zinc-400" />
+                    <span>View-only (Demo)</span>
+                  </>
+                ) : saveStatus === 'saving' ? (
                   <>
                     <Loader2 size={11} className="animate-spin text-amber-600" />
                     <span>Auto-saving...</span>
@@ -1204,7 +1273,7 @@ export function InterviewPrepStudio({
                     <span>Auto-saved</span>
                   </>
                 )}
-              </span>
+              </button>
             </p>
           </div>
         </div>
@@ -1214,7 +1283,7 @@ export function InterviewPrepStudio({
           <button
             type="button"
             onClick={handleCreateNewDoc}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#f4f4f5] hover:bg-[#e4e4e7] text-[#121722] text-xs font-semibold rounded-full transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#f4f4f5] hover:bg-[#e4e4e7] text-[#121722] text-xs font-semibold rounded-full transition-all shadow-2xs cursor-pointer"
           >
             <Plus size={14} />
             <span>New</span>
@@ -1223,7 +1292,7 @@ export function InterviewPrepStudio({
           <button
             type="button"
             onClick={handleCopy}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-xs font-semibold rounded-full transition-all shadow-2xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-xs font-semibold rounded-full transition-all shadow-2xs cursor-pointer"
           >
             {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
             <span>{copied ? 'Copied' : 'Copy'}</span>
@@ -1232,14 +1301,14 @@ export function InterviewPrepStudio({
           <button
             type="button"
             onClick={handleExportPDF}
-            className={`inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-full transition-all shadow-2xs ${
+            className={`inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold rounded-full transition-all shadow-2xs ${
               isDemo
                 ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 hover:bg-zinc-100 cursor-not-allowed'
                 : 'bg-[#0068f9] text-white hover:bg-[#024bb1] cursor-pointer'
             }`}
-            title="Export document as A4 PDF"
+            title={isDemo ? "Exporting PDF is prohibited in Demo Mode" : "Export document as A4 PDF"}
           >
-            <Printer size={14} className={isDemo ? "text-zinc-400" : "text-white"} />
+            <Printer size={15} className={isDemo ? "text-zinc-400" : "text-white"} />
             <span>Export PDF</span>
           </button>
 
@@ -1247,10 +1316,10 @@ export function InterviewPrepStudio({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 text-[#a5a5a5] hover:text-[#121722] hover:bg-[#efefef] rounded-full transition-colors cursor-pointer ml-1"
+              className="p-2 text-[#a5a5a5] hover:text-[#121722] hover:bg-[#efefef] rounded-full transition-colors cursor-pointer"
               title="Close Studio"
             >
-              <X size={18} />
+              <X size={20} />
             </button>
           )}
         </div>
@@ -1408,10 +1477,10 @@ export function InterviewPrepStudio({
                 onClick={() => setActivePageIndex(idx)}
                 className={`w-full max-w-[794px] h-[1123px] max-h-[1123px] min-h-[1123px] bg-white shadow-md border ${
                   activePageIndex === idx ? 'border-blue-400 ring-2 ring-blue-500/15' : 'border-[#e2e8f0]'
-                } p-6 sm:px-12 sm:pt-5 sm:pb-4 relative rounded-xs flex flex-col justify-between overflow-hidden transition-all`}
+                } p-6 sm:px-12 sm:pt-6 sm:pb-5 relative rounded-xs flex flex-col justify-between overflow-hidden transition-all`}
               >
                 {/* Top Sheet Header */}
-                <div className="shrink-0 flex items-center justify-between text-[11px] text-slate-400 font-medium pb-1.5 mb-1.5 border-b border-slate-100 select-none">
+                <div className="shrink-0 flex items-center justify-between text-[11px] text-slate-400 font-medium pb-2 mb-2 border-b border-slate-100 select-none">
                   <div className="flex items-center gap-1.5 text-slate-500">
                     <FileText size={13} className="text-[#0068f9]" />
                     <span>Page {idx + 1} of {pages.length} (A4 • 210 × 297 mm)</span>
@@ -1457,16 +1526,16 @@ export function InterviewPrepStudio({
                   onKeyUp={updateToolbarSelection}
                   onMouseUp={updateToolbarSelection}
                   onSelect={updateToolbarSelection}
-                  className="flex-1 w-full text-slate-800 font-sans focus:outline-none select-text text-sm sm:text-base leading-relaxed overflow-hidden rich-editor-content"
+                  className="flex-1 w-full text-slate-800 font-sans focus:outline-none select-text text-sm sm:text-base leading-relaxed rich-editor-content"
                   style={{
                     textAlign: textAlign,
-                    minHeight: '1000px',
-                    maxHeight: '1015px'
+                    minHeight: '940px',
+                    maxHeight: '975px'
                   }}
                 />
 
                 {/* Bottom Sheet Footer */}
-                <div className="shrink-0 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 select-none">
+                <div className="shrink-0 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 select-none">
                   <div className="flex items-center gap-1.5 truncate max-w-[480px]">
                     <span className="font-medium text-slate-500">Powered by Seekr</span>
                     <a

@@ -89,9 +89,9 @@ export function paginateHtml(
   sandbox.className = containerEl.className;
   document.body.appendChild(sandbox);
 
-  // Target maximum height per page (true usable text area before footer boundary)
-  // For A4 (1123px total sheet height - ~110px padding/header/footer) = 1005px
-  const maxPageHeight = 1005;
+  // Target maximum height per page (true usable text area before footer boundary with uncropped padding)
+  // For A4 (1123px total sheet height - ~145px padding/header/footer) = 975px
+  const maxPageHeight = 975;
 
   sandbox.innerHTML = fullHtml;
 
@@ -173,7 +173,7 @@ export function paginateHtml(
       return;
     }
 
-    // Paragraph or generic block: add piece-by-piece to fully utilize all space right to the edge
+    // Paragraph or generic block: add sentence by sentence to cleanly fill page without clipping
     const fullText = el.innerHTML;
     const chunks = fullText.match(/<[^>]+>|[^<>.!?\n]+[.!?\n]*|[^<>.!?\n]+$/g) || [fullText];
 
@@ -186,30 +186,9 @@ export function paginateHtml(
       currentChunkEl.innerHTML = prevHtml ? `${prevHtml} ${chunk}` : chunk;
 
       if (currentPageDiv.offsetHeight > maxPageHeight) {
-        // Sentence overflowed! Try fitting as many words as possible on this page
+        // Revert last chunk: this page is now full with clean line margins!
         currentChunkEl.innerHTML = prevHtml;
 
-        const words = chunk.split(/\s+/).filter(Boolean);
-        let overflowWords: string[] = [];
-
-        for (let w = 0; w < words.length; w++) {
-          const word = words[w];
-          const testHtml = currentChunkEl.innerHTML 
-            ? `${currentChunkEl.innerHTML} ${word}` 
-            : word;
-          currentChunkEl.innerHTML = testHtml;
-
-          if (currentPageDiv.offsetHeight > maxPageHeight) {
-            // Revert last word: this page is now 100% completely full!
-            currentChunkEl.innerHTML = prevHtml 
-              ? `${prevHtml} ${words.slice(0, w).join(' ')}`.trim()
-              : words.slice(0, w).join(' ').trim();
-            overflowWords = words.slice(w);
-            break;
-          }
-        }
-
-        // Finalize the current full page
         if (currentChunkEl.innerHTML.trim()) {
           startNewPage();
         } else {
@@ -219,11 +198,10 @@ export function paginateHtml(
           startNewPage();
         }
 
-        // Start next page with leftover words
-        const leftover = overflowWords.length > 0 ? overflowWords.join(' ') : chunk;
+        // Start next page with this chunk
         currentChunkEl = document.createElement(tagName);
         currentPageDiv.appendChild(currentChunkEl);
-        currentChunkEl.innerHTML = leftover;
+        currentChunkEl.innerHTML = chunk;
       }
     }
 

@@ -3,6 +3,7 @@ import { X, Printer, Copy, Check, FileText, Plus, Trash2, Loader2 } from 'lucide
 import { toast } from 'sonner';
 import { Toolbar } from './ui/toolbar';
 import { markdownOrTextToHtml, executeRichTextCommand, queryEditorState, paginateHtml, normalizeUrl } from '../lib/editor-utils';
+import { triggerDirectPdfExport } from '../lib/pdf-export';
 
 interface CoverLetterStudioProps {
   initialText: string;
@@ -455,7 +456,7 @@ export function CoverLetterStudio({
     const el = pageRefs.current[idx];
     if (!el) return;
 
-    if (el.scrollHeight > 1010) {
+    if (el.scrollHeight > 980) {
       autoPaginatePageIfOverflow(idx);
     } else {
       lastValidHtmlRef.current[idx] = el.innerHTML;
@@ -620,11 +621,6 @@ export function CoverLetterStudio({
       toast.info('Demo Mode: Exporting PDF is prohibited in this view-only portfolio showcase.');
       return;
     }
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      toast.error('Popup blocked. Please allow popups to print or save PDF.');
-      return;
-    }
 
     let fontStyle = "font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 10.5pt; line-height: 1.6; color: #1e293b;";
     let accentHeader = "";
@@ -638,23 +634,39 @@ export function CoverLetterStudio({
       fontStyle = "font-family: 'Computer Modern', 'Times New Roman', serif; font-size: 11pt; line-height: 1.7; color: #000;";
     }
 
+    const sanitizePrintHtml = (rawHtml: string): string => {
+      if (!rawHtml) return '';
+      return rawHtml
+        .replace(/<h[1-6][^>]*>\s*(?:<br\s*\/?>|&nbsp;|\s)*<\/h[1-6]>/gi, '')
+        .replace(/<blockquote[^>]*>\s*(?:<br\s*\/?>|&nbsp;|\s)*<\/blockquote>/gi, '')
+        .replace(/<li[^>]*>\s*(?:<br\s*\/?>|&nbsp;|\s)*<\/li>/gi, '')
+        .replace(/<ul[^>]*>\s*<\/ul>/gi, '')
+        .replace(/<ol[^>]*>\s*<\/ol>/gi, '')
+        .replace(/(?:<p[^>]*>\s*(?:<br\s*\/?>|&nbsp;|\s)*<\/p>\s*){2,}/gi, '<p><br></p>')
+        .replace(/^(?:\s*<p[^>]*>\s*(?:<br\s*\/?>|&nbsp;|\s)*<\/p>\s*)+/gi, '')
+        .trim();
+    };
+
     const currentDomPages = snapshotDomPages();
-    const pagesHtml = currentDomPages.map((content, i) => `
+    const pagesHtml = currentDomPages.map((content, i) => {
+      const sanitized = sanitizePrintHtml(content);
+      return `
       <div class="a4-page-sheet">
         ${i === 0 ? accentHeader : ''}
-        <div class="content">${content}</div>
+        <div class="content">${sanitized}</div>
         <div class="page-footer-print">
           <span>Powered by Seekr <a href="https://seekr-v5am.onrender.com/" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">https://seekr-v5am.onrender.com/</a></span>
           <span>Page ${i + 1} of ${currentDomPages.length}</span>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
-    printWindow.document.write(`
+    const fullHtml = `
       <!DOCTYPE html>
       <html>
         <head>
-          <title></title>
+          <title>${companyName ? `${companyName} Cover Letter` : 'Cover Letter'} - Seekr</title>
           <style>
             @page { 
               size: A4 portrait; 
@@ -694,6 +706,20 @@ export function CoverLetterStudio({
               flex: 1;
               line-height: 1.7;
             }
+            .content h1:empty,
+            .content h2:empty,
+            .content h3:empty,
+            .content p:empty,
+            .content blockquote:empty,
+            .content ul:empty,
+            .content ol:empty,
+            .content li:empty {
+              display: none !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              border: none !important;
+              height: 0 !important;
+            }
             .content p { 
               margin-top: 0;
               margin-bottom: 1.25em; 
@@ -728,15 +754,19 @@ export function CoverLetterStudio({
         <body>
           ${pagesHtml}
           <script>
-            window.onload = () => { 
-              window.print(); 
-              setTimeout(() => window.close(), 500); 
+            window.onload = function() {
+              window.focus();
+              window.print();
+            };
+            window.onafterprint = function() {
+              window.close();
             };
           </script>
         </body>
       </html>
-    `);
-    printWindow.document.close();
+    `;
+
+    triggerDirectPdfExport(fullHtml);
   };
 
   const isAtBottomBoundary = (el: HTMLElement, nextRowNeeded: boolean = false): boolean => {
@@ -942,7 +972,7 @@ export function CoverLetterStudio({
           <button 
             type="button"
             onClick={handleCopy}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-xs font-semibold rounded-full transition-all shadow-2xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-xs font-semibold rounded-full transition-all shadow-2xs cursor-pointer"
           >
             {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
             <span>{copied ? 'Copied' : 'Copy'}</span>
@@ -951,7 +981,7 @@ export function CoverLetterStudio({
           <button 
             type="button"
             onClick={handlePrint}
-            className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-full transition-all shadow-2xs ${
+            className={`inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold rounded-full transition-all shadow-2xs ${
               isDemo
                 ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 hover:bg-zinc-100 cursor-not-allowed'
                 : 'bg-[#0068f9] text-white hover:bg-[#024bb1] cursor-pointer'
@@ -992,10 +1022,10 @@ export function CoverLetterStudio({
             onClick={() => setActivePageIndex(idx)}
             className={`w-full max-w-[794px] h-[1123px] max-h-[1123px] min-h-[1123px] bg-white shadow-md border ${
               activePageIndex === idx ? 'border-blue-400 ring-2 ring-blue-500/15' : 'border-[#e2e8f0]'
-            } p-6 sm:px-12 sm:pt-5 sm:pb-4 relative rounded-xs flex flex-col justify-between overflow-hidden transition-all`}
+            } p-6 sm:px-12 sm:pt-6 sm:pb-5 relative rounded-xs flex flex-col justify-between overflow-hidden transition-all`}
           >
             {/* Top Sheet Header */}
-            <div className="shrink-0 flex items-center justify-between text-[11px] text-slate-400 font-medium pb-1.5 mb-1.5 border-b border-slate-100 select-none">
+            <div className="shrink-0 flex items-center justify-between text-[11px] text-slate-400 font-medium pb-2 mb-2 border-b border-slate-100 select-none">
               <div className="flex items-center gap-1.5 text-slate-500">
                 <FileText size={13} className="text-[#0068f9]" />
                 <span>Page {idx + 1} of {pages.length} (A4 • 210 × 297 mm)</span>
@@ -1052,12 +1082,12 @@ export function CoverLetterStudio({
               onMouseUp={updateToolbarSelection}
               onSelect={updateToolbarSelection}
               onKeyDown={(e) => handleKeyDown(e, idx)}
-              className={`w-full flex-1 overflow-hidden bg-transparent focus:outline-none text-[#121722] text-sm sm:text-base leading-relaxed rich-editor-content ${
+              className={`w-full flex-1 bg-transparent focus:outline-none text-[#121722] text-sm sm:text-base leading-relaxed rich-editor-content ${
                 style === 'classic' ? 'font-serif' : style === 'executive' ? 'font-serif' : 'font-sans'
               }`}
               style={{
-                minHeight: '1000px',
-                maxHeight: '1015px'
+                minHeight: '940px',
+                maxHeight: '975px'
               }}
               spellCheck="false"
             />

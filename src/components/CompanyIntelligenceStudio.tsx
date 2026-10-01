@@ -28,6 +28,7 @@ import {
 import { CompanyTeardownData, JobApplication } from '../types';
 import { HeadcountTrendChart } from './HeadcountTrendChart';
 import { NoDataState } from './NoDataState';
+import { triggerDirectPdfExport } from '../lib/pdf-export';
 import { auth } from '../lib/firebase';
 import { getSavedTeardowns, saveTeardown, deleteSavedTeardown, SavedTeardownRecord } from '../db/teardowns';
 import { jsonrepair } from 'jsonrepair';
@@ -595,11 +596,6 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
       return;
     }
     if (!currentTeardown) return;
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      toast.error('Popup blocked. Please allow popups in your browser to print or export PDF.');
-      return;
-    }
 
     const t = currentTeardown;
     
@@ -752,12 +748,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
       </html>
     `;
 
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => {
-      printWindow.print();
-    }, 250);
+    triggerDirectPdfExport(html);
   };
 
   // Find matching application for one-click add

@@ -111,3 +111,37 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   margin-bottom: 0.25em;
 }
 
+/* Direct In-Place Print Engine */
+#seekr-print-root {
+  display: none;
+}
+
+@media print {
+  /* Hide the entire app UI when printing */
+  body.printing-seekr-doc > *:not(#seekr-print-root) {
+    display: none !important;
+  }
+  
+  body.printing-seekr-doc {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  body.printing-seekr-doc #seekr-print-root {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  @page {
+    size: auto;
+    margin: 0;
+  }
+}
+
