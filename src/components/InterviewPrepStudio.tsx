@@ -334,7 +334,7 @@ export function InterviewPrepStudio({
 
   // Snapshot current DOM innerHTML or ref memory of all pages
   const snapshotDomPages = useCallback((): string[] => {
-    const count = Math.max(pages.length, pagesContentRef.current.length, lastValidHtmlRef.current.length, 1);
+    const count = pages.length;
     const result: string[] = [];
     for (let idx = 0; idx < count; idx++) {
       const el = pageRefs.current[idx];
@@ -347,6 +347,9 @@ export function InterviewPrepStudio({
       pagesContentRef.current[idx] = chosen;
       lastValidHtmlRef.current[idx] = chosen;
     }
+    pageRefs.current.length = count;
+    pagesContentRef.current.length = count;
+    lastValidHtmlRef.current.length = count;
     return result;
   }, [pages]);
 
@@ -449,23 +452,120 @@ export function InterviewPrepStudio({
     }
   }, [activePageIndex]);
 
+  // Smart auto-pagination when content exceeds 1 page
+  const autoPaginatePageIfOverflow = useCallback((pageIndex: number) => {
+    const el = pageRefs.current[pageIndex];
+    if (!el) return;
+
+    // Check if height exceeds page boundary
+    const clientH = el.clientHeight > 200 ? el.clientHeight : 920;
+    if (el.scrollHeight <= clientH + 4) {
+      lastValidHtmlRef.current[pageIndex] = el.innerHTML;
+      pagesContentRef.current[pageIndex] = el.innerHTML;
+      debouncedUpdateWordCount();
+      triggerAutoSave();
+      return;
+    }
+
+    // Split overflowing content intelligently across pages
+    const fullHtml = el.innerHTML;
+    const paginated = paginateHtml(el, fullHtml);
+
+    if (paginated.length <= 1) {
+      lastValidHtmlRef.current[pageIndex] = el.innerHTML;
+      pagesContentRef.current[pageIndex] = el.innerHTML;
+      debouncedUpdateWordCount();
+      triggerAutoSave();
+      return;
+    }
+
+    const currentDomPages = snapshotDomPages();
+    const nextPages = [
+      ...currentDomPages.slice(0, pageIndex),
+      ...paginated,
+      ...currentDomPages.slice(pageIndex + 1)
+    ];
+
+    setPages(nextPages);
+    pagesContentRef.current = [...nextPages];
+    lastValidHtmlRef.current = [...nextPages];
+
+    setTimeout(() => {
+      nextPages.forEach((html, i) => {
+        const pageEl = pageRefs.current[i];
+        if (pageEl) {
+          pageEl.innerHTML = html;
+        }
+      });
+      debouncedUpdateWordCount();
+      triggerAutoSave();
+    }, 50);
+  }, [snapshotDomPages, debouncedUpdateWordCount, triggerAutoSave]);
+
+  // Handle paste in a page sheet: auto-extend pages to hold all content
+  const handlePaste = (_e: React.ClipboardEvent<HTMLDivElement>, pageIndex: number) => {
+    if (isDemo) {
+      _e.preventDefault();
+      toast.info('Demo Mode: Modifying content is restricted in this view-only portfolio preview.');
+      return;
+    }
+    // Allow the native paste into contenteditable, then run smart auto-pagination
+    setTimeout(() => {
+      autoPaginatePageIfOverflow(pageIndex);
+    }, 15);
+  };
+
   // Handle live typing in a page sheet
   const handlePageInput = (idx: number) => {
     setActivePageIndex(idx);
     const el = pageRefs.current[idx];
     if (!el) return;
 
-    if (el.scrollHeight > el.clientHeight + 1) {
-      document.execCommand('undo');
-      if (el.scrollHeight > el.clientHeight + 1 && lastValidHtmlRef.current[idx]) {
-        el.innerHTML = lastValidHtmlRef.current[idx];
-      }
-      toast.warning('Bottom page boundary reached. Click "Add page" below to add another sheet.', { id: 'page-limit' });
+    const clientH = el.clientHeight > 200 ? el.clientHeight : 920;
+    if (el.scrollHeight > clientH + 4) {
+      autoPaginatePageIfOverflow(idx);
     } else {
       lastValidHtmlRef.current[idx] = el.innerHTML;
       pagesContentRef.current[idx] = el.innerHTML;
+      debouncedUpdateWordCount();
+      triggerAutoSave();
     }
-    triggerAutoSave();
+  };
+
+  // Handle keyboard shortcuts & smart page breaks
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>, pageIndex: number) => {
+    e.stopPropagation();
+
+    if (isDemo) {
+      const isNav = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key) ||
+        ((e.ctrlKey || e.metaKey) && ['c', 'a'].includes(e.key.toLowerCase()));
+      if (!isNav) {
+        e.preventDefault();
+        toast.info('Demo Mode: Modifying content is restricted in this view-only portfolio preview.', { id: 'demo-edit' });
+      }
+      return;
+    }
+
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      handleAddPage(pageIndex);
+      return;
+    }
+
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      document.execCommand('insertText', false, '    ');
+      return;
+    }
+
+    const el = pageRefs.current[pageIndex];
+    if (!el) return;
+
+    const clientH = el.clientHeight > 200 ? el.clientHeight : 920;
+    if (e.key === 'Enter' && el.scrollHeight >= clientH - 24) {
+      e.preventDefault();
+      handleAddPage(pageIndex);
+    }
   };
 
   const handleToolbarAction = (action: string, value?: string) => {
@@ -536,12 +636,42 @@ export function InterviewPrepStudio({
     const currentDomPages = snapshotDomPages();
     const nextPages = currentDomPages.filter((_, i) => i !== indexToRemove);
 
-    setPages(nextPages);
+    // Truncate refs explicitly so deleted elements cannot be resurrected
+    pageRefs.current.length = nextPages.length;
     pagesContentRef.current = [...nextPages];
     lastValidHtmlRef.current = [...nextPages];
+    setPages(nextPages);
 
-    const nextActive = Math.max(0, indexToRemove - 1);
+    const nextActive = Math.max(0, Math.min(activePageIndex, nextPages.length - 1));
     setActivePageIndex(nextActive);
+
+    const combinedHtml = nextPages.join('');
+    if (!isWorkspace && effectiveSingleDocKey) {
+      try {
+        localStorage.setItem(effectiveSingleDocKey, combinedHtml);
+        localStorage.setItem(`${effectiveSingleDocKey}_pages`, JSON.stringify(nextPages));
+      } catch (e) {}
+    }
+
+    setDocuments(prev => {
+      const nextList = prev.map(s => {
+        if (s.id === activeStoryId) {
+          return {
+            ...s,
+            content: combinedHtml,
+            pages: nextPages,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return s;
+      });
+      persistDocuments(nextList);
+      return nextList;
+    });
+
+    if (onSaveRef.current) {
+      onSaveRef.current(combinedHtml);
+    }
 
     setTimeout(() => {
       nextPages.forEach((html, i) => {
@@ -551,8 +681,8 @@ export function InterviewPrepStudio({
         }
       });
       debouncedUpdateWordCount();
-      triggerAutoSave();
-    }, 50);
+    }, 40);
+
     toast.info(`Page ${indexToRemove + 1} removed`);
   };
 
@@ -1135,17 +1265,17 @@ export function InterviewPrepStudio({
           </div>
 
           {/* Multi-Page Canvas Area: True A4 page sheets */}
-          <div className="flex-1 p-4 sm:p-8 overflow-y-auto flex flex-col items-center bg-[#f1f3f5] custom-scrollbar gap-8">
+          <div className="flex-1 p-4 sm:p-6 overflow-y-auto flex flex-col items-center bg-[#f1f3f5] custom-scrollbar gap-4 sm:gap-5">
             {pages.map((_initialHtml, idx) => (
               <div
                 key={idx}
                 onClick={() => setActivePageIndex(idx)}
                 className={`w-full max-w-[794px] h-[1123px] max-h-[1123px] min-h-[1123px] bg-white shadow-md border ${
                   activePageIndex === idx ? 'border-blue-400 ring-2 ring-blue-500/15' : 'border-[#e2e8f0]'
-                } p-6 sm:px-12 sm:pt-8 sm:pb-6 relative rounded-xs flex flex-col justify-between overflow-hidden transition-all`}
+                } p-6 sm:px-12 sm:pt-6 sm:pb-5 relative rounded-xs flex flex-col justify-between overflow-hidden transition-all`}
               >
                 {/* Top Sheet Header */}
-                <div className="shrink-0 flex items-center justify-between text-[11px] text-slate-400 font-medium pb-3 mb-3 border-b border-slate-100 select-none">
+                <div className="shrink-0 flex items-center justify-between text-[11px] text-slate-400 font-medium pb-2 mb-2 border-b border-slate-100 select-none">
                   <div className="flex items-center gap-1.5 text-slate-500">
                     <FileText size={13} className="text-[#0068f9]" />
                     <span>Page {idx + 1} of {pages.length} (A4 • 210 × 297 mm)</span>
@@ -1174,7 +1304,7 @@ export function InterviewPrepStudio({
                       className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] text-[#0068f9] bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer"
                     >
                       <Plus size={11} />
-                      <span>Add Page Below</span>
+                      <span>Add New Page</span>
                     </button>
                   </div>
                 </div>
@@ -1186,14 +1316,16 @@ export function InterviewPrepStudio({
                   suppressContentEditableWarning
                   onFocus={() => setActivePageIndex(idx)}
                   onInput={() => handlePageInput(idx)}
+                  onPaste={(e) => handlePaste(e, idx)}
+                  onKeyDown={(e) => handleKeyDown(e, idx)}
                   onKeyUp={updateToolbarSelection}
                   onMouseUp={updateToolbarSelection}
                   onSelect={updateToolbarSelection}
                   className="flex-1 w-full text-slate-800 font-sans focus:outline-none select-text text-sm sm:text-base leading-relaxed overflow-hidden rich-editor-content"
                   style={{
                     textAlign: textAlign,
-                    minHeight: '920px',
-                    maxHeight: '940px'
+                    minHeight: '970px',
+                    maxHeight: '990px'
                   }}
                 />
 
