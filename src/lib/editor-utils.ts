@@ -61,7 +61,8 @@ export function markdownOrTextToHtml(raw: string): string {
 }
 
 /**
- * Automatically paginates HTML content across multiple pages if it exceeds the height of containerEl
+ * Automatically paginates HTML content across multiple A4 pages if it exceeds page height.
+ * Accurately measures true content height in an off-screen sandbox matching container styling.
  */
 export function paginateHtml(
   containerEl: HTMLElement,
@@ -71,150 +72,155 @@ export function paginateHtml(
     return ['<p><br></p>'];
   }
 
-  const originalHtml = containerEl.innerHTML;
+  // Create an off-screen measurement sandbox with exact width & typography of containerEl
+  const computedStyle = window.getComputedStyle(containerEl);
+  const sandbox = document.createElement('div');
+  sandbox.style.position = 'absolute';
+  sandbox.style.visibility = 'hidden';
+  sandbox.style.left = '-9999px';
+  sandbox.style.top = '0';
+  sandbox.style.width = `${containerEl.clientWidth > 100 ? containerEl.clientWidth : 698}px`;
+  sandbox.style.fontFamily = computedStyle.fontFamily;
+  sandbox.style.fontSize = computedStyle.fontSize;
+  sandbox.style.lineHeight = computedStyle.lineHeight;
+  sandbox.style.letterSpacing = computedStyle.letterSpacing;
+  sandbox.style.boxSizing = 'border-box';
+  sandbox.style.wordBreak = 'break-word';
+  sandbox.className = containerEl.className;
+  document.body.appendChild(sandbox);
 
-  // Measurement target height: strictly utilize all vertical space of the A4 content zone
-  containerEl.innerHTML = fullHtml;
-  const clientHeight = containerEl.clientHeight > 200 ? containerEl.clientHeight : 975;
+  // Target maximum height per page (true usable text area before footer boundary)
+  // For A4 (1123px total sheet height - 150px padding/header/footer) ~ 960px
+  const maxPageHeight = containerEl.clientHeight > 500 ? containerEl.clientHeight - 10 : 960;
 
-  // If it fits comfortably within 1 page, keep it as single page
-  if (containerEl.scrollHeight <= clientHeight + 4) {
-    containerEl.innerHTML = originalHtml;
+  sandbox.innerHTML = fullHtml;
+
+  // If entire content fits in 1 page, return single page immediately
+  if (sandbox.offsetHeight <= maxPageHeight) {
+    document.body.removeChild(sandbox);
     return [fullHtml];
   }
 
-  // Parse nodes from the full HTML
-  const sourceNodes = Array.from(containerEl.childNodes);
-  const pagesHtml: string[] = [];
+  // Extract source DOM nodes
+  const sourceNodes = Array.from(sandbox.childNodes).map(n => n.cloneNode(true));
+  sandbox.innerHTML = '';
 
-  containerEl.innerHTML = '';
-  let currentPageContainer = document.createElement('div');
-  containerEl.appendChild(currentPageContainer);
+  const pagesHtml: string[] = [];
+  let currentPageDiv = document.createElement('div');
+  sandbox.appendChild(currentPageDiv);
 
   const startNewPage = () => {
-    if (currentPageContainer.innerHTML.trim()) {
-      pagesHtml.push(currentPageContainer.innerHTML);
+    if (currentPageDiv.innerHTML.trim()) {
+      pagesHtml.push(currentPageDiv.innerHTML);
     }
-    currentPageContainer.innerHTML = '';
+    currentPageDiv.innerHTML = '';
   };
 
-  // Helper to add a paragraph/block piece by piece (sentence by sentence)
-  // to ensure EVERY page strictly uses all of the available space before auto-extending to next
-  const addBlockIncrementally = (blockEl: HTMLElement) => {
-    const tagName = blockEl.tagName.toLowerCase();
+  const addBlockIncrementally = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      if (!node.textContent?.trim()) return;
+      const p = document.createElement('p');
+      p.textContent = node.textContent;
+      node = p;
+    }
 
-    // Headings (H1-H6): keep whole if possible
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
+    const el = node as HTMLElement;
+    const tagName = el.tagName.toLowerCase();
+
+    // Headings (H1-H6): if heading fits, add it; if it overflows, move to next page
     if (/^h[1-6]$/.test(tagName)) {
-      currentPageContainer.appendChild(blockEl.cloneNode(true));
-      if (containerEl.scrollHeight > clientHeight + 2) {
-        currentPageContainer.removeChild(currentPageContainer.lastChild!);
-        if (currentPageContainer.innerHTML.trim()) {
+      currentPageDiv.appendChild(el.cloneNode(true));
+      if (currentPageDiv.offsetHeight > maxPageHeight) {
+        currentPageDiv.removeChild(currentPageDiv.lastChild!);
+        if (currentPageDiv.innerHTML.trim()) {
           startNewPage();
         }
-        currentPageContainer.appendChild(blockEl.cloneNode(true));
+        currentPageDiv.appendChild(el.cloneNode(true));
       }
       return;
     }
 
-    // Try adding the whole block first
-    currentPageContainer.appendChild(blockEl.cloneNode(true));
-    if (containerEl.scrollHeight <= clientHeight + 2) {
-      // It fits completely on the current page!
+    // Try adding whole element first
+    currentPageDiv.appendChild(el.cloneNode(true));
+    if (currentPageDiv.offsetHeight <= maxPageHeight) {
+      // Fits completely on current page!
       return;
     }
 
-    // It doesn't fit completely on the current page!
-    // Remove the whole block, and add it piece-by-piece to strictly fill all remaining space on this page!
-    currentPageContainer.removeChild(currentPageContainer.lastChild!);
+    // Overflow! Remove it from current page
+    currentPageDiv.removeChild(currentPageDiv.lastChild!);
 
-    const fullText = blockEl.innerHTML;
-    // Split by sentence boundaries, periods, question marks, exclamation marks, or line breaks
-    const sentences = fullText.match(/<[^>]+>|[^<>.!?\n]+[.!?\n]*|[^<>.!?\n]+$/g) || [fullText];
+    // If it's a list (UL/OL), paginate item by item
+    if (tagName === 'ul' || tagName === 'ol') {
+      let activeList = document.createElement(tagName);
+      currentPageDiv.appendChild(activeList);
+
+      const items = Array.from(el.children);
+      for (const item of items) {
+        activeList.appendChild(item.cloneNode(true));
+        if (currentPageDiv.offsetHeight > maxPageHeight) {
+          activeList.removeChild(activeList.lastChild!);
+          if (activeList.children.length === 0 && activeList.parentNode) {
+            currentPageDiv.removeChild(activeList);
+          }
+          startNewPage();
+          activeList = document.createElement(tagName);
+          currentPageDiv.appendChild(activeList);
+          activeList.appendChild(item.cloneNode(true));
+        }
+      }
+      return;
+    }
+
+    // Paragraph or generic block: add sentence by sentence to fully utilize every space on this page
+    const fullText = el.innerHTML;
+    const chunks = fullText.match(/<[^>]+>|[^<>.!?\n]+[.!?\n]*|[^<>.!?\n]+$/g) || [fullText];
 
     let currentChunkEl = document.createElement(tagName);
-    currentPageContainer.appendChild(currentChunkEl);
+    currentPageDiv.appendChild(currentChunkEl);
 
-    for (let i = 0; i < sentences.length; i++) {
-      const part = sentences[i];
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
       const prevHtml = currentChunkEl.innerHTML;
-      currentChunkEl.innerHTML = prevHtml ? `${prevHtml} ${part}` : part;
+      currentChunkEl.innerHTML = prevHtml ? `${prevHtml} ${chunk}` : chunk;
 
-      if (containerEl.scrollHeight > clientHeight + 2) {
-        // Revert last part: this page is now 100% full to capacity!
+      if (currentPageDiv.offsetHeight > maxPageHeight) {
+        // Revert last chunk: this page is now 100% full!
         currentChunkEl.innerHTML = prevHtml;
 
         if (currentChunkEl.innerHTML.trim()) {
           startNewPage();
         } else {
           if (currentChunkEl.parentNode) {
-            currentPageContainer.removeChild(currentChunkEl);
+            currentPageDiv.removeChild(currentChunkEl);
           }
           startNewPage();
         }
 
         // Continue with the remaining content on the next page
         currentChunkEl = document.createElement(tagName);
-        currentPageContainer.appendChild(currentChunkEl);
-        currentChunkEl.innerHTML = part;
+        currentPageDiv.appendChild(currentChunkEl);
+        currentChunkEl.innerHTML = chunk;
       }
     }
 
-    // Clean up if trailing chunk ended up empty
     if (!currentChunkEl.innerHTML.trim() && currentChunkEl.parentNode) {
-      currentPageContainer.removeChild(currentChunkEl);
+      currentPageDiv.removeChild(currentChunkEl);
     }
   };
 
   for (const node of sourceNodes) {
-    if (node.nodeType === Node.ELEMENT_NODE) {
-      const el = node as HTMLElement;
-      const tagName = el.tagName.toUpperCase();
-
-      // If it's a list (UL or OL), paginate by individual <li> items
-      if (tagName === 'UL' || tagName === 'OL') {
-        const listTag = tagName.toLowerCase();
-        let activeList = document.createElement(listTag);
-        currentPageContainer.appendChild(activeList);
-
-        const listItems = Array.from(el.children);
-        for (const li of listItems) {
-          activeList.appendChild(li.cloneNode(true));
-
-          // Check if this item causes the page to exceed clientHeight
-          if (containerEl.scrollHeight > clientHeight + 2) {
-            activeList.removeChild(activeList.lastChild!);
-
-            if (activeList.children.length === 0 && activeList.parentNode) {
-              currentPageContainer.removeChild(activeList);
-            }
-
-            // Finish current page and start a new one
-            startNewPage();
-
-            // Create new list on the new page and add the li
-            activeList = document.createElement(listTag);
-            currentPageContainer.appendChild(activeList);
-            activeList.appendChild(li.cloneNode(true));
-          }
-        }
-        continue;
-      }
-
-      // Regular block element (P, H1-H6, BLOCKQUOTE, etc.)
-      addBlockIncrementally(el);
-    } else if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) {
-      const p = document.createElement('p');
-      p.textContent = node.textContent;
-      addBlockIncrementally(p);
-    }
+    addBlockIncrementally(node);
   }
 
-  // Final page
-  if (currentPageContainer.innerHTML.trim()) {
-    pagesHtml.push(currentPageContainer.innerHTML);
+  // Push final page
+  if (currentPageDiv.innerHTML.trim()) {
+    pagesHtml.push(currentPageDiv.innerHTML);
   }
 
-  containerEl.innerHTML = originalHtml;
+  // Clean up sandbox
+  document.body.removeChild(sandbox);
 
   return pagesHtml.length > 0 ? pagesHtml : [fullHtml];
 }

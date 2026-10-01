@@ -457,16 +457,6 @@ export function InterviewPrepStudio({
     const el = pageRefs.current[pageIndex];
     if (!el) return;
 
-    // Check if height exceeds page boundary
-    const clientH = el.clientHeight > 200 ? el.clientHeight : 920;
-    if (el.scrollHeight <= clientH + 4) {
-      lastValidHtmlRef.current[pageIndex] = el.innerHTML;
-      pagesContentRef.current[pageIndex] = el.innerHTML;
-      debouncedUpdateWordCount();
-      triggerAutoSave();
-      return;
-    }
-
     // Split overflowing content intelligently across pages
     const fullHtml = el.innerHTML;
     const paginated = paginateHtml(el, fullHtml);
@@ -499,7 +489,7 @@ export function InterviewPrepStudio({
       });
       debouncedUpdateWordCount();
       triggerAutoSave();
-    }, 50);
+    }, 40);
   }, [snapshotDomPages, debouncedUpdateWordCount, triggerAutoSave]);
 
   // Handle paste in a page sheet: auto-extend pages to hold all content
@@ -512,7 +502,7 @@ export function InterviewPrepStudio({
     // Allow the native paste into contenteditable, then run smart auto-pagination
     setTimeout(() => {
       autoPaginatePageIfOverflow(pageIndex);
-    }, 15);
+    }, 20);
   };
 
   // Handle live typing in a page sheet
@@ -521,8 +511,7 @@ export function InterviewPrepStudio({
     const el = pageRefs.current[idx];
     if (!el) return;
 
-    const clientH = el.clientHeight > 200 ? el.clientHeight : 920;
-    if (el.scrollHeight > clientH + 4) {
+    if (el.scrollHeight > 990) {
       autoPaginatePageIfOverflow(idx);
     } else {
       lastValidHtmlRef.current[idx] = el.innerHTML;
@@ -556,15 +545,6 @@ export function InterviewPrepStudio({
       e.preventDefault();
       document.execCommand('insertText', false, '    ');
       return;
-    }
-
-    const el = pageRefs.current[pageIndex];
-    if (!el) return;
-
-    const clientH = el.clientHeight > 200 ? el.clientHeight : 920;
-    if (e.key === 'Enter' && el.scrollHeight >= clientH - 24) {
-      e.preventDefault();
-      handleAddPage(pageIndex);
     }
   };
 
@@ -1221,7 +1201,7 @@ export function InterviewPrepStudio({
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
                 <Tag size={12} />
-                <span>Tags / Methods:</span>
+                <span>Tags:</span>
               </span>
               {activeStory.tags.map((tag, tIdx) => (
                 <span
@@ -1240,7 +1220,7 @@ export function InterviewPrepStudio({
               ))}
               <input
                 type="text"
-                placeholder="+ Add method or tag (Enter)"
+                placeholder="Add tag"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();

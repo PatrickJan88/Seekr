@@ -281,15 +281,6 @@ export function CoverLetterStudio({
     const el = pageRefs.current[pageIndex];
     if (!el) return;
 
-    const clientH = el.clientHeight > 200 ? el.clientHeight : 920;
-    if (el.scrollHeight <= clientH + 4) {
-      lastValidHtmlRef.current[pageIndex] = el.innerHTML;
-      pagesContentRef.current[pageIndex] = el.innerHTML;
-      debouncedUpdateWordCount();
-      triggerAutoSave();
-      return;
-    }
-
     const fullHtml = el.innerHTML;
     const paginated = paginateHtml(el, fullHtml);
 
@@ -321,7 +312,7 @@ export function CoverLetterStudio({
       });
       debouncedUpdateWordCount();
       triggerAutoSave();
-    }, 50);
+    }, 40);
   }, [snapshotDomPages, debouncedUpdateWordCount, triggerAutoSave]);
 
   const handlePageInput = (idx: number) => {
@@ -332,8 +323,7 @@ export function CoverLetterStudio({
     const el = pageRefs.current[idx];
     if (!el) return;
 
-    const clientH = el.clientHeight > 200 ? el.clientHeight : 920;
-    if (el.scrollHeight > clientH + 4) {
+    if (el.scrollHeight > 990) {
       autoPaginatePageIfOverflow(idx);
     } else {
       lastValidHtmlRef.current[idx] = el.innerHTML;
@@ -352,7 +342,7 @@ export function CoverLetterStudio({
     // Allow native paste, then automatically extend pages if length exceeds 1 page
     setTimeout(() => {
       autoPaginatePageIfOverflow(pageIndex);
-    }, 15);
+    }, 20);
   };
 
   const handleToolbarAction = (action: string, value?: string) => {
@@ -676,51 +666,6 @@ export function CoverLetterStudio({
       e.preventDefault();
       document.execCommand('insertText', false, '    ');
       return;
-    }
-
-    const el = pageRefs.current[pageIndex];
-    if (!el) return;
-
-    // Navigation, deletion, and standard edit shortcuts are always permitted
-    const isNavOrDelete = 
-      e.key === 'Backspace' ||
-      e.key === 'Delete' ||
-      e.key.startsWith('Arrow') ||
-      e.key === 'Home' ||
-      e.key === 'End' ||
-      e.key === 'PageUp' ||
-      e.key === 'PageDown' ||
-      e.key === 'Escape' ||
-      ((e.ctrlKey || e.metaKey) && ['z', 'y', 'a', 'c', 'x'].includes(e.key.toLowerCase()));
-
-    if (isNavOrDelete) {
-      return;
-    }
-
-    // 1. Enter key: If at bottom, automatically add new page and focus
-    if (e.key === 'Enter') {
-      if (isAtBottomBoundary(el, true)) {
-        e.preventDefault();
-        handleAddPage(pageIndex);
-        return;
-      }
-    }
-
-    // 2. Typing characters, spaces, etc.: If at bottom, automatically add new page and insert character
-    const isTypingChar = !e.ctrlKey && !e.metaKey && !e.altKey && (e.key.length === 1 || e.key === ' ');
-    if (isTypingChar) {
-      if (isAtBottomBoundary(el, false)) {
-        e.preventDefault();
-        handleAddPage(pageIndex);
-        setTimeout(() => {
-          const nextEl = pageRefs.current[pageIndex + 1];
-          if (nextEl) {
-            nextEl.focus();
-            document.execCommand('insertText', false, e.key);
-          }
-        }, 60);
-        return;
-      }
     }
   };
 
