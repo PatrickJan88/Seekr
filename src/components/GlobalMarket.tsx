@@ -34,10 +34,10 @@ import { NestedRoleMenu } from './NestedRoleMenu';
 import { DateFilterMenu } from './DateFilterMenu';
 import { NoDataState } from './NoDataState';
 import { QSTierDropdownMenu, QSTier } from './QSTierDropdownMenu';
-import qsWorldUniversities from '../data/qsWorldUniversities.json';
+import cwurWorldUniversities from '../data/cwurWorldUniversities.json';
 
 const uniRankLookup = new Map<string, number>();
-(qsWorldUniversities as any[]).forEach((u) => {
+(cwurWorldUniversities as any[]).forEach((u) => {
   if (u.institution) {
     uniRankLookup.set(u.institution.toLowerCase(), u.rankNum);
     const clean = u.institution.replace(/\s*\([^)]*\)/g, '').trim().toLowerCase();
@@ -107,7 +107,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
   const matchingUniversities = useMemo(() => {
     if (trackingSystem !== 'academic') return [];
     const q = searchTerm.toLowerCase().trim();
-    return (qsWorldUniversities as any[])
+    return (cwurWorldUniversities as any[])
       .filter((u) => {
         // If QS Tier is active, respect tier filtering in suggestions
         if (qsTierFilter === 'top50' && u.rankNum > 50) return false;

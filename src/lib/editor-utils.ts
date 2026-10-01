@@ -398,9 +398,11 @@ export function executeRichTextCommand(
         }
       }
       if (isHeading) {
-        document.execCommand('formatBlock', false, '<p>');
+        const ok = document.execCommand('formatBlock', false, '<p>');
+        if (!ok) document.execCommand('formatBlock', false, 'p');
       } else {
-        document.execCommand('formatBlock', false, '<h2>');
+        const ok = document.execCommand('formatBlock', false, '<h2>');
+        if (!ok) document.execCommand('formatBlock', false, 'h2');
       }
       break;
     }
@@ -418,9 +420,11 @@ export function executeRichTextCommand(
         }
       }
       if (isQuote) {
-        document.execCommand('formatBlock', false, '<p>');
+        const ok = document.execCommand('formatBlock', false, '<p>');
+        if (!ok) document.execCommand('formatBlock', false, 'p');
       } else {
-        document.execCommand('formatBlock', false, '<blockquote>');
+        const ok = document.execCommand('formatBlock', false, '<blockquote>');
+        if (!ok) document.execCommand('formatBlock', false, 'blockquote');
       }
       break;
     }

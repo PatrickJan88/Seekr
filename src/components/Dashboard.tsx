@@ -154,6 +154,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     | 'company-intel'
     | 'studio-cover-letter'
     | 'studio-interview-prep'
+    | 'studio-personal-story'
     | 'studio-resume'
   >('sankey');
   const [trackingSystem, setTrackingSystem] = useState<'industry' | 'academic'>('industry');
@@ -861,6 +862,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     'eval-history': 'Evaluation History',
     'studio-cover-letter': 'Cover Letter Studio',
     'studio-interview-prep': 'Interview Prep Studio',
+    'studio-personal-story': 'Interview Prep Studio',
     'studio-resume': 'Resume Studio'
   };
   const displayTitle = viewTitles[view] || view.replace('-', ' ');
@@ -987,7 +989,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
               </div>
             )}
 
-            {view === 'studio-interview-prep' && (
+            {(view === 'studio-interview-prep' || view === 'studio-personal-story') && (
               <div className="w-full h-full flex-1 flex flex-col min-h-[calc(100vh-140px)] animate-in fade-in duration-200">
                 <InterviewPrepStudio
                   embedded={true}
@@ -997,6 +999,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                   storageKey="studio_interview_prep_dashboard_draft"
                   onClose={() => setView('sankey')}
                   isDemo={isDemo}
+                  trackingSystem={trackingSystem}
                 />
               </div>
             )}

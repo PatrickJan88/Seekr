@@ -457,6 +457,7 @@ export function CoverLetterStudio({
         ${i === 0 ? accentHeader : ''}
         <div class="content">${content}</div>
         <div class="page-footer-print">
+          <span>Powered by Seekr <a href="https://seekr-v5am.onrender.com/" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">https://seekr-v5am.onrender.com/</a></span>
           <span>Page ${i + 1} of ${currentDomPages.length}</span>
         </div>
       </div>
@@ -524,9 +525,10 @@ export function CoverLetterStudio({
             .content ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 0.85em; }
             .page-footer-print {
               display: flex;
-              justify-content: flex-end;
+              justify-content: space-between;
               font-size: 8.5pt;
               color: #94a3b8;
+              border-top: 1px solid #e2e8f0;
               padding-top: 3mm;
             }
             @media print {
@@ -891,8 +893,22 @@ export function CoverLetterStudio({
             />
 
             {/* Bottom Sheet Footer */}
-            <div className="shrink-0 mt-auto pt-3 border-t border-slate-200 flex justify-end items-center text-[10px] text-slate-400 pointer-events-none select-none">
-              <span>Page {idx + 1} of {pages.length}</span>
+            <div className="shrink-0 mt-auto pt-3 border-t border-slate-200 flex justify-between items-center text-[10px] text-slate-400 select-none">
+              <div className="flex items-center gap-1.5 truncate max-w-[480px]">
+                <span className="font-medium text-slate-500">Powered by Seekr</span>
+                <a
+                  href="https://seekr-v5am.onrender.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-slate-400 hover:text-[#0068f9] underline underline-offset-2 transition-colors truncate pointer-events-auto"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  https://seekr-v5am.onrender.com/
+                </a>
+              </div>
+              <span className="font-medium text-slate-500 shrink-0">
+                Page {idx + 1} of {pages.length}
+              </span>
             </div>
           </div>
         ))}

@@ -2572,25 +2572,31 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
     }
   });
 
-  // Complete QS World University Directory endpoint (1,422 global institutions)
-  app.get("/api/qs-universities", async (req, res) => {
+  // Complete World University Directory endpoint (CWUR Global 2000 & QS)
+  app.get(["/api/qs-universities", "/api/universities", "/api/cwur-universities"], async (req, res) => {
     try {
-      const search = (req.query.search as string || '').toLowerCase().trim();
+      const search = (req.query.search as string || req.query.q as string || '').toLowerCase().trim();
       const tier = (req.query.tier as string || 'all').toLowerCase().trim();
       const country = (req.query.country as string || '').toLowerCase().trim();
       const limit = parseInt(req.query.limit as string || '100', 10);
       const offset = parseInt(req.query.offset as string || '0', 10);
 
-      const qsDataModule = await import('./src/data/qsWorldUniversities.json');
-      const qsData = qsDataModule.default || qsDataModule;
+      const cwurPath = path.join(process.cwd(), 'src', 'data', 'cwurWorldUniversities.json');
+      let uniData: any[] = [];
+      if (fs.existsSync(cwurPath)) {
+        uniData = JSON.parse(fs.readFileSync(cwurPath, 'utf8'));
+      } else {
+        const qsDataModule = await import('./src/data/qsWorldUniversities.json');
+        uniData = qsDataModule.default || qsDataModule;
+      }
       
-      let filtered = (qsData as any[]).filter(u => {
+      let filtered = uniData.filter(u => {
         if (tier === 'top50' && u.rankNum > 50) return false;
         if (tier === 'top100' && u.rankNum > 100) return false;
         if (tier === 'top250' && u.rankNum > 250) return false;
         if (tier === 'top500' && u.rankNum > 500) return false;
 
-        if (country && u.country.toLowerCase() !== country && u.countryCode.toLowerCase() !== country) {
+        if (country && (u.country || '').toLowerCase() !== country && (u.countryCode || '').toLowerCase() !== country) {
           return false;
         }
 
@@ -2598,7 +2604,8 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
           const matchName = (u.institution || '').toLowerCase().includes(search);
           const matchCountry = (u.country || '').toLowerCase().includes(search);
           const matchRank = (u.rank || '').toLowerCase().includes(search);
-          if (!matchName && !matchCountry && !matchRank) return false;
+          const matchDomain = (u.domain || '').toLowerCase().includes(search);
+          if (!matchName && !matchCountry && !matchRank && !matchDomain) return false;
         }
 
         return true;

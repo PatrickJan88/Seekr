@@ -1523,7 +1523,7 @@ ${app.notes || 'No extra description provided.'}`;
       {showInterviewPrepStudio && interviewGuideText && (
         <InterviewPrepStudio
           initialText={interviewGuideText}
-          companyName={result?.company_name}
+          companyName={result?.company_name && result.company_name !== 'Unknown Company' ? result.company_name : undefined}
           targetRole={targetRole}
           onClose={() => {
             setShowInterviewPrepStudio(false);
@@ -1537,7 +1537,7 @@ ${app.notes || 'No extra description provided.'}`;
               });
             }
           }}
-          storageKey={activeEvaluationId ? `studio_interview_prep_${activeEvaluationId}` : `studio_interview_prep_${(result?.company_name || 'general').replace(/\s+/g, '_')}`}
+          storageKey={activeEvaluationId ? `studio_interview_prep_${activeEvaluationId}` : `studio_interview_prep_${((result?.company_name && result.company_name !== 'Unknown Company') ? result.company_name : 'general').replace(/\s+/g, '_')}`}
           isDemo={isDemo}
         />
       )}

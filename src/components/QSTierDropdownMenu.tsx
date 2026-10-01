@@ -12,7 +12,7 @@ interface QSTierDropdownMenuProps {
 }
 
 const TIER_OPTIONS: { label: string; value: QSTier }[] = [
-  { label: 'All (1,422)', value: 'all' },
+  { label: 'All (2,000)', value: 'all' },
   { label: 'Top 50', value: 'top50' },
   { label: 'Top 100', value: 'top100' },
   { label: 'Top 250', value: 'top250' },

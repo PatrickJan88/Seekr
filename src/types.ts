@@ -365,3 +365,17 @@ export interface CompanyTeardownData {
   generatedAt: number;
 }
 
+export interface PersonalStory {
+  id: string;
+  title: string;
+  topic: string;
+  category: string;
+  tags: string[];
+  content: string;
+  pages?: string[];
+  createdAt: string;
+  updatedAt: string;
+  targetRole?: string;
+  targetCompany?: string;
+}
+
