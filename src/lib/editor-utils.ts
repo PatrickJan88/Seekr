@@ -232,6 +232,66 @@ export function formatAnchors(container: HTMLElement) {
   });
 }
 
+function findEnclosingBlock(node: Node | null, editorEl: HTMLElement): HTMLElement | null {
+  let curr: Node | null = node;
+  while (curr && curr !== editorEl) {
+    if (curr.nodeType === Node.ELEMENT_NODE) {
+      const el = curr as HTMLElement;
+      if (/^(H[1-6]|P|DIV|BLOCKQUOTE|LI)$/i.test(el.nodeName)) {
+        return el;
+      }
+    }
+    curr = curr.parentNode;
+  }
+  return null;
+}
+
+function findEnclosingHeading(sel: Selection | null, editorEl: HTMLElement): HTMLElement | null {
+  if (!sel || sel.rangeCount === 0) return null;
+  
+  // 1. Check anchorNode
+  let node: Node | null = sel.anchorNode;
+  while (node && node !== editorEl) {
+    if (node.nodeType === Node.ELEMENT_NODE && /^H[1-6]$/i.test(node.nodeName)) {
+      return node as HTMLElement;
+    }
+    node = node.parentNode;
+  }
+
+  // 2. Check focusNode
+  node = sel.focusNode;
+  while (node && node !== editorEl) {
+    if (node.nodeType === Node.ELEMENT_NODE && /^H[1-6]$/i.test(node.nodeName)) {
+      return node as HTMLElement;
+    }
+    node = node.parentNode;
+  }
+
+  // 3. Check commonAncestorContainer
+  const range = sel.getRangeAt(0);
+  node = range.commonAncestorContainer;
+  while (node && node !== editorEl) {
+    if (node.nodeType === Node.ELEMENT_NODE && /^H[1-6]$/i.test(node.nodeName)) {
+      return node as HTMLElement;
+    }
+    node = node.parentNode;
+  }
+
+  // 4. Check if the range contents or startContainer/endContainer contain a heading
+  if (range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE) {
+    const parentEl = range.commonAncestorContainer as HTMLElement;
+    const headings = parentEl.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    for (let i = 0; i < headings.length; i++) {
+      const h = headings[i] as HTMLElement;
+      if (sel.containsNode(h, true) || range.intersectsNode(h)) {
+        return h;
+      }
+    }
+  }
+
+  return null;
+}
+
 export function executeRichTextCommand(
   editorEl: HTMLElement,
   action: string,
@@ -386,45 +446,159 @@ export function executeRichTextCommand(
     }
     case 'heading': {
       const sel = window.getSelection();
-      let isHeading = false;
-      if (sel && sel.rangeCount > 0) {
-        let node: Node | null = sel.anchorNode;
-        while (node && node !== editorEl) {
-          if (node.nodeName === 'H1' || node.nodeName === 'H2' || node.nodeName === 'H3') {
-            isHeading = true;
-            break;
+      const existingHeading = findEnclosingHeading(sel, editorEl);
+
+      if (existingHeading) {
+        // UNCHECK HEADING: Revert back to normal paragraph <p>
+        let ok = false;
+        try {
+          ok = document.execCommand('formatBlock', false, '<p>');
+          if (!ok) ok = document.execCommand('formatBlock', false, 'p');
+          if (!ok) ok = document.execCommand('formatBlock', false, '<P>');
+        } catch {}
+
+        // Verify if still in heading
+        const stillHeading = findEnclosingHeading(window.getSelection(), editorEl);
+        if (stillHeading || (existingHeading.isConnected && /^H[1-6]$/i.test(existingHeading.nodeName))) {
+          const targetToReplace = stillHeading || existingHeading;
+          if (targetToReplace.parentNode) {
+            const p = document.createElement('p');
+            while (targetToReplace.firstChild) {
+              p.appendChild(targetToReplace.firstChild);
+            }
+            targetToReplace.parentNode.replaceChild(p, targetToReplace);
+
+            // Restore selection onto the new paragraph
+            const newRange = document.createRange();
+            newRange.selectNodeContents(p);
+            const curSel = window.getSelection();
+            if (curSel) {
+              curSel.removeAllRanges();
+              curSel.addRange(newRange);
+            }
           }
-          node = node.parentNode;
         }
-      }
-      if (isHeading) {
-        const ok = document.execCommand('formatBlock', false, '<p>');
-        if (!ok) document.execCommand('formatBlock', false, 'p');
       } else {
-        const ok = document.execCommand('formatBlock', false, '<h2>');
-        if (!ok) document.execCommand('formatBlock', false, 'h2');
+        // CHECK HEADING: Turn block into <h2>
+        let ok = false;
+        try {
+          ok = document.execCommand('formatBlock', false, '<h2>');
+          if (!ok) ok = document.execCommand('formatBlock', false, 'h2');
+          if (!ok) ok = document.execCommand('formatBlock', false, '<H2>');
+        } catch {}
+
+        const nowHeading = findEnclosingHeading(window.getSelection(), editorEl);
+        if (!nowHeading && sel && sel.rangeCount > 0) {
+          const block = findEnclosingBlock(sel.anchorNode, editorEl) || findEnclosingBlock(sel.focusNode, editorEl);
+          if (block && block.parentNode && !/^H[1-6]$/i.test(block.nodeName)) {
+            const h2 = document.createElement('h2');
+            while (block.firstChild) {
+              h2.appendChild(block.firstChild);
+            }
+            block.parentNode.replaceChild(h2, block);
+
+            const newRange = document.createRange();
+            newRange.selectNodeContents(h2);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+          }
+        }
       }
       break;
     }
     case 'quote': {
       const sel = window.getSelection();
-      let isQuote = false;
+      let quoteEl: HTMLElement | null = null;
       if (sel && sel.rangeCount > 0) {
         let node: Node | null = sel.anchorNode;
         while (node && node !== editorEl) {
           if (node.nodeName === 'BLOCKQUOTE') {
-            isQuote = true;
+            quoteEl = node as HTMLElement;
             break;
           }
           node = node.parentNode;
         }
+        if (!quoteEl) {
+          node = sel.focusNode;
+          while (node && node !== editorEl) {
+            if (node.nodeName === 'BLOCKQUOTE') {
+              quoteEl = node as HTMLElement;
+              break;
+            }
+            node = node.parentNode;
+          }
+        }
       }
-      if (isQuote) {
-        const ok = document.execCommand('formatBlock', false, '<p>');
-        if (!ok) document.execCommand('formatBlock', false, 'p');
+
+      if (quoteEl) {
+        // UNCHECK QUOTE: Revert back to normal paragraph <p>
+        let ok = false;
+        try {
+          ok = document.execCommand('formatBlock', false, '<p>');
+          if (!ok) ok = document.execCommand('formatBlock', false, 'p');
+          if (!ok) ok = document.execCommand('formatBlock', false, '<P>');
+        } catch {}
+
+        let stillQuote: HTMLElement | null = null;
+        const curSel = window.getSelection();
+        if (curSel && curSel.rangeCount > 0) {
+          let n: Node | null = curSel.anchorNode;
+          while (n && n !== editorEl) {
+            if (n.nodeName === 'BLOCKQUOTE') { stillQuote = n as HTMLElement; break; }
+            n = n.parentNode;
+          }
+        }
+
+        if (stillQuote || (quoteEl.isConnected && quoteEl.nodeName === 'BLOCKQUOTE')) {
+          const target = stillQuote || quoteEl;
+          if (target.parentNode) {
+            const p = document.createElement('p');
+            while (target.firstChild) {
+              p.appendChild(target.firstChild);
+            }
+            target.parentNode.replaceChild(p, target);
+
+            const newRange = document.createRange();
+            newRange.selectNodeContents(p);
+            if (curSel) {
+              curSel.removeAllRanges();
+              curSel.addRange(newRange);
+            }
+          }
+        }
       } else {
-        const ok = document.execCommand('formatBlock', false, '<blockquote>');
-        if (!ok) document.execCommand('formatBlock', false, 'blockquote');
+        // CHECK QUOTE: Turn into blockquote
+        let ok = false;
+        try {
+          ok = document.execCommand('formatBlock', false, '<blockquote>');
+          if (!ok) ok = document.execCommand('formatBlock', false, 'blockquote');
+        } catch {}
+
+        let nowQuote = false;
+        const curSel = window.getSelection();
+        if (curSel && curSel.rangeCount > 0) {
+          let n: Node | null = curSel.anchorNode;
+          while (n && n !== editorEl) {
+            if (n.nodeName === 'BLOCKQUOTE') { nowQuote = true; break; }
+            n = n.parentNode;
+          }
+        }
+
+        if (!nowQuote && sel && sel.rangeCount > 0) {
+          const block = findEnclosingBlock(sel.anchorNode, editorEl) || findEnclosingBlock(sel.focusNode, editorEl);
+          if (block && block.parentNode && block.nodeName !== 'BLOCKQUOTE') {
+            const bq = document.createElement('blockquote');
+            while (block.firstChild) {
+              bq.appendChild(block.firstChild);
+            }
+            block.parentNode.replaceChild(bq, block);
+
+            const newRange = document.createRange();
+            newRange.selectNodeContents(bq);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+          }
+        }
       }
       break;
     }
@@ -553,16 +727,21 @@ export function queryEditorState(editorEl: HTMLElement): {
     textAlign = detectedAlign;
 
     if (sel && sel.rangeCount > 0) {
+      const headingEl = findEnclosingHeading(sel, editorEl);
+      if (headingEl) {
+        active.push('heading');
+      }
+
+      let isQuote = false;
+      let isLink = false;
+
       let node: Node | null = sel.anchorNode;
       while (node && node !== editorEl) {
-        if (node.nodeName === 'H1' || node.nodeName === 'H2' || node.nodeName === 'H3') {
-          active.push('heading');
-        }
         if (node.nodeName === 'BLOCKQUOTE') {
-          active.push('quote');
+          isQuote = true;
         }
         if (node.nodeName === 'A') {
-          active.push('link');
+          isLink = true;
         }
         if (
           node.nodeName === 'MARK' ||
@@ -570,13 +749,27 @@ export function queryEditorState(editorEl: HTMLElement): {
             (node as HTMLElement).style.backgroundColor &&
             (node as HTMLElement).style.backgroundColor !== 'transparent')
         ) {
-          active.push('highlight');
+          if (!active.includes('highlight')) active.push('highlight');
         }
         if ((node as HTMLElement).style && (node as HTMLElement).style.color) {
-          active.push('color');
+          if (!active.includes('color')) active.push('color');
         }
         node = node.parentNode;
       }
+
+      let fNode: Node | null = sel.focusNode;
+      while (fNode && fNode !== editorEl) {
+        if (fNode.nodeName === 'BLOCKQUOTE') {
+          isQuote = true;
+        }
+        if (fNode.nodeName === 'A') {
+          isLink = true;
+        }
+        fNode = fNode.parentNode;
+      }
+
+      if (isQuote && !active.includes('quote')) active.push('quote');
+      if (isLink && !active.includes('link')) active.push('link');
     }
   } catch {
     // queryCommandState may be unsupported in edge scenarios
