@@ -7,7 +7,7 @@
 **Track, evaluate, and land your next tech or academic role.**  
 *An all-in-one career intelligence platform and AI agent pipeline.*
 
-[![Version](https://img.shields.io/badge/version-4.1.0-blue.svg?style=flat-square)](https://github.com/PatrickJan88/Seekr)
+[![Version](https://img.shields.io/badge/version-4.2.0-blue.svg?style=flat-square)](https://github.com/PatrickJan88/Seekr)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&style=flat-square)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&style=flat-square)](https://www.typescriptlang.org/)
@@ -25,6 +25,32 @@
 ## Overview
 
 **Seekr** bridges the gap between passive job application tracking and active, AI-assisted career strategy. Engineered for software engineers, data scientists, researchers, and tech professionals, Seekr combines high-performance client-side visual pipelines with server-side AI engines to analyze job postings, evaluate CV compatibility, generate tailored application materials, and track interview milestones.
+
+---
+
+## What's New in Version 4.2.0
+
+Version `4.2.0` introduces a refined **Dynamic 30-Day Auto-Ghosting System** with user modification detection and active interview protection, comprehensive **Studio UI Standardization** across all document generators, and a rebuilt **Direct PDF Export Engine** eliminating sandboxed browser pop-up conflicts and contentEditable artifact lines.
+
+### Major Highlights
+
+*   **Dynamic 30-Day Auto-Ghosting Pipeline**:
+    *   **30-Day Lifecycle Automation**: Replaced legacy 60-day interval with a responsive 30-day lifecycle matching standard industry hiring response timelines.
+    *   **Adaptive Manual Update Recalculation**: If an application is created and never modified, the 30-day countdown is calculated strictly from the initial application date (`appliedDate`). When a user manually edits the application ticket (such as scheduling or updating a **Next Interview** date, modifying notes, updating status, or adjusting details), the 30-day timer dynamically resets and recalculates from that latest activity event.
+    *   **Active Interview Protection**: Applications with an upcoming interview scheduled in the future (`nextInterviewDate > today`) remain marked as active in progress and are strictly shielded from automatic ghosting.
+    *   **Automated Background Task Isolation**: Background automated tasks (such as automated interview reminder checks) no longer touch user activity timestamps, preventing dormant applications from having their countdowns artificially prolonged.
+    *   **Revival Grace Period**: Manually moving an application from Ghosted back to an active stage (e.g. Applied or Screening) immediately refreshes `lastManualUpdate`, granting a full fresh 30-day evaluation window.
+    *   **Kanban Board Clarity**: Updated Kanban column information tooltip to clearly explain the 30-day manual update rule to users.
+
+*   **Studio Layout & Header Standardization**:
+    *   **Unified Studio Navigation Header**: Standardized spacing (`px-4 sm:px-6 py-4`), background, and border metrics across **Interview Prep Studio**, **Resume Tailoring Studio**, and **Cover Letter Studio**.
+    *   **Cohesive Action System**: Normalized button hierarchies across all studios with uniform pill radii (`rounded-full shadow-2xs`), consistent icon styling, and unified close interactions.
+    *   **Evaluation History Streamlining**: Removed the redundant "New Evaluation" button from the Evaluation History header bar, keeping the search filter and evaluation counter cleanly focused and uncluttered.
+
+*   **PDF Export Engine & Print Preview Overhaul**:
+    *   **Native Direct Print Flow**: Upgraded `triggerDirectPdfExport` to immediately invoke the browser's native print preview dialog without opening orphan browser tabs, equipped with automated post-print teardown (`window.onafterprint = () => window.close()`).
+    *   **ContentEditable Ghost Line Elimination**: Integrated the `sanitizePrintHtml` sanitization pipeline to strip empty headings (`<h2><br></h2>`, `<h1></h1>`), ghost blockquotes, and empty list elements generated when users clear starter text in the rich editor.
+    *   **CSS Print Isolation**: Added strict `:empty` print rules (`.content h1:empty, .content h2:empty { display: none !important; border: none !important; }`), ensuring exported PDF documents render with clean, professional typography and zero visual line artifacts.
 
 ---
 
@@ -201,7 +227,15 @@ Version `4.0.0` introduces dedicated standalone left-panel access for Company 36
 
 ## Version History & Changelog
 
-### **v4.1.0** — *Current Release*
+### **v4.2.0** — *Current Release*
+*   Implemented **Dynamic 30-Day Auto-Ghosting Pipeline** with adaptive manual update recalculation (`lastManualUpdate`), active upcoming interview shielding, and automated background task isolation.
+*   Updated **Kanban Board Ghosted Tooltip** to clearly explain the 30-day manual update rule.
+*   Standardized **Studio Header Layouts & Typography** across Interview Prep Studio, Resume Tailoring Studio, and Cover Letter Studio.
+*   Streamlined **Evaluation History Header** by removing the redundant "New Evaluation" button to keep the search bar and counter cleanly focused.
+*   Upgraded **PDF Export Engine** with seamless native print preview dialog invocation and automated temporary window cleanup.
+*   Implemented **`sanitizePrintHtml` and CSS `:empty` Print Isolation** eliminating contentEditable artifact lines in PDF exports.
+
+### **v4.1.0**
 *   Added **New User 3-Step Guided Onboarding Experience** with animated stepper progress line, track selection (Industry Seekr vs. Academic Seekr), single-selection role preferences grouped by parent categories, and blank CV upload dropzone.
 *   Implemented **Strict First-Time Login Gating** ensuring the onboarding pop-up only displays once for brand new user signups and fresh guest sessions, and automatically stays hidden for established users with existing data or applications.
 *   Added **Role Preference Selection in Settings** positioned immediately after the Tracking System, strictly matched to Industry and Academic role classifications.

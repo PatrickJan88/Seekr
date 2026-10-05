@@ -213,7 +213,7 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
                 <div className="group relative flex items-center">
                   <Info size={14} className="text-[#777c86] cursor-pointer hover:text-[#121722] transition-colors" />
                   <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 p-2.5 bg-[#121722] text-white text-xs font-medium leading-relaxed rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[100] text-center shadow-xl">
-                    Applications without updates for 60 days are automatically marked as Ghosted.
+                    Applications without manual updates for 30 days are automatically marked as Ghosted.
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-b-[#121722]"></div>
                   </div>
                 </div>

@@ -77,6 +77,7 @@ export interface JobApplication {
   reminderSent?: boolean;
   createdAt: number;
   updatedAt: number;
+  lastManualUpdate?: number; // Timestamp of the last explicit manual user action/edit
   trackingSystem?: 'industry' | 'academic';
 }
 

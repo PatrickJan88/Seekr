@@ -435,31 +435,81 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     return () => clearInterval(interval);
   }, [applications, isDemo]);
 
+  const parseDateToMs = (dateVal?: string | number | null): number => {
+    if (!dateVal) return 0;
+    if (typeof dateVal === 'number') {
+      return dateVal > 0 ? dateVal : 0;
+    }
+    const trimmed = String(dateVal).trim();
+    if (!trimmed) return 0;
+
+    const parsed = new Date(trimmed).getTime();
+    if (!isNaN(parsed) && parsed > 0) {
+      return parsed;
+    }
+
+    // Try parsing parts (e.g. YYYY-MM-DD or DD/MM/YYYY)
+    const parts = trimmed.split(/[-/T\s]/);
+    if (parts.length >= 3) {
+      if (parts[0].length === 4) {
+        const p = new Date(`${parts[0]}-${parts[1]}-${parts[2]}`).getTime();
+        if (!isNaN(p) && p > 0) return p;
+      }
+      if (parts[2].length === 4) {
+        const p1 = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`).getTime();
+        if (!isNaN(p1) && p1 > 0) return p1;
+        const p2 = new Date(`${parts[2]}-${parts[0]}-${parts[1]}`).getTime();
+        if (!isNaN(p2) && p2 > 0) return p2;
+      }
+    }
+
+    return 0;
+  };
+
   const applyAutoGhosting = async (data: JobApplication[]): Promise<JobApplication[]> => {
-    const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000;
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
     const now = Date.now();
-    const activeStatuses = ['Wishlist', 'Applied', 'Screening', 'Technical', 'Final'];
+    const activeStatuses: JobStatus[] = ['Wishlist', 'Applied', 'Screening', 'Technical', 'Final'];
     
-    let changed = false;
     let ghostedCount = 0;
     
     const updatedData = await Promise.all(data.map(async (app) => {
       if (activeStatuses.includes(app.status)) {
-        // Use appliedDate if available, fallback to createdAt, or default to 0 if none exist
-        const startDate = app.appliedDate ? new Date(app.appliedDate).getTime() : 
-                          app.createdAt ? app.createdAt : 0;
-        const lastUpdate = app.updatedAt || startDate;
-        
-        if (lastUpdate > 0 && (now - lastUpdate > SIXTY_DAYS_MS)) {
-          changed = true;
-          
+        // 1. Initial applied date or creation date (e.g. August 20)
+        const appliedDateMs = parseDateToMs(app.appliedDate) || (typeof app.createdAt === 'number' ? app.createdAt : 0);
+
+        // 2. Next interview date
+        const interviewDateMs = parseDateToMs(app.nextInterviewDate);
+        const hasUpcomingInterview = interviewDateMs > now;
+
+        // Active upcoming interview scheduled in the future: keep active and do not ghost
+        if (hasUpcomingInterview) {
+          return app;
+        }
+
+        // 3. Last manual update timestamp (set when the user explicitly modifies or edits this ticket)
+        const manualUpdateMs = (typeof app.lastManualUpdate === 'number' && app.lastManualUpdate > 0) 
+          ? app.lastManualUpdate 
+          : 0;
+
+        // If interview occurred in the past (e.g. August 27), it documents active interaction on that date
+        const pastInterviewMs = interviewDateMs;
+
+        // Dynamically calculate from the latest manual update / interview event / applied date:
+        // - If user only set applied date on day 1 and never modified the ticket: calculates from appliedDateMs.
+        // - If user edited the application (e.g. added Next interview date August 27 or edited notes):
+        //   the 30-day calculation dynamically updates to start from that latest activity date.
+        const effectiveDate = Math.max(appliedDateMs, pastInterviewMs, manualUpdateMs);
+
+        // If 30 days have elapsed since the latest manual update or documented activity, auto-move to Ghosted
+        if (effectiveDate > 0 && (now - effectiveDate >= THIRTY_DAYS_MS)) {
           if (!recentlyGhostedIds.has(app.id)) {
             ghostedCount++;
             recentlyGhostedIds.add(app.id);
           }
 
-          const ghostedApp = { ...app, status: 'Ghosted' as JobStatus };
-          if (auth.currentUser) {
+          const ghostedApp: JobApplication = { ...app, status: 'Ghosted' as JobStatus };
+          if (auth.currentUser && !isDemo) {
             try {
               await updateApplication(app.id, { status: 'Ghosted' });
             } catch (err) {
@@ -475,11 +525,13 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     if (ghostedCount > 0) {
       const title = ghostedCount === 1 ? 'Application Ghosted' : `${ghostedCount} Applications Ghosted`;
       const msg = ghostedCount === 1 
-        ? '1 application was automatically moved to Ghosted due to 60 days of inactivity.' 
-        : `${ghostedCount} applications were automatically moved to Ghosted due to 60 days of inactivity.`;
+        ? '1 application was automatically moved to Ghosted (no manual updates for 30+ days).' 
+        : `${ghostedCount} applications were automatically moved to Ghosted (no manual updates for 30+ days).`;
       
-      if (auth.currentUser) {
-        await addNotification(auth.currentUser.uid, 'status_update', title, msg);
+      if (auth.currentUser && !isDemo) {
+        try {
+          await addNotification(auth.currentUser.uid, 'status_update', title, msg);
+        } catch (e) {}
       }
       toast.info(msg);
     }
@@ -513,7 +565,8 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
           data = DEMO_APPLICATIONS;
         }
 
-        setApplications(data);
+        const updatedData = await applyAutoGhosting(data);
+        setApplications(updatedData);
       } catch (err) {
         console.error('Failed to load demo applications', err);
         setApplications(DEMO_APPLICATIONS);
@@ -588,8 +641,9 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     }
 
     try {
-      await updateApplication(appId, { status: newStatus as any });
-      setApplications(apps => apps.map(a => a.id === appId ? { ...a, status: newStatus as any } : a));
+      const now = Date.now();
+      await updateApplication(appId, { status: newStatus as any, lastManualUpdate: now });
+      setApplications(apps => apps.map(a => a.id === appId ? { ...a, status: newStatus as any, lastManualUpdate: now } : a));
       toast.success(`Application status updated successfully`);
     } catch (err) {
       console.error('Error updating status', err);
@@ -604,7 +658,8 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     }
     if (!auth.currentUser) return;
     try {
-      const newApp = await addApplication({ ...appData, userId: auth.currentUser.uid } as any);
+      const now = Date.now();
+      const newApp = await addApplication({ ...appData, userId: auth.currentUser.uid, lastManualUpdate: now } as any);
       setApplications(apps => [newApp, ...apps]);
       toast.success(`Added ${appData.company} to Wishlist`);
     } catch (err) {
@@ -627,13 +682,23 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     }
 
     try {
+      const now = Date.now();
       if (editingApp) {
-        const payload = { ...appData, userId: auth.currentUser.uid };
+        const payload: Partial<JobApplication> = { 
+          ...appData, 
+          userId: auth.currentUser.uid,
+          lastManualUpdate: now 
+        };
         await updateApplication(editingApp.id, payload);
         setApplications(apps => apps.map(a => a.id === editingApp.id ? { ...a, ...payload } as JobApplication : a));
         toast.success('Application updated successfully');
       } else {
-        const newApp = await addApplication({ ...appData, userId: auth.currentUser.uid } as any);
+        const appliedTime = appData.appliedDate ? (parseDateToMs(appData.appliedDate) || now) : now;
+        const newApp = await addApplication({ 
+          ...appData, 
+          userId: auth.currentUser.uid,
+          lastManualUpdate: appliedTime 
+        } as any);
         setApplications(apps => [newApp, ...apps]);
         toast.success('Application saved successfully');
       }
@@ -804,12 +869,15 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
            appliedDate = String(appliedDate);
         }
         
+        const appliedDateMs = parseDateToMs(appliedDate) || Date.now();
+
         return {
           company: String(company),
           position: String(position),
           status: st,
           appliedDate: appliedDate,
-          userId: auth.currentUser!.uid
+          userId: auth.currentUser!.uid,
+          lastManualUpdate: appliedDateMs
         };
       }).filter(item => item.company !== 'Unknown' || item.position !== 'Unknown');
       console.log('Processed imports:', imports);
