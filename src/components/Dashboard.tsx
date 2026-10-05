@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { JobApplication, JobStatus, UserResume } from '../types';
+import { JobApplication, JobStatus, UserResume, toCanonicalStatus } from '../types';
 import { getApplications, addApplication, updateApplication, deleteApplication, addApplicationsBatch, deleteAllApplications } from '../db/applications';
 import { Kanban } from './Kanban';
 import { Analytics } from './Analytics';
@@ -489,8 +489,9 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     }
 
     const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
     const now = Date.now();
-    const activeStatuses: JobStatus[] = ['Wishlist', 'Applied', 'Screening', 'Technical', 'Final'];
+    const activeStatuses: JobStatus[] = ['Applied', 'Screening', 'Technical', 'Final'];
     
     let ghostedCount = 0;
     
@@ -522,8 +523,11 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
         //   the 30-day calculation dynamically updates to start from that latest activity date.
         const effectiveDate = Math.max(appliedDateMs, pastInterviewMs, manualUpdateMs);
 
-        // If 30 days have elapsed since the latest manual update or documented activity, auto-move to Ghosted
-        if (effectiveDate > 0 && (now - effectiveDate >= THIRTY_DAYS_MS)) {
+        // Academic review processes typically run 90-120 days; Industry is 30 days
+        const timeoutMs = app.trackingSystem === 'academic' ? NINETY_DAYS_MS : THIRTY_DAYS_MS;
+
+        // If 30 (or 90 for academic) days have elapsed since the latest manual update or documented activity, auto-move to Ghosted
+        if (effectiveDate > 0 && (now - effectiveDate >= timeoutMs)) {
           if (!recentlyGhostedIds.has(app.id)) {
             ghostedCount++;
             recentlyGhostedIds.add(app.id);
@@ -586,17 +590,9 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
       const data = await getApplications(auth.currentUser.uid);
       console.log(`Loaded ${data.length} applications.`);
       
-      const validStatuses = ['Wishlist', 'Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
       const normalizedData = data.map(app => {
-        let st: string = app.status;
-        if (st) {
-          st = st.trim();
-          st = st.charAt(0).toUpperCase() + st.slice(1).toLowerCase();
-        }
-        if (!validStatuses.includes(st)) {
-          st = 'Applied';
-        }
-        return { ...app, status: st as JobStatus };
+        const canonicalStatus = toCanonicalStatus(app.status);
+        return { ...app, status: canonicalStatus };
       });
       
       const updatedData = await applyAutoGhosting(normalizedData);
@@ -856,11 +852,8 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
         const company = normalized['company'] || normalized['company name'] || normalized['employer'] || normalized['organization'] || (row && row[0]) || 'Unknown';
         const position = normalized['position'] || normalized['job title'] || normalized['role'] || normalized['title'] || (row && row[1]) || 'Unknown';
         
-        let st = String(normalized['status'] || normalized['stage'] || normalized['state'] || 'Applied').trim();
-        st = st.charAt(0).toUpperCase() + st.slice(1).toLowerCase();
-        if (!['Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'].includes(st)) {
-          st = 'Applied';
-        }
+        let rawSt = String(normalized['status'] || normalized['stage'] || normalized['state'] || 'Applied').trim();
+        const st = toCanonicalStatus(rawSt);
         
         let appliedDate = normalized['applied date'] || normalized['applied_date'] || normalized['date applied'] || normalized['date'];
         

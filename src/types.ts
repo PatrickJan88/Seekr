@@ -11,6 +11,41 @@ export interface ApplicationLink {
 
 export type JobStatus = 'Wishlist' | 'Applied' | 'Screening' | 'Technical' | 'Final' | 'Offer' | 'Rejected' | 'Ghosted';
 
+export const toCanonicalStatus = (statusOrLabel?: string | null): JobStatus => {
+  if (!statusOrLabel) return 'Applied';
+  const clean = statusOrLabel.trim().toLowerCase();
+  switch (clean) {
+    case 'screening':
+    case 'committee review':
+      return 'Screening';
+    case 'technical':
+    case 'first-round interview':
+    case 'first round interview':
+      return 'Technical';
+    case 'final':
+    case 'campus visit':
+      return 'Final';
+    case 'offer':
+      return 'Offer';
+    case 'rejected':
+      return 'Rejected';
+    case 'ghosted':
+      return 'Ghosted';
+    case 'wishlist':
+      return 'Wishlist';
+    case 'applied':
+    case 'submitted':
+    default:
+      return 'Applied';
+  }
+};
+
+export const isStatusMatching = (appStatus?: string | null, filterStatus?: string | null): boolean => {
+  if (!filterStatus) return true;
+  if (!appStatus) return false;
+  return toCanonicalStatus(appStatus) === toCanonicalStatus(filterStatus);
+};
+
 export const getStatusLabel = (status: JobStatus | string, trackingSystem: 'industry' | 'academic' = 'industry'): string => {
   if (trackingSystem === 'academic') {
     switch (status) {

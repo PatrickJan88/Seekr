@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { JobApplication, JobStatus, getWorkTypeBadgeStyle, getStatusLabel } from '../types';
+import { JobApplication, JobStatus, getWorkTypeBadgeStyle, getStatusLabel, toCanonicalStatus, isStatusMatching } from '../types';
 import { Calendar, Building, MoreVertical, LayoutDashboard, List, MapPin, X, Info, Link2, ExternalLink, Sparkles, Building2 } from 'lucide-react';
 import { ListView } from './ListView';
 import { matchLocation } from './ApplicationMap';
@@ -152,8 +152,9 @@ export function Kanban({
   }, [locationFilter, filteredApplications]);
 
   const grouped = filteredApplications.reduce((acc, app) => {
-    if (!acc[app.status]) acc[app.status] = [];
-    acc[app.status].push(app);
+    const canon = toCanonicalStatus(app.status);
+    if (!acc[canon]) acc[canon] = [];
+    acc[canon].push(app);
     return acc;
   }, {} as Record<JobStatus, JobApplication[]>);
   
@@ -385,7 +386,7 @@ export function Kanban({
           </div>
       ) : (
         <ListView 
-          applications={filteredApplications.filter(app => (currentStatusFilter ? app.status === currentStatusFilter : displayStatuses.includes(app.status)))} 
+          applications={filteredApplications.filter(app => (currentStatusFilter ? isStatusMatching(app.status, currentStatusFilter) : displayStatuses.some(s => isStatusMatching(app.status, s))))} 
           onEdit={onEdit} 
           onStatusChange={onStatusChange} 
           onDelete={onDelete} 

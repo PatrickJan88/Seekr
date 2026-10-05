@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactECharts from 'echarts-for-react';
-import { JobApplication, JobStatus, getStatusLabel } from '../types';
+import { JobApplication, JobStatus, getStatusLabel, toCanonicalStatus } from '../types';
 import { NoDataState } from './NoDataState';
 
 interface SankeyChartProps {
@@ -89,6 +89,15 @@ export function SankeyChart({ applications, isDemo = false, onAdd, trackingSyste
   });
 
   const filteredNodes = nodes.filter(n => activeNodes.has(n.name));
+
+  const resolveStatus = (name?: string): JobStatus | null => {
+    if (!name) return null;
+    const trimmed = String(name).trim();
+    if (trimmed === totalLabel || trimmed === 'Total Applications' || trimmed === 'Total Submissions') {
+      return null;
+    }
+    return toCanonicalStatus(trimmed);
+  };
 
   const labelToStatusKey: Record<string, string> = {
     [appliedLabel]: 'Applied',
@@ -194,20 +203,21 @@ export function SankeyChart({ applications, isDemo = false, onAdd, trackingSyste
     click: (params: any) => {
       if (!params) return;
       if (params.dataType === 'node') {
-        const nodeName = params.name;
+        const nodeName = params.name || params.data?.name;
         // Total applications area is not clickable
         if (nodeName === totalLabel) {
           return;
         }
-        const statusKey = labelToStatusKey[nodeName];
+        const statusKey = resolveStatus(nodeName);
         if (statusKey) {
-          onCategoryClick?.(statusKey as JobStatus);
+          onCategoryClick?.(statusKey);
         }
       } else if (params.dataType === 'edge') {
         const targetName = params.data?.target;
-        const statusKey = labelToStatusKey[targetName];
+        const sourceName = params.data?.source;
+        const statusKey = resolveStatus(targetName) || resolveStatus(sourceName);
         if (statusKey) {
-          onCategoryClick?.(statusKey as JobStatus);
+          onCategoryClick?.(statusKey);
         }
       }
     }
