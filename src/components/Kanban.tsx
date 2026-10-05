@@ -15,11 +15,71 @@ interface KanbanProps {
   onDelete: (appId: string) => void;
   locationFilter?: string | null;
   onLocationSelect?: (country: string | null) => void;
+  initialLayoutMode?: 'kanban' | 'list';
+  statusFilter?: JobStatus | null;
+  onStatusFilterChange?: (status: JobStatus | null) => void;
 }
 
-export function Kanban({ applications, onEdit, onStatusChange, onDelete, locationFilter = null, onLocationSelect, trackingSystem = 'industry' }: KanbanProps) {
-  const [activeTab, setActiveTab] = useState<'wishlist' | 'active' | 'inactive'>('active');
-  const [layoutMode, setLayoutMode] = useState<'kanban' | 'list'>('kanban');
+export function Kanban({ 
+  applications, 
+  onEdit, 
+  onStatusChange, 
+  onDelete, 
+  locationFilter = null, 
+  onLocationSelect, 
+  trackingSystem = 'industry',
+  initialLayoutMode = 'kanban',
+  statusFilter = null,
+  onStatusFilterChange
+}: KanbanProps) {
+  const WISHLIST_STATUSES: JobStatus[] = ['Wishlist'];
+  const ACTIVE_STATUSES: JobStatus[] = ['Applied', 'Screening', 'Technical', 'Final', 'Offer'];
+  const INACTIVE_STATUSES: JobStatus[] = ['Rejected', 'Ghosted'];
+
+  const getInitialTab = (): 'wishlist' | 'active' | 'inactive' => {
+    if (statusFilter) {
+      if (WISHLIST_STATUSES.includes(statusFilter)) return 'wishlist';
+      if (INACTIVE_STATUSES.includes(statusFilter)) return 'inactive';
+      return 'active';
+    }
+    return 'active';
+  };
+
+  const [activeTab, setActiveTab] = useState<'wishlist' | 'active' | 'inactive'>(getInitialTab);
+  const [layoutMode, setLayoutMode] = useState<'kanban' | 'list'>(statusFilter ? 'list' : initialLayoutMode);
+  const [currentStatusFilter, setCurrentStatusFilter] = useState<JobStatus | null>(statusFilter);
+
+  React.useEffect(() => {
+    if (initialLayoutMode) {
+      setLayoutMode(initialLayoutMode);
+    }
+  }, [initialLayoutMode]);
+
+  React.useEffect(() => {
+    setCurrentStatusFilter(statusFilter);
+    if (statusFilter) {
+      setLayoutMode('list');
+      if (WISHLIST_STATUSES.includes(statusFilter)) {
+        setActiveTab('wishlist');
+      } else if (INACTIVE_STATUSES.includes(statusFilter)) {
+        setActiveTab('inactive');
+      } else {
+        setActiveTab('active');
+      }
+    }
+  }, [statusFilter]);
+
+  const handleTabChange = (tab: 'wishlist' | 'active' | 'inactive') => {
+    setActiveTab(tab);
+    if (currentStatusFilter) {
+      const allowedInTab = tab === 'wishlist' ? WISHLIST_STATUSES : tab === 'active' ? ACTIVE_STATUSES : INACTIVE_STATUSES;
+      if (!allowedInTab.includes(currentStatusFilter)) {
+        setCurrentStatusFilter(null);
+        onStatusFilterChange?.(null);
+      }
+    }
+  };
+
   const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'weekly' | 'monthly' | 'yearly' | 'custom'>('all');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
@@ -70,10 +130,6 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
     });
   }, [applications, timeFilter, customStartDate, customEndDate, locationFilter]);
 
-  const WISHLIST_STATUSES: JobStatus[] = ['Wishlist'];
-  const ACTIVE_STATUSES: JobStatus[] = ['Applied', 'Screening', 'Technical', 'Final', 'Offer'];
-  const INACTIVE_STATUSES: JobStatus[] = ['Rejected', 'Ghosted'];
-
   const prevLocationFilter = React.useRef<string | null | undefined>(undefined);
 
   React.useEffect(() => {
@@ -107,25 +163,43 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
     <div className="relative w-full flex-1 flex flex-col min-h-[500px]">
       <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col relative overflow-hidden gap-4">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
-        <div className="flex gap-2">
-          <button 
-            onClick={() => setActiveTab('active')}
-            className={`h-[38px] flex items-center justify-center px-4 rounded-full font-medium text-sm transition-all cursor-pointer ${activeTab === 'active' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
-          >
-            Active Progress
-          </button>
-          <button 
-            onClick={() => setActiveTab('inactive')}
-            className={`h-[38px] flex items-center justify-center px-4 rounded-full font-medium text-sm transition-all cursor-pointer ${activeTab === 'inactive' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
-          >
-            Closed
-          </button>
-          <button 
-            onClick={() => setActiveTab('wishlist')}
-            className={`h-[38px] flex items-center justify-center px-4 rounded-full font-medium text-sm transition-all cursor-pointer ${activeTab === 'wishlist' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
-          >
-            Wishlist
-          </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex gap-2">
+            <button 
+              onClick={() => handleTabChange('active')}
+              className={`h-[38px] flex items-center justify-center px-4 rounded-full font-medium text-sm transition-all cursor-pointer ${activeTab === 'active' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
+            >
+              Active Progress
+            </button>
+            <button 
+              onClick={() => handleTabChange('inactive')}
+              className={`h-[38px] flex items-center justify-center px-4 rounded-full font-medium text-sm transition-all cursor-pointer ${activeTab === 'inactive' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
+            >
+              Closed
+            </button>
+            <button 
+              onClick={() => handleTabChange('wishlist')}
+              className={`h-[38px] flex items-center justify-center px-4 rounded-full font-medium text-sm transition-all cursor-pointer ${activeTab === 'wishlist' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
+            >
+              Wishlist
+            </button>
+          </div>
+
+          {currentStatusFilter && (
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-[#e8f1ff] text-[#0068f9] rounded-full text-xs font-semibold border border-[#0068f9]/20 shadow-2xs animate-in fade-in">
+              <span>Status: {getStatusLabel(currentStatusFilter, trackingSystem)}</span>
+              <button 
+                onClick={() => {
+                  setCurrentStatusFilter(null);
+                  onStatusFilterChange?.(null);
+                }}
+                className="hover:text-blue-900 cursor-pointer p-0.5 rounded-full hover:bg-blue-200/50 transition-colors"
+                title="Clear status filter"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          )}
         </div>
         
         <div className="flex items-center gap-2 ml-auto">
@@ -179,7 +253,11 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
 
           <div className="flex items-center gap-1 bg-white border border-[#efefef] rounded-full p-1 shadow-2xs h-[34px]">
             <button
-              onClick={() => setLayoutMode('kanban')}
+              onClick={() => {
+                setLayoutMode('kanban');
+                setCurrentStatusFilter(null);
+                onStatusFilterChange?.(null);
+              }}
               className={`p-1 px-2.5 rounded-full transition-all cursor-pointer flex items-center justify-center h-full ${layoutMode === 'kanban' ? 'bg-[#faf9f7] text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
               title="Kanban View"
             >
@@ -306,7 +384,13 @@ export function Kanban({ applications, onEdit, onStatusChange, onDelete, locatio
       ))}
           </div>
       ) : (
-        <ListView applications={filteredApplications.filter(app => displayStatuses.includes(app.status))} onEdit={onEdit} onStatusChange={onStatusChange} onDelete={onDelete} trackingSystem={trackingSystem} />
+        <ListView 
+          applications={filteredApplications.filter(app => (currentStatusFilter ? app.status === currentStatusFilter : displayStatuses.includes(app.status)))} 
+          onEdit={onEdit} 
+          onStatusChange={onStatusChange} 
+          onDelete={onDelete} 
+          trackingSystem={trackingSystem} 
+        />
       )}
       </div>
     </div>

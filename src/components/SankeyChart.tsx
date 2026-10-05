@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactECharts from 'echarts-for-react';
-import { JobApplication, getStatusLabel } from '../types';
+import { JobApplication, JobStatus, getStatusLabel } from '../types';
 import { NoDataState } from './NoDataState';
 
 interface SankeyChartProps {
@@ -8,9 +8,10 @@ interface SankeyChartProps {
   applications: JobApplication[];
   isDemo?: boolean;
   trackingSystem?: 'industry' | 'academic';
+  onCategoryClick?: (status: JobStatus | 'Total') => void;
 }
 
-export function SankeyChart({ applications, isDemo = false, onAdd, trackingSystem = 'industry' }: SankeyChartProps) {
+export function SankeyChart({ applications, isDemo = false, onAdd, trackingSystem = 'industry', onCategoryClick }: SankeyChartProps) {
   const total = applications.length;
 
   if (total === 0) {
@@ -60,14 +61,14 @@ export function SankeyChart({ applications, isDemo = false, onAdd, trackingSyste
   const totalLabel = trackingSystem === 'academic' ? 'Total Submissions' : 'Total Applications';
 
   const nodes = [
-    { name: totalLabel, itemStyle: { color: '#2b7fff' } },
-    { name: appliedLabel, itemStyle: { color: '#86efac' } },
-    { name: ghostedLabel, itemStyle: { color: '#cbd5e1' } },
-    { name: rejectedLabel, itemStyle: { color: '#fca5a5' } },
-    { name: screeningLabel, itemStyle: { color: '#8ec5ff' } },
-    { name: technicalLabel, itemStyle: { color: '#8ec5ff' } },
-    { name: finalLabel, itemStyle: { color: '#8ec5ff' } },
-    { name: offerLabel, itemStyle: { color: '#8ec5ff' } },
+    { name: totalLabel, itemStyle: { color: '#2b7fff', cursor: 'default' }, cursor: 'default' },
+    { name: appliedLabel, itemStyle: { color: '#86efac', cursor: 'pointer' }, cursor: 'pointer' },
+    { name: ghostedLabel, itemStyle: { color: '#cbd5e1', cursor: 'pointer' }, cursor: 'pointer' },
+    { name: rejectedLabel, itemStyle: { color: '#fca5a5', cursor: 'pointer' }, cursor: 'pointer' },
+    { name: screeningLabel, itemStyle: { color: '#8ec5ff', cursor: 'pointer' }, cursor: 'pointer' },
+    { name: technicalLabel, itemStyle: { color: '#8ec5ff', cursor: 'pointer' }, cursor: 'pointer' },
+    { name: finalLabel, itemStyle: { color: '#8ec5ff', cursor: 'pointer' }, cursor: 'pointer' },
+    { name: offerLabel, itemStyle: { color: '#8ec5ff', cursor: 'pointer' }, cursor: 'pointer' },
   ];
 
   const links: any[] = [];
@@ -111,11 +112,12 @@ export function SankeyChart({ applications, isDemo = false, onAdd, trackingSyste
         if (params.dataType === 'node') {
           const statusKey = labelToStatusKey[params.name];
           const count = params.name === totalLabel ? applications.length : (statusKey ? (counts[statusKey] || 0) : 0);
-          return `<div style="display:flex; align-items:center; gap:8px;"><div style="width:12px; height:12px; border-radius:50%; background-color:${params.color || '#3b82f6'};"></div><span style="color:#1e293b; font-weight:500; font-family: ui-sans-serif, system-ui, sans-serif;">${params.name || ''} : ${count}</span></div>`;
+          return `<div style="display:flex; align-items:center; gap:8px;"><div style="width:10px; height:10px; border-radius:50%; background-color:${params.color || '#3b82f6'};"></div><span style="color:#1e293b; font-weight:600; font-family: ui-sans-serif, system-ui, sans-serif;">${params.name || ''} : ${count}</span></div>`;
         }
         const source = params.data?.source || params.name || '';
         const target = params.data?.target || '';
-        return `<div style="display:flex; align-items:center; gap:8px;"><div style="width:12px; height:12px; border-radius:50%; background-color:${params.color || '#94a3b8'};"></div><span style="color:#1e293b; font-weight:500; font-family: ui-sans-serif, system-ui, sans-serif;">${source}${target ? ` &rarr; ${target}` : ''}</span></div>`;
+        const val = params.data?.value ? ` (${params.data.value})` : '';
+        return `<div style="display:flex; align-items:center; gap:8px;"><div style="width:10px; height:10px; border-radius:50%; background-color:${params.color || '#94a3b8'};"></div><span style="color:#1e293b; font-weight:600; font-family: ui-sans-serif, system-ui, sans-serif;">${source}${target ? ` &rarr; ${target}` : ''}${val}</span></div>`;
       }
     },
     series: [
@@ -188,11 +190,39 @@ export function SankeyChart({ applications, isDemo = false, onAdd, trackingSyste
     ]
   };
 
+  const onEvents = {
+    click: (params: any) => {
+      if (!params) return;
+      if (params.dataType === 'node') {
+        const nodeName = params.name;
+        // Total applications area is not clickable
+        if (nodeName === totalLabel) {
+          return;
+        }
+        const statusKey = labelToStatusKey[nodeName];
+        if (statusKey) {
+          onCategoryClick?.(statusKey as JobStatus);
+        }
+      } else if (params.dataType === 'edge') {
+        const targetName = params.data?.target;
+        const statusKey = labelToStatusKey[targetName];
+        if (statusKey) {
+          onCategoryClick?.(statusKey as JobStatus);
+        }
+      }
+    }
+  };
+
   return (
     <div className="relative w-full flex-1 flex flex-col min-h-[500px]">
       <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col relative">
         <div className="flex-1 w-full min-h-0 relative">
-          <ReactECharts option={option} style={{ height: '100%', width: '100%' }} notMerge={true} />
+          <ReactECharts 
+            option={option} 
+            style={{ height: '100%', width: '100%' }} 
+            notMerge={true} 
+            onEvents={onEvents}
+          />
         </div>
       </div>
     </div>

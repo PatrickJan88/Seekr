@@ -280,6 +280,18 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   }, [view]);
 
   const [locationFilter, setLocationFilter] = useState<string | null>(null);
+  const [kanbanLayoutMode, setKanbanLayoutMode] = useState<'kanban' | 'list'>('kanban');
+  const [kanbanStatusFilter, setKanbanStatusFilter] = useState<JobStatus | null>(null);
+
+  const handleSankeyCategoryClick = (status: JobStatus | 'Total') => {
+    if (status === 'Total' || !status) {
+      setKanbanStatusFilter(null);
+    } else {
+      setKanbanStatusFilter(status);
+    }
+    setKanbanLayoutMode('list');
+    setView('kanban');
+  };
 
   useEffect(() => {
     const handleKeyDown = (e /*: KeyboardEvent*/) => {
@@ -943,7 +955,13 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
             setTrackingSystem={handleSetTrackingSystem}
            className="w-[260px] border-none bg-transparent"
            activeId={view}
-           onSelect={(id) => setView(id as any)}
+           onSelect={(id) => {
+             if (id === 'kanban') {
+               setKanbanStatusFilter(null);
+               setKanbanLayoutMode('kanban');
+             }
+             setView(id as any);
+           }}
            isDemo={isDemo}
            onImport={() => isDemo ? toast.info('Demo Mode: Importing data is disabled in this view-only portfolio preview.') : setShowImportModal(true)}
            onExport={() => {
@@ -1015,10 +1033,24 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                   setIsFormOpen(true); 
                 }} 
                 trackingSystem={trackingSystem} 
+                onCategoryClick={handleSankeyCategoryClick}
               />
             )}
             {view === 'global-market' && <GlobalMarket isDemo={isDemo} onAddToWishlist={handleSave} trackingSystem={trackingSystem} selectedRole={selectedRole} />}
-            {view === 'kanban' && <Kanban applications={filteredApplications} onEdit={(app) => { setEditingApp(app); setIsFormOpen(true); }} onStatusChange={handleStatusChange as any} onDelete={handleDelete} locationFilter={locationFilter} onLocationSelect={handleLocationSelect} trackingSystem={trackingSystem} />}
+            {view === 'kanban' && (
+              <Kanban 
+                applications={filteredApplications} 
+                onEdit={(app) => { setEditingApp(app); setIsFormOpen(true); }} 
+                onStatusChange={handleStatusChange as any} 
+                onDelete={handleDelete} 
+                locationFilter={locationFilter} 
+                onLocationSelect={handleLocationSelect} 
+                trackingSystem={trackingSystem}
+                initialLayoutMode={kanbanLayoutMode}
+                statusFilter={kanbanStatusFilter}
+                onStatusFilterChange={setKanbanStatusFilter}
+              />
+            )}
             {view === 'analytics' && <Analytics applications={filteredApplications} onLocationSelect={handleLocationSelect} trackingSystem={trackingSystem} />}
             {view === 'cv-match' && <CVMatchAssessment applications={filteredApplications} isDemo={isDemo} trackingSystem={trackingSystem} onAddToWishlist={handleSave} onViewHistory={() => setView('eval-history')} setNestedBreadcrumb={setNestedBreadcrumb} />}
             {view === 'company-intel' && (

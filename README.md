@@ -52,6 +52,12 @@ Version `4.2.0` introduces a refined **Dynamic 30-Day Auto-Ghosting System** wit
     *   **ContentEditable Ghost Line Elimination**: Integrated the `sanitizePrintHtml` sanitization pipeline to strip empty headings (`<h2><br></h2>`, `<h1></h1>`), ghost blockquotes, and empty list elements generated when users clear starter text in the rich editor.
     *   **CSS Print Isolation**: Added strict `:empty` print rules (`.content h1:empty, .content h2:empty { display: none !important; border: none !important; }`), ensuring exported PDF documents render with clean, professional typography and zero visual line artifacts.
 
+*   **Interactive Sankey Chart to Applications List View Navigation**:
+    *   **Direct Category Drilldown**: Clicking on any category in the Sankey diagram (Applied, Screening, Technical, Final, Offer, Ghosted, Rejected, or connecting flow links) automatically navigates to **My Applications**.
+    *   **Automated List View & Tab Activation**: Switches the layout to **List View** and instantly activates the corresponding category tab (**Active Progress** for active stages, **Closed** for Ghosted/Rejected, and **Wishlist** for Wishlist).
+    *   **Granular Status Filtering with 1-Click Clear**: Automatically filters the applications table to display only entries matching the clicked status, accompanied by an inline status badge (e.g., `Status: Applied ✕`) for effortless clearing back to all records in that tab.
+    *   **Scope & Cleanliness Enforcement**: Kept the aggregate "Total Applications" (or "Total Submissions") node informational and non-clickable with a default cursor, and maintained a clean, minimal hover tooltip.
+
 ---
 
 ## What's New in Version 4.1.0
@@ -230,6 +236,9 @@ Version `4.0.0` introduces dedicated standalone left-panel access for Company 36
 ### **v4.2.0** — *Current Release*
 *   Implemented **Dynamic 30-Day Auto-Ghosting Pipeline** with adaptive manual update recalculation (`lastManualUpdate`), active upcoming interview shielding, and automated background task isolation.
 *   Updated **Kanban Board Ghosted Tooltip** to clearly explain the 30-day manual update rule.
+*   Added **Interactive Sankey Chart Category Drilldown** enabling 1-click navigation directly into **My Applications** List View filtered by the clicked status with automatic tab switching (Active Progress, Closed, Wishlist).
+*   Added **Inline Status Filter Badge with 1-Click Dismissal** in List View when drilling down from pipeline diagrams.
+*   Enforced **Scope & Tooltip Cleanliness** on Sankey charts by keeping Total Applications non-clickable and maintaining a clean hover tooltip.
 *   Standardized **Studio Header Layouts & Typography** across Interview Prep Studio, Resume Tailoring Studio, and Cover Letter Studio.
 *   Streamlined **Evaluation History Header** by removing the redundant "New Evaluation" button to keep the search bar and counter cleanly focused.
 *   Upgraded **PDF Export Engine** with seamless native print preview dialog invocation and automated temporary window cleanup.
