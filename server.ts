@@ -978,7 +978,11 @@ const parseLocation = (loc: any) => {
 };
 
 const app = express();
-  const PORT = Number(process.env.PORT) || 3000;
+  // In AI Studio development, internal nginx proxy routes traffic to port 3000.
+  // In cloud deployments like Render (process.env.RENDER) or external production containers, bind to process.env.PORT.
+  const PORT = (process.env.RENDER || (!process.env.APPLET_ID && process.env.PORT))
+    ? Number(process.env.PORT) || 3000
+    : 3000;
 
   app.use(express.json({ limit: "50mb" }));
 

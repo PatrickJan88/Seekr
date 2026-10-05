@@ -266,8 +266,12 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   };
 
   const filteredApplications = useMemo(() => {
+    if (isDemo) {
+      // In Demo Mode, always display all 12 mock applications with their diverse statuses
+      return applications;
+    }
     return applications.filter(app => (app.trackingSystem || 'industry') === trackingSystem);
-  }, [applications, trackingSystem]);
+  }, [applications, trackingSystem, isDemo]);
   const [editingApp, setEditingApp] = useState<JobApplication | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -479,6 +483,11 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   };
 
   const applyAutoGhosting = async (data: JobApplication[]): Promise<JobApplication[]> => {
+    // Under no circumstances should auto-ghosting touch or modify Demo Mode applications
+    if (isDemo) {
+      return data;
+    }
+
     const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
     const now = Date.now();
     const activeStatuses: JobStatus[] = ['Wishlist', 'Applied', 'Screening', 'Technical', 'Final'];
@@ -555,30 +564,13 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     if (isDemo) {
       setLoading(true);
       try {
-        const local = localStorage.getItem('seekr_demo_applications');
-        let data: JobApplication[] = [];
-        if (local) {
-          try {
-            const parsed: JobApplication[] = JSON.parse(local);
-            data = parsed.map((app, idx) => {
-              if (DEMO_APPLICATIONS[idx] && app.id === DEMO_APPLICATIONS[idx].id) {
-                return {
-                  ...app,
-                  company: DEMO_APPLICATIONS[idx].company,
-                  notes: DEMO_APPLICATIONS[idx].notes
-                };
-              }
-              return app;
-            });
-          } catch {
-            data = DEMO_APPLICATIONS;
-          }
-        } else {
-          data = DEMO_APPLICATIONS;
-        }
+        // Clear any old/corrupted demo local storage from previous sessions
+        try {
+          localStorage.removeItem('seekr_demo_applications');
+        } catch {}
 
-        const updatedData = await applyAutoGhosting(data);
-        setApplications(updatedData);
+        // Strictly preserve and restore the 12 pristine demo applications with diverse statuses
+        setApplications(DEMO_APPLICATIONS);
       } catch (err) {
         console.error('Failed to load demo applications', err);
         setApplications(DEMO_APPLICATIONS);
