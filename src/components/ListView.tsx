@@ -11,6 +11,9 @@ interface ListViewProps {
   onStatusChange: (appId: string, status: JobStatus) => void;
   onDelete: (appId: string) => void;
   trackingSystem?: 'industry' | 'academic';
+  isDemo?: boolean;
+  focusedApplicationId?: string | null;
+  onClearFocusedApplication?: () => void;
 }
 
 const STATUS_COLORS: Record<JobStatus, string> = {
@@ -242,7 +245,7 @@ function ActionDropdown({ onEdit, onDelete }: { onEdit: () => void, onDelete: ()
   );
 }
 
-export function ListView({ applications, onEdit, onStatusChange, onDelete, trackingSystem = 'industry' }: ListViewProps) {
+export function ListView({ applications, onEdit, onStatusChange, onDelete, trackingSystem = 'industry', focusedApplicationId, onClearFocusedApplication }: ListViewProps) {
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
   const sortedApplications = useMemo(() => {
@@ -392,11 +395,23 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete, track
           </thead>
           <tbody>
             {applications.length > 0 ? (
-              sortedApplications.map((app) => (
+              sortedApplications.map((app) => {
+                const isFocused = focusedApplicationId === app.id;
+                return (
                 <tr 
                   key={app.id} 
-                  onClick={() => onEdit(app)}
-                  className="hover:bg-[#faf9f7] transition-colors cursor-pointer group"
+                  id={`app-row-${app.id}`}
+                  onClick={() => {
+                    if (isFocused) {
+                      onClearFocusedApplication?.();
+                    }
+                    onEdit(app);
+                  }}
+                  className={`transition-colors cursor-pointer group ${
+                    isFocused 
+                      ? 'bg-blue-50/40 border-y-2 border-[#0068f9]' 
+                      : 'hover:bg-[#faf9f7]'
+                  }`}
                 >
                   <td className="border-b border-[#efefef] px-6 py-4 max-w-0" style={{ width: colWidths.position }}>
                     <div className="font-bold text-sm text-[#121722] truncate block" title={app.position}>{app.position}</div>
@@ -444,7 +459,8 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete, track
                     <ActionDropdown onEdit={() => onEdit(app)} onDelete={() => onDelete(app.id)} />
                   </td>
                 </tr>
-              ))
+              );
+            })
             ) : (
               <tr>
                 <td colSpan={7} className="p-0 border-0">

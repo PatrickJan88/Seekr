@@ -18,6 +18,8 @@ interface KanbanProps {
   initialLayoutMode?: 'kanban' | 'list';
   statusFilter?: JobStatus | null;
   onStatusFilterChange?: (status: JobStatus | null) => void;
+  focusedApplicationId?: string | null;
+  onClearFocusedApplication?: () => void;
 }
 
 export function Kanban({ 
@@ -30,13 +32,16 @@ export function Kanban({
   trackingSystem = 'industry',
   initialLayoutMode = 'kanban',
   statusFilter = null,
-  onStatusFilterChange
+  onStatusFilterChange,
+  focusedApplicationId = null,
+  onClearFocusedApplication
 }: KanbanProps) {
   const WISHLIST_STATUSES: JobStatus[] = ['Wishlist'];
   const ACTIVE_STATUSES: JobStatus[] = ['Applied', 'Screening', 'Technical', 'Final', 'Offer'];
   const INACTIVE_STATUSES: JobStatus[] = ['Rejected', 'Ghosted'];
 
   const getInitialTab = (): 'wishlist' | 'active' | 'inactive' => {
+    if (focusedApplicationId) return 'inactive';
     if (statusFilter) {
       if (WISHLIST_STATUSES.includes(statusFilter)) return 'wishlist';
       if (INACTIVE_STATUSES.includes(statusFilter)) return 'inactive';
@@ -46,8 +51,9 @@ export function Kanban({
   };
 
   const [activeTab, setActiveTab] = useState<'wishlist' | 'active' | 'inactive'>(getInitialTab);
-  const [layoutMode, setLayoutMode] = useState<'kanban' | 'list'>(statusFilter ? 'list' : initialLayoutMode);
+  const [layoutMode, setLayoutMode] = useState<'kanban' | 'list'>(initialLayoutMode || (statusFilter ? 'list' : 'kanban'));
   const [currentStatusFilter, setCurrentStatusFilter] = useState<JobStatus | null>(statusFilter);
+  const [internalFocusedId, setInternalFocusedId] = useState<string | null>(focusedApplicationId);
 
   React.useEffect(() => {
     if (initialLayoutMode) {
@@ -56,9 +62,18 @@ export function Kanban({
   }, [initialLayoutMode]);
 
   React.useEffect(() => {
+    setInternalFocusedId(focusedApplicationId || null);
+    if (focusedApplicationId) {
+      setActiveTab('inactive');
+    }
+  }, [focusedApplicationId]);
+
+  React.useEffect(() => {
     setCurrentStatusFilter(statusFilter);
     if (statusFilter) {
-      setLayoutMode('list');
+      if (initialLayoutMode) {
+        setLayoutMode(initialLayoutMode);
+      }
       if (WISHLIST_STATUSES.includes(statusFilter)) {
         setActiveTab('wishlist');
       } else if (INACTIVE_STATUSES.includes(statusFilter)) {
@@ -67,7 +82,19 @@ export function Kanban({
         setActiveTab('active');
       }
     }
-  }, [statusFilter]);
+  }, [statusFilter, initialLayoutMode]);
+
+  React.useEffect(() => {
+    if (internalFocusedId) {
+      const timer = setTimeout(() => {
+        const el = document.getElementById(`app-card-${internalFocusedId}`) || document.getElementById(`app-row-${internalFocusedId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [internalFocusedId, layoutMode, activeTab]);
 
   const handleTabChange = (tab: 'wishlist' | 'active' | 'inactive') => {
     setActiveTab(tab);
@@ -303,16 +330,29 @@ export function Kanban({
             </span>
           </div>
           <div className="flex-1 overflow-y-auto flex flex-col gap-3 pr-1 scrollbar-thin">
-            {(grouped[status] || []).map(app => (
+            {(grouped[status] || []).map(app => {
+              const isFocused = internalFocusedId === app.id;
+              return (
               <div 
                 key={app.id} 
-                onClick={() => onEdit(app)}
+                id={`app-card-${app.id}`}
+                onClick={() => {
+                  if (isFocused) {
+                    setInternalFocusedId(null);
+                    onClearFocusedApplication?.();
+                  }
+                  onEdit(app);
+                }}
                 draggable
                 onDragStart={(e) => {
                   e.dataTransfer.setData('text/plain', app.id);
                   e.dataTransfer.effectAllowed = 'move';
                 }}
-                className="p-4 border border-[#efefef] rounded-2xl bg-[#faf9f7] hover:border-[#0068f9]/40 hover:bg-white transition-all cursor-pointer group shadow-2xs cursor-grab active:cursor-grabbing"
+                className={`p-4 rounded-2xl transition-all cursor-pointer group shadow-2xs cursor-grab active:cursor-grabbing ${
+                  isFocused
+                    ? 'border-2 border-[#0068f9] bg-white'
+                    : 'border border-[#efefef] bg-[#faf9f7] hover:bg-white hover:border-[#0068f9]/40'
+                }`}
               >
                 <div className="flex justify-between items-start mb-2">
                   <h4 className="font-bold text-sm text-[#121722] truncate pr-2">{app.position}</h4>
@@ -379,7 +419,8 @@ export function Kanban({
                   })()}
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         </div>
       ))}
@@ -387,10 +428,21 @@ export function Kanban({
       ) : (
         <ListView 
           applications={filteredApplications.filter(app => (currentStatusFilter ? isStatusMatching(app.status, currentStatusFilter) : displayStatuses.some(s => isStatusMatching(app.status, s))))} 
-          onEdit={onEdit} 
+          onEdit={(app) => {
+            if (internalFocusedId === app.id) {
+              setInternalFocusedId(null);
+              onClearFocusedApplication?.();
+            }
+            onEdit(app);
+          }} 
           onStatusChange={onStatusChange} 
           onDelete={onDelete} 
-          trackingSystem={trackingSystem} 
+          trackingSystem={trackingSystem}
+          focusedApplicationId={internalFocusedId}
+          onClearFocusedApplication={() => {
+            setInternalFocusedId(null);
+            onClearFocusedApplication?.();
+          }} 
         />
       )}
       </div>

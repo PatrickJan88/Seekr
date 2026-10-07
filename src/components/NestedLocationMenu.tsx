@@ -24,9 +24,18 @@ export function NestedLocationMenu({
   onSelectCity,
   className,
 }: NestedLocationMenuProps) {
-  const continents = Array.from(locationTree.keys()).sort();
+  const isExcluded = (val?: string) => {
+    if (!val) return true;
+    const lower = val.trim().toLowerCase();
+    return lower === 'other' || lower === 'remote' || lower === 'remote / global' || lower.includes('remote') || lower.includes('other');
+  };
+
+  const continents = Array.from(locationTree.keys())
+    .filter(c => !isExcluded(c))
+    .sort();
 
   const getDisplayText = () => {
+    if (continentFilter === "Remote") return "Remote";
     if (cityFilter && countryFilter) return `${cityFilter}, ${countryFilter}`;
     if (countryFilter) return countryFilter;
     if (continentFilter) return continentFilter;
@@ -61,12 +70,26 @@ export function NestedLocationMenu({
             All Locations
             {!continentFilter && <Check size={16} className="ml-auto text-[#0068f9]" />}
           </DropdownMenu.Item>
+
+          <DropdownMenu.Item 
+            className="flex items-center px-3 py-2 text-sm text-[#121722] rounded-lg cursor-pointer hover:bg-[#faf9f7] outline-none select-none"
+            onClick={() => {
+              onSelectContinent("Remote");
+              onSelectCountry("");
+              onSelectCity("");
+            }}
+          >
+            Remote
+            {continentFilter === "Remote" && <Check size={16} className="ml-auto text-[#0068f9]" />}
+          </DropdownMenu.Item>
           
           <DropdownMenu.Separator className="h-px bg-[#efefef] my-1 mx-2" />
 
           {continents.map((continent) => {
             const countriesMap = locationTree.get(continent) || new Map<string, Set<string>>();
-            const countries = Array.from(countriesMap.keys()).sort();
+            const countries = Array.from(countriesMap.keys())
+              .filter(country => !isExcluded(country))
+              .sort();
             
             if (countries.length === 0) {
               return (
@@ -113,7 +136,9 @@ export function NestedLocationMenu({
                     <DropdownMenu.Separator className="h-px bg-[#efefef] my-1 mx-2" />
                     
                     {countries.map(country => {
-                      const cities = Array.from(countriesMap.get(country) || []).sort();
+                      const cities = Array.from(countriesMap.get(country) || [])
+                        .filter(city => !isExcluded(city))
+                        .sort();
                       
                       if (cities.length === 0) {
                         return (

@@ -22,16 +22,27 @@ export const getNotifications = (userId: string, callback: (notifications: AppNo
   });
 };
 
-export const addNotification = async (userId: string, type: string, title: string, message: string) => {
+export const addNotification = async (
+  userId: string, 
+  type: string, 
+  title: string, 
+  message: string,
+  applicationId?: string,
+  applicationIds?: string[]
+) => {
   try {
-    await addDoc(collection(db, 'notifications'), {
+    const payload: any = {
       userId,
       type,
       title,
       message,
       timestamp: Date.now(),
       unread: true
-    });
+    };
+    if (applicationId) payload.applicationId = applicationId;
+    if (applicationIds && applicationIds.length > 0) payload.applicationIds = applicationIds;
+
+    await addDoc(collection(db, 'notifications'), payload);
   } catch (err: any) {
     console.error('Failed to add notification', err);
     toast.error('Failed to add notification: ' + err.message);

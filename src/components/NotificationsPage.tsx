@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Briefcase, Calendar, AlertCircle, CheckCircle2, Trash2, Bell } from 'lucide-react';
+import { Briefcase, Calendar, AlertCircle, CheckCircle2, Trash2, Bell, ArrowRight } from 'lucide-react';
 import { auth } from '../lib/firebase';
 import { getNotifications, markNotificationRead, deleteNotification, clearAllNotifications } from '../lib/notifications';
 import { AppNotification } from '../types';
@@ -8,9 +8,10 @@ import { NoDataState } from './NoDataState';
 
 interface NotificationsPageProps {
   onBack?: () => void;
+  onNavigateToGhosted?: (notification: AppNotification) => void;
 }
 
-export function NotificationsPage({ onBack }: NotificationsPageProps) {
+export function NotificationsPage({ onBack, onNavigateToGhosted }: NotificationsPageProps) {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -106,9 +107,24 @@ export function NotificationsPage({ onBack }: NotificationsPageProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h4 className={`text-sm ${n.unread ? 'font-bold text-[#121722]' : 'font-medium text-[#777c86]'}`}>
-                        {n.title}
-                      </h4>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className={`text-sm ${n.unread ? 'font-bold text-[#121722]' : 'font-medium text-[#777c86]'}`}>
+                          {n.title}
+                        </h4>
+                        {(n.title.toLowerCase().includes('ghosted') || n.type === 'status_update') && onNavigateToGhosted && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMarkAsRead(n.id);
+                              onNavigateToGhosted(n);
+                            }}
+                            className="text-xs font-semibold text-[#0068f9] hover:text-[#0051c2] hover:underline cursor-pointer bg-transparent border-0 p-0 transition-colors"
+                          >
+                            View in Ghosted
+                          </button>
+                        )}
+                      </div>
                       <p className={`mt-1 text-xs ${n.unread ? 'text-[#121722]' : 'text-[#777c86]'}`}>
                         {n.message}
                       </p>

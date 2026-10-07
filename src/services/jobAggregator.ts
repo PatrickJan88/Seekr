@@ -724,3 +724,151 @@ export async function fetchLiveAcademicAdzuna(appId: string, appKey: string): Pr
 
   return jobs;
 }
+
+/**
+ * Ingest live Swedish public & enterprise employment postings via Arbetsförmedlingen JobTech Dev API
+ * Cost: $0 - Official Swedish Public Employment Service open data (CC0 Public Domain, zero auth required)
+ * Base URL: https://jobsearch.api.jobtechdev.se
+ */
+export async function fetchArbetsformedlingenJobs(): Promise<{ industryJobs: AggregatedJob[]; academicJobs: AggregatedJob[] }> {
+  const industryJobs: AggregatedJob[] = [];
+  const academicJobs: AggregatedJob[] = [];
+
+  try {
+    // Parallel fetch: Data/IT field + Higher Education & Academic research query
+    const [itRes, acadRes] = await Promise.allSettled([
+      fetch('https://jobsearch.api.jobtechdev.se/search?occupation-field=apaJ_2ja_LuF&limit=60', {
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(4500)
+      }),
+      fetch('https://jobsearch.api.jobtechdev.se/search?q=postdoktor%20forskare%20doktorand%20universitet&limit=40', {
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(4500)
+      })
+    ]);
+
+    const processHits = (hits: any[], defaultSystem: 'industry' | 'academic') => {
+      if (!Array.isArray(hits)) return;
+      hits.forEach((hit: any) => {
+        if (!hit || !hit.id || !hit.headline) return;
+
+        const employerName = hit.employer?.workplace || hit.employer?.name || 'Swedish Employer';
+        const rawTitle = hit.headline.trim();
+        const lowerTitle = rawTitle.toLowerCase();
+        const lowerEmp = (employerName || '').toLowerCase();
+
+        // Accurately determine if post belongs to Academic Seekr or Industry Seekr
+        const isAcademic = defaultSystem === 'academic' ||
+          lowerTitle.includes('postdoktor') ||
+          lowerTitle.includes('postdoc') ||
+          lowerTitle.includes('doktorand') ||
+          lowerTitle.includes('forskare') ||
+          lowerTitle.includes('universitet') ||
+          lowerTitle.includes('professor') ||
+          lowerTitle.includes('adjunkt') ||
+          lowerTitle.includes('lektor') ||
+          lowerTitle.includes('fellow') ||
+          lowerEmp.includes('universitet') ||
+          lowerEmp.includes('university') ||
+          lowerEmp.includes('högskola') ||
+          lowerEmp.includes('institutet');
+
+        const system: 'industry' | 'academic' = isAcademic ? 'academic' : 'industry';
+        const category = isAcademic 
+          ? normalizeAcademicCategory(rawTitle)
+          : normalizeIndustryCategory(rawTitle, hit.occupation_group?.label || '');
+
+        // Resolve logo from employer domain with official fallback
+        let domain = 'arbetsformedlingen.se';
+        if (hit.employer?.url) {
+          try {
+            const rawUrl = hit.employer.url.startsWith('http') ? hit.employer.url : `https://${hit.employer.url}`;
+            const parsed = new URL(rawUrl);
+            domain = parsed.hostname.replace(/^www\./, '');
+          } catch {}
+        }
+        const logo = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+
+        // Clean city and country formatting
+        const rawCity = hit.workplace_address?.city || hit.workplace_address?.municipality || 'Stockholm';
+        const city = rawCity.charAt(0).toUpperCase() + rawCity.slice(1);
+        const locationStr = `${city}, Sweden`;
+
+        // Direct application portal or official Platsbanken post
+        const applyUrl = hit.application_details?.url || hit.webpage_url || `https://arbetsformedlingen.se/platsbanken/annonser/${hit.id}`;
+
+        // Contract/working hours type
+        let jobType = 'full_time';
+        const empLabel = (hit.employment_type?.label || hit.working_hours_type?.label || '').toLowerCase();
+        if (empLabel.includes('deltid') || empLabel.includes('part')) jobType = 'part_time';
+        else if (empLabel.includes('visstid') || empLabel.includes('konsult') || empLabel.includes('contract')) jobType = 'contract';
+        else if (isAcademic && lowerTitle.includes('doktorand')) jobType = 'fellowship';
+
+        // Clean salary description
+        const salary = hit.salary_description || (hit.salary_type?.label ? hit.salary_type.label : '');
+
+        // Description cleaning
+        const cleanDesc = cleanHtmlText(hit.description?.text_formatted || hit.description?.text || '');
+        const description = cleanDesc.length > 50 
+          ? cleanDesc 
+          : `${rawTitle} at ${employerName} in ${locationStr}. Official verified career opening via Arbetsförmedlingen Platsbanken.`;
+
+        // Tags for search and categorization
+        const tags = ['sweden', 'platsbanken', 'arbetsformedlingen'];
+        if (city) tags.push(city.toLowerCase());
+        if (isAcademic) {
+          tags.push('academic', 'research', 'university', category);
+        } else {
+          tags.push('tech', category);
+          if (hit.occupation_field?.label) tags.push(hit.occupation_field.label.toLowerCase());
+        }
+
+        const job: AggregatedJob = {
+          id: `af-${hit.id}`,
+          url: applyUrl,
+          title: rawTitle,
+          company_name: employerName,
+          company_logo: logo,
+          category,
+          tags,
+          job_type: jobType,
+          publication_date: parseDateSafe(hit.publication_date),
+          candidate_required_location: locationStr,
+          salary,
+          description,
+          system,
+          parsed_location: {
+            continent: 'Europe',
+            country: 'Sweden',
+            city
+          }
+        };
+
+        if (system === 'academic') {
+          academicJobs.push(job);
+        } else {
+          industryJobs.push(job);
+        }
+      });
+    };
+
+    if (itRes.status === 'fulfilled' && itRes.value.ok) {
+      const itData: any = await itRes.value.json();
+      if (itData && itData.hits) {
+        processHits(itData.hits, 'industry');
+      }
+    }
+
+    if (acadRes.status === 'fulfilled' && acadRes.value.ok) {
+      const acadData: any = await acadRes.value.json();
+      if (acadData && acadData.hits) {
+        processHits(acadData.hits, 'academic');
+      }
+    }
+  } catch (err) {
+    console.warn('[Arbetsförmedlingen] Feed ingestion error:', err);
+  }
+
+  return { industryJobs, academicJobs };
+}
+

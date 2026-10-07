@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { JobApplication, JobStatus, UserResume, toCanonicalStatus } from '../types';
+import { JobApplication, JobStatus, UserResume, toCanonicalStatus, AppNotification } from '../types';
 import { getApplications, addApplication, updateApplication, deleteApplication, addApplicationsBatch, deleteAllApplications } from '../db/applications';
 import { Kanban } from './Kanban';
 import { Analytics } from './Analytics';
@@ -286,6 +286,30 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   const [locationFilter, setLocationFilter] = useState<string | null>(null);
   const [kanbanLayoutMode, setKanbanLayoutMode] = useState<'kanban' | 'list'>('kanban');
   const [kanbanStatusFilter, setKanbanStatusFilter] = useState<JobStatus | null>(null);
+  const [focusedAppId, setFocusedAppId] = useState<string | null>(null);
+
+  const handleNavigateToGhosted = (notification?: AppNotification) => {
+    let targetId = notification?.applicationId || (notification?.applicationIds && notification.applicationIds[0]);
+
+    if (!targetId) {
+      const ghosted = applications.filter(a => a.status === 'Ghosted');
+      if (ghosted.length > 0) {
+        const sorted = [...ghosted].sort((a, b) => {
+          const tA = (typeof a.lastManualUpdate === 'number' ? a.lastManualUpdate : 0) || (parseDateToMs(a.appliedDate) || 0);
+          const tB = (typeof b.lastManualUpdate === 'number' ? b.lastManualUpdate : 0) || (parseDateToMs(b.appliedDate) || 0);
+          return tB - tA;
+        });
+        targetId = sorted[0].id;
+      }
+    }
+
+    if (targetId) {
+      setFocusedAppId(targetId);
+    }
+    setKanbanStatusFilter(null);
+    setKanbanLayoutMode('kanban');
+    setView('kanban');
+  };
 
   const handleSankeyCategoryClick = (status: JobStatus | 'Total') => {
     if (status === 'Total' || !status) {
@@ -494,6 +518,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     const activeStatuses: JobStatus[] = ['Applied', 'Screening', 'Technical', 'Final'];
     
     let ghostedCount = 0;
+    const justGhostedIds: string[] = [];
     
     const updatedData = await Promise.all(data.map(async (app) => {
       if (activeStatuses.includes(app.status)) {
@@ -531,6 +556,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
           if (!recentlyGhostedIds.has(app.id)) {
             ghostedCount++;
             recentlyGhostedIds.add(app.id);
+            justGhostedIds.push(app.id);
           }
 
           const ghostedApp: JobApplication = { ...app, status: 'Ghosted' as JobStatus };
@@ -555,7 +581,14 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
       
       if (auth.currentUser && !isDemo) {
         try {
-          await addNotification(auth.currentUser.uid, 'status_update', title, msg);
+          await addNotification(
+            auth.currentUser.uid, 
+            'status_update', 
+            title, 
+            msg, 
+            justGhostedIds[0], 
+            justGhostedIds
+          );
         } catch (e) {}
       }
       toast.info(msg);
@@ -999,7 +1032,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
            
            <div className="flex items-center gap-3">
              <CommandSearch applications={applications} onSelectApplication={(app) => { setEditingApp(app); setIsFormOpen(true); }} trackingSystem={trackingSystem} />
-             <NotificationCenter onViewAll={() => setView('notifications')} />
+             <NotificationCenter onViewAll={() => setView('notifications')} onNavigateToGhosted={handleNavigateToGhosted} />
            </div>
          </header>
 
@@ -1034,6 +1067,8 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                 initialLayoutMode={kanbanLayoutMode}
                 statusFilter={kanbanStatusFilter}
                 onStatusFilterChange={setKanbanStatusFilter}
+                focusedApplicationId={focusedAppId}
+                onClearFocusedApplication={() => setFocusedAppId(null)}
               />
             )}
             {view === 'analytics' && <Analytics applications={filteredApplications} onLocationSelect={handleLocationSelect} trackingSystem={trackingSystem} />}
@@ -1055,7 +1090,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                 isDemo={isDemo} 
               />
             )}
-            {view === 'notifications' && <NotificationsPage onBack={() => setView('sankey')} />}
+            {view === 'notifications' && <NotificationsPage onBack={() => setView('sankey')} onNavigateToGhosted={handleNavigateToGhosted} />}
             {view === 'settings' && <SettingsPage onBack={() => setView('sankey')} onClearData={handleClearData} isSyncing={isSyncing} isDemo={isDemo} trackingSystem={trackingSystem} setTrackingSystem={handleSetTrackingSystem} selectedRole={selectedRole} setSelectedRole={handleSetSelectedRole} />}
             {view === 'eval-history' && <EvaluateHistoryPage onBack={() => setView('cv-match')} applications={filteredApplications} isDemo={isDemo} onAddToWishlist={handleSave} />}
 

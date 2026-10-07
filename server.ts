@@ -7,7 +7,8 @@ import {
   fetchAllTopCompanyJobs,
   getQSUniversityAcademicJobs,
   fetchLiveAcademicAdzuna,
-  getInitialIndustrySeedJobs
+  getInitialIndustrySeedJobs,
+  fetchArbetsformedlingenJobs
 } from './src/services/jobAggregator';
 
 function safeParseJSON(text: string, fallback: any) {
@@ -978,11 +979,14 @@ const parseLocation = (loc: any) => {
 };
 
 const app = express();
+  // Support explicit --port CLI argument (e.g. from container supervisors), otherwise fallback to environment logic
+  const portArgIdx = process.argv.indexOf('--port');
+  const portFromArg = portArgIdx !== -1 && process.argv[portArgIdx + 1] ? Number(process.argv[portArgIdx + 1]) : null;
   // In AI Studio development, internal nginx proxy routes traffic to port 3000.
   // In cloud deployments like Render (process.env.RENDER) or external production containers, bind to process.env.PORT.
-  const PORT = (process.env.RENDER || (!process.env.APPLET_ID && process.env.PORT))
+  const PORT = portFromArg || ((process.env.RENDER || (!process.env.APPLET_ID && process.env.PORT))
     ? Number(process.env.PORT) || 3000
-    : 3000;
+    : 3000);
 
   app.use(express.json({ limit: "50mb" }));
 
@@ -2455,6 +2459,20 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
         }
       };
 
+      const fetchArbetsformedlingen = async () => {
+        try {
+          const { industryJobs, academicJobs } = await fetchArbetsformedlingenJobs();
+          if (Array.isArray(industryJobs) && industryJobs.length > 0) {
+            allJobs = allJobs.concat(industryJobs);
+          }
+          if (Array.isArray(academicJobs) && academicJobs.length > 0) {
+            allAcademicJobs = allAcademicJobs.concat(academicJobs);
+          }
+        } catch (e) {
+          console.warn("[Arbetsförmedlingen] Feed temporarily unavailable, continuing.");
+        }
+      };
+
       // Run all fetches in parallel
       await Promise.allSettled([
         fetchRemotive(),
@@ -2467,7 +2485,8 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
         fetchJooble(),
         fetchReed(),
         fetchTopCompanies(),
-        fetchAcademicFeeds()
+        fetchAcademicFeeds(),
+        fetchArbetsformedlingen()
       ]);
 
       // Sort industry jobs by newest first
@@ -2573,6 +2592,35 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
       });
     } catch (error: any) {
       res.status(500).json({ error: error.message || "Failed to fetch market jobs" });
+    }
+  });
+
+  // Dedicated Arbetsförmedlingen JobTech Platsbanken live query endpoint
+  app.get("/api/arbetsformedlingen-jobs", async (req, res) => {
+    try {
+      const q = (req.query.q as string || req.query.query as string || '').trim();
+      const municipality = (req.query.municipality as string || '').trim();
+      const limit = Math.min(parseInt(req.query.limit as string || '30', 10), 100);
+      const remote = req.query.remote === 'true';
+
+      let url = `https://jobsearch.api.jobtechdev.se/search?limit=${limit}`;
+      if (q) url += `&q=${encodeURIComponent(q)}`;
+      if (municipality) url += `&municipality=${encodeURIComponent(municipality)}`;
+      if (remote) url += `&remote=true`;
+
+      const afRes = await fetch(url, {
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(5000)
+      });
+
+      if (!afRes.ok) {
+        return res.status(afRes.status).json({ error: "Arbetsförmedlingen API returned error" });
+      }
+
+      const data: any = await afRes.json();
+      return res.json(data);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message || "Arbetsförmedlingen API request failed" });
     }
   });
 
@@ -3542,7 +3590,7 @@ Return ONLY a valid JSON object strictly matching this schema:
 
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, hmr: false },
       appType: "spa"});
     app.use(vite.middlewares);
   } else {

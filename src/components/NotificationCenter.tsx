@@ -6,7 +6,7 @@ import { auth } from '../lib/firebase';
 import { getNotifications, markNotificationRead, markAllNotificationsRead } from '../lib/notifications';
 import { AppNotification } from '../types';
 
-export function NotificationCenter({ onViewAll }: { onViewAll: () => void }) {
+export function NotificationCenter({ onViewAll, onNavigateToGhosted }: { onViewAll: () => void; onNavigateToGhosted?: (n: AppNotification) => void }) {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [tab, setTab] = useState("all");
   
@@ -98,18 +98,43 @@ export function NotificationCenter({ onViewAll }: { onViewAll: () => void }) {
               ) : (
                 <div className="divide-y divide-[#efefef]">
                   {filtered.map((n) => (
-                    <button
+                    <div
                       key={n.id}
+                      role="button"
+                      tabIndex={0}
                       onClick={() => handleMarkAsRead(n.id)}
-                      className={`w-full flex items-start gap-3 p-4 text-left transition-colors hover:bg-[#faf9f7] cursor-pointer ${n.unread ? 'bg-[#faf9f7]/60' : ''}`}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleMarkAsRead(n.id);
+                        }
+                      }}
+                      className={`w-full flex items-start gap-3 p-4 text-left transition-colors hover:bg-[#faf9f7] cursor-pointer select-none outline-none focus-visible:ring-1 focus-visible:ring-[#0068f9] ${n.unread ? 'bg-[#faf9f7]/60' : ''}`}
                     >
                       <div className="mt-0.5 shrink-0">
                         {getIcon(n.type)}
                       </div>
                       <div className="flex-1 space-y-1">
-                        <p className={`text-xs ${n.unread ? 'font-bold text-[#121722]' : 'font-medium text-[#777c86]'}`}>
-                          {n.title}
-                        </p>
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className={`text-xs ${n.unread ? 'font-bold text-[#121722]' : 'font-medium text-[#777c86]'}`}>
+                              {n.title}
+                            </p>
+                            {(n.title.toLowerCase().includes('ghosted') || n.type === 'status_update') && onNavigateToGhosted && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMarkAsRead(n.id);
+                                  onNavigateToGhosted(n);
+                                }}
+                                className="text-[11px] font-semibold text-[#0068f9] hover:text-[#0051c2] hover:underline cursor-pointer bg-transparent border-0 p-0 transition-colors"
+                              >
+                                View in Ghosted
+                              </button>
+                            )}
+                          </div>
+                        </div>
                         <p className="text-xs text-[#777c86] leading-relaxed">
                           {n.message}
                         </p>
@@ -120,7 +145,7 @@ export function NotificationCenter({ onViewAll }: { onViewAll: () => void }) {
                       {n.unread && (
                         <span className="mt-1.5 shrink-0 w-2 h-2 rounded-full bg-[#0068f9]" />
                       )}
-                    </button>
+                    </div>
                   ))}
                 </div>
               )}

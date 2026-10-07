@@ -684,6 +684,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
 
       await onSave({
         ...formData,
+        workType: formData.workType || undefined,
         companyUrl: bestUrl || formData.companyUrl || '',
         links: sanitizedLinks,
         linkUrl: sanitizedLinks.length > 0 ? sanitizedLinks[0].url : '',

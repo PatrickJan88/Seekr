@@ -52,6 +52,12 @@ Version `4.2.0` introduces a refined **Dynamic 30-Day Auto-Ghosting System** wit
     *   **ContentEditable Ghost Line Elimination**: Integrated the `sanitizePrintHtml` sanitization pipeline to strip empty headings (`<h2><br></h2>`, `<h1></h1>`), ghost blockquotes, and empty list elements generated when users clear starter text in the rich editor.
     *   **CSS Print Isolation**: Added strict `:empty` print rules (`.content h1:empty, .content h2:empty { display: none !important; border: none !important; }`), ensuring exported PDF documents render with clean, professional typography and zero visual line artifacts.
 
+*   **Arbetsförmedlingen Platsbanken (JobTech Dev) Open API Ingestion**:
+    *   **Live Swedish Labor Market & Public Enterprise Feeds**: Integrated direct open data ingestion from Sweden's national public employment service (Arbetsförmedlingen) via the official JobTech Dev JobSearch API (`jobsearch.api.jobtechdev.se`) operating under a Creative Commons Zero (CC0) license with zero API keys or authentication required.
+    *   **Unified Schema Alignment**: Automatically normalizes Swedish tech and business postings into the Seekr `MarketJob` schema (`AggregatedJob`), extracting verified employer details, org numbers, city and region coordinates, salary descriptions, and direct portal links.
+    *   **Dual Industry & Academic Track Routing**: Intelligently routes engineering, software, and IT posts into the **Industry Seekr** market feed, while automatically categorizing Swedish university research, postdoctoral, and faculty positions (Uppsala Universitet, Lunds Universitet, KTH, Karolinska Institutet, Göteborgs Universitet, Chalmers) into the **Academic Seekr** market feed.
+    *   **Dedicated On-Demand Endpoint**: Added `/api/arbetsformedlingen-jobs` supporting live query parameters (`q`, `municipality`, `limit`, `remote`) for real-time Swedish job search.
+
 *   **Interactive Sankey Chart to Applications List View Navigation**:
     *   **Direct Category Drilldown**: Clicking on any category in the Sankey diagram (Applied, Screening, Technical, Final, Offer, Ghosted, Rejected, or connecting flow links) automatically navigates to **My Applications**.
     *   **Automated List View & Tab Activation**: Switches the layout to **List View** and instantly activates the corresponding category tab (**Active Progress** for active stages, **Closed** for Ghosted/Rejected, and **Wishlist** for Wishlist).
@@ -234,6 +240,8 @@ Version `4.0.0` introduces dedicated standalone left-panel access for Company 36
 ## Version History & Changelog
 
 ### **v4.2.0** — *Current Release*
+*   Integrated **Arbetsförmedlingen Platsbanken (JobTech Dev) Open API Ingestion** ($0 cost, CC0 license) into Job Market feeds with automated schema normalization across Swedish tech enterprises and top university research postings (Uppsala, Lund, KTH, Karolinska).
+*   Added dedicated **`/api/arbetsformedlingen-jobs` Proxy Endpoint** for live on-demand query execution with municipality and remote filters.
 *   Implemented **Dynamic 30-Day Auto-Ghosting Pipeline** with adaptive manual update recalculation (`lastManualUpdate`), active upcoming interview shielding, and automated background task isolation.
 *   Updated **Kanban Board Ghosted Tooltip** to clearly explain the 30-day manual update rule.
 *   Added **Interactive Sankey Chart Category Drilldown** enabling 1-click navigation directly into **My Applications** List View filtered by the clicked status with automatic tab switching (Active Progress, Closed, Wishlist).

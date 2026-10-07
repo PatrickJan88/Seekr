@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Loader2, ExternalLink, Search, MapPin, Briefcase, Clock, Building2, Plus, Sparkles, Info, Upload, X, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 import locationsData from '../data/locations.json';
-import { UserResume } from '../types';
+import { UserResume, predictWorkType } from '../types';
 import { getUserResume, getStoredLocalResume, saveUserResume, RESUME_UPDATED_EVENT } from '../db/resumes';
 import { auth } from '../lib/firebase';
 import { extractTextFromPDF, fileToBase64 } from '../lib/pdf';
@@ -276,17 +276,25 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
 
   const locationTree = React.useMemo(() => {
     const tree = new Map<string, Map<string, Set<string>>>();
-    
-    // Remote option at the top
-    tree.set("Remote / Global", new Map([["Remote / Global", new Set(["Remote"])]]));
 
     for (const [country, cities] of Object.entries(locationsData)) {
+        if (!country) continue;
+        const cLower = country.toLowerCase();
+        if (cLower === 'other' || cLower.includes('other') || cLower.includes('remote')) continue;
+
         const continent = getContinent(country);
+        if (!continent) continue;
+        const contLower = String(continent).toLowerCase();
+        if (contLower === 'other' || contLower.includes('other') || contLower.includes('remote')) continue;
+
         if (!tree.has(continent)) tree.set(continent, new Map());
         const continentMap = tree.get(continent)!;
         if (!continentMap.has(country)) continentMap.set(country, new Set());
         for (const city of (cities as string[])) {
-            if (city) continentMap.get(country)!.add(city);
+            if (!city) continue;
+            const cityLower = city.toLowerCase();
+            if (cityLower === 'other' || cityLower.includes('other') || cityLower.includes('remote')) continue;
+            continentMap.get(country)!.add(city);
         }
     }
     return tree;
@@ -407,9 +415,24 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
       // 1. Location match
       const { continent, country, city } = job.parsed_location || { continent: "Other", country: "Other", city: "" };
       let matchesLocation = true;
-      if (continentFilter && continentFilter !== continent) matchesLocation = false;
-      if (countryFilter && countryFilter !== country) matchesLocation = false;
-      if (cityFilter && city !== cityFilter) matchesLocation = false;
+      if (continentFilter === 'Remote') {
+        const isRemoteJob =
+          continent === 'Remote' ||
+          country === 'Remote' ||
+          (job.candidate_required_location || '').toLowerCase().includes('remote') ||
+          (job.candidate_required_location || '').toLowerCase().includes('anywhere') ||
+          (job.candidate_required_location || '').toLowerCase().includes('worldwide') ||
+          (job.title || '').toLowerCase().includes('remote') ||
+          (job.tags && job.tags.includes('remote'));
+
+        if (!isRemoteJob) {
+          matchesLocation = false;
+        }
+      } else {
+        if (continentFilter && continentFilter !== continent) matchesLocation = false;
+        if (countryFilter && countryFilter !== country) matchesLocation = false;
+        if (cityFilter && city !== cityFilter) matchesLocation = false;
+      }
       
       // Date match
       let matchesDate = true;
@@ -856,11 +879,16 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        const predictedWorkType = predictWorkType(job);
+                        const fallbackLocation = job.candidate_required_location
+                          ? job.candidate_required_location
+                          : (job.parsed_location?.city ? `${job.parsed_location.city}, ${job.parsed_location.country}` : '');
+
                         onAddToWishlist?.({
                           company: job.company_name,
                           position: job.title,
-                          location: job.candidate_required_location || 'Remote',
-                          workType: 'Remote',
+                          location: fallbackLocation,
+                          ...(predictedWorkType ? { workType: predictedWorkType } : {}),
                           status: 'Wishlist',
                           notes: `Added from Job Market.\nJob Link: ${job.url}\n\nDescription:\n${stripHtml(job.description)}`
                         });

@@ -74,6 +74,59 @@ export const getStatusLabel = (status: JobStatus | string, trackingSystem: 'indu
 
 export type WorkType = 'On-site' | 'Hybrid' | 'Remote';
 
+export const predictWorkType = (job?: {
+  title?: string;
+  candidate_required_location?: string;
+  location?: string;
+  tags?: string[];
+  job_type?: string;
+  description?: string;
+} | null): WorkType | undefined => {
+  if (!job) return undefined;
+
+  const title = (job.title || '').trim();
+  const loc = (job.candidate_required_location || job.location || '').trim();
+  const tagsStr = Array.isArray(job.tags) ? job.tags.join(' ') : '';
+  const jobType = (job.job_type || '').trim();
+  const headerCombined = `${title} | ${loc} | ${tagsStr} | ${jobType}`.toLowerCase();
+
+  // 1. Primary check on title, location, tags, and job_type
+  // Hybrid check (prioritize hybrid so "hybrid remote" or "remote/hybrid" evaluates as Hybrid)
+  if (/\bhybrid\b/i.test(headerCombined)) {
+    return 'Hybrid';
+  }
+
+  // On-site check
+  if (/\b(?:on-site|onsite|in-person|in person|office-based)\b/i.test(headerCombined)) {
+    return 'On-site';
+  }
+
+  // Explicit Remote check
+  if (/\b(?:remote|telecommute|wfh|anywhere|work from home)\b/i.test(headerCombined)) {
+    return 'Remote';
+  }
+
+  // 2. Secondary check in description if headers didn't explicitly state
+  if (job.description) {
+    const descSample = job.description.slice(0, 2000);
+
+    if (/\b(?:hybrid\s*(?:work|role|model|policy|schedule|setup)|workplace\s*model:\s*hybrid|work\s*arrangement:\s*hybrid|hybrid\s*position)\b/i.test(descSample)) {
+      return 'Hybrid';
+    }
+
+    if (/\b(?:(?:100%|fully|strictly)\s*(?:on-site|onsite|in-person)|on-site\s*role|on-site\s*position|workplace\s*model:\s*on-site|work\s*arrangement:\s*on-site)\b/i.test(descSample)) {
+      return 'On-site';
+    }
+
+    if (/\b(?:(?:100%|fully|strictly)\s*remote|remote-first|remote\s*work\s*option|workplace\s*model:\s*remote|work\s*arrangement:\s*remote|remote\s*position)\b/i.test(descSample)) {
+      return 'Remote';
+    }
+  }
+
+  // If not explicitly declared, return undefined so it falls back to the default first option ("Select work type...")
+  return undefined;
+};
+
 export const getWorkTypeBadgeStyle = (workType?: WorkType | string) => {
   switch (workType) {
     case 'On-site':
@@ -124,6 +177,8 @@ export interface AppNotification {
   message: string;
   timestamp: number;
   unread: boolean;
+  applicationId?: string;
+  applicationIds?: string[];
 }
 
 export interface UserResume {
