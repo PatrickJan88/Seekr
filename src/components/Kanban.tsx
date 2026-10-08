@@ -65,6 +65,8 @@ export function Kanban({
     setInternalFocusedId(focusedApplicationId || null);
     if (focusedApplicationId) {
       setActiveTab('inactive');
+      setCurrentStatusFilter(null);
+      onStatusFilterChange?.(null);
     }
   }, [focusedApplicationId]);
 
@@ -213,7 +215,7 @@ export function Kanban({
             </button>
           </div>
 
-          {currentStatusFilter && (
+          {currentStatusFilter && !internalFocusedId && currentStatusFilter !== 'Ghosted' && (
             <div className="flex items-center gap-1.5 px-3 py-1 bg-[#e8f1ff] text-[#0068f9] rounded-full text-xs font-semibold border border-[#0068f9]/20 shadow-2xs animate-in fade-in">
               <span>Status: {getStatusLabel(currentStatusFilter, trackingSystem)}</span>
               <button 

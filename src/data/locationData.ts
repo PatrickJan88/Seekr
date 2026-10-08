@@ -10,10 +10,28 @@ export interface CountryLocationGroup {
 
 export const LOCATION_DATA: CountryLocationGroup[] = [
   {
+    country: 'Albania',
+    cities: [
+      { label: 'Durrës', value: 'Durrës, Albania' },
+      { label: 'Shkodër', value: 'Shkodër, Albania' },
+      { label: 'Tirana', value: 'Tirana, Albania' },
+      { label: 'Vlorë', value: 'Vlorë, Albania' },
+      { label: 'Custom / Other Albanian City', value: 'custom_al' }
+    ]
+  },
+  {
+    country: 'Andorra',
+    cities: [
+      { label: 'Andorra la Vella', value: 'Andorra la Vella, Andorra' },
+      { label: 'Encamp', value: 'Encamp, Andorra' },
+      { label: 'Escaldes-Engordany', value: 'Escaldes-Engordany, Andorra' },
+      { label: 'Custom / Other Andorran City', value: 'custom_ad' }
+    ]
+  },
+  {
     country: 'Australia',
     cities: [
       { label: 'Adelaide, SA', value: 'Adelaide, Australia' },
-      { label: 'Australia Remote', value: 'Australia Remote, Australia' },
       { label: 'Brisbane, QLD', value: 'Brisbane, Australia' },
       { label: 'Melbourne, VIC', value: 'Melbourne, Australia' },
       { label: 'Perth, WA', value: 'Perth, Australia' },
@@ -25,6 +43,7 @@ export const LOCATION_DATA: CountryLocationGroup[] = [
     country: 'Austria',
     cities: [
       { label: 'Graz, Styria', value: 'Graz, Austria' },
+      { label: 'Innsbruck, Tyrol', value: 'Innsbruck, Austria' },
       { label: 'Linz, Upper Austria', value: 'Linz, Austria' },
       { label: 'Salzburg', value: 'Salzburg, Austria' },
       { label: 'Vienna', value: 'Vienna, Austria' },
@@ -32,10 +51,53 @@ export const LOCATION_DATA: CountryLocationGroup[] = [
     ]
   },
   {
+    country: 'Belarus',
+    cities: [
+      { label: 'Brest', value: 'Brest, Belarus' },
+      { label: 'Gomel', value: 'Gomel, Belarus' },
+      { label: 'Grodno', value: 'Grodno, Belarus' },
+      { label: 'Minsk', value: 'Minsk, Belarus' },
+      { label: 'Custom / Other Belarusian City', value: 'custom_by' }
+    ]
+  },
+  {
+    country: 'Belgium',
+    cities: [
+      { label: 'Antwerp, Flanders', value: 'Antwerp, Belgium' },
+      { label: 'Bruges, Flanders', value: 'Bruges, Belgium' },
+      { label: 'Brussels', value: 'Brussels, Belgium' },
+      { label: 'Ghent, Flanders', value: 'Ghent, Belgium' },
+      { label: 'Leuven, Flemish Brabant', value: 'Leuven, Belgium' },
+      { label: 'Liège, Wallonia', value: 'Liège, Belgium' },
+      { label: 'Namur, Wallonia', value: 'Namur, Belgium' },
+      { label: 'Custom / Other Belgian City', value: 'custom_be' }
+    ]
+  },
+  {
+    country: 'Bosnia and Herzegovina',
+    cities: [
+      { label: 'Banja Luka', value: 'Banja Luka, Bosnia and Herzegovina' },
+      { label: 'Mostar', value: 'Mostar, Bosnia and Herzegovina' },
+      { label: 'Sarajevo', value: 'Sarajevo, Bosnia and Herzegovina' },
+      { label: 'Tuzla', value: 'Tuzla, Bosnia and Herzegovina' },
+      { label: 'Custom / Other Bosnian City', value: 'custom_ba' }
+    ]
+  },
+  {
+    country: 'Bulgaria',
+    cities: [
+      { label: 'Burgas', value: 'Burgas, Bulgaria' },
+      { label: 'Plovdiv', value: 'Plovdiv, Bulgaria' },
+      { label: 'Ruse', value: 'Ruse, Bulgaria' },
+      { label: 'Sofia', value: 'Sofia, Bulgaria' },
+      { label: 'Varna', value: 'Varna, Bulgaria' },
+      { label: 'Custom / Other Bulgarian City', value: 'custom_bg' }
+    ]
+  },
+  {
     country: 'Canada',
     cities: [
       { label: 'Calgary, AB', value: 'Calgary, AB, Canada' },
-      { label: 'Canada Remote', value: 'Canada Remote, Canada' },
       { label: 'Montreal, QC', value: 'Montreal, QC, Canada' },
       { label: 'Ottawa, ON', value: 'Ottawa, ON, Canada' },
       { label: 'Toronto, ON', value: 'Toronto, ON, Canada' },
@@ -47,7 +109,6 @@ export const LOCATION_DATA: CountryLocationGroup[] = [
     country: 'China',
     cities: [
       { label: 'Beijing', value: 'Beijing, China' },
-      { label: 'China Remote', value: 'China Remote, China' },
       { label: 'Hong Kong', value: 'Hong Kong, China' },
       { label: 'Shanghai', value: 'Shanghai, China' },
       { label: 'Shenzhen, Guangdong', value: 'Shenzhen, China' },
@@ -56,10 +117,33 @@ export const LOCATION_DATA: CountryLocationGroup[] = [
     ]
   },
   {
+    country: 'Croatia',
+    cities: [
+      { label: 'Dubrovnik', value: 'Dubrovnik, Croatia' },
+      { label: 'Osijek', value: 'Osijek, Croatia' },
+      { label: 'Rijeka', value: 'Rijeka, Croatia' },
+      { label: 'Split', value: 'Split, Croatia' },
+      { label: 'Zadar', value: 'Zadar, Croatia' },
+      { label: 'Zagreb', value: 'Zagreb, Croatia' },
+      { label: 'Custom / Other Croatian City', value: 'custom_hr' }
+    ]
+  },
+  {
+    country: 'Cyprus',
+    cities: [
+      { label: 'Larnaca', value: 'Larnaca, Cyprus' },
+      { label: 'Limassol', value: 'Limassol, Cyprus' },
+      { label: 'Nicosia', value: 'Nicosia, Cyprus' },
+      { label: 'Paphos', value: 'Paphos, Cyprus' },
+      { label: 'Custom / Other Cypriot City', value: 'custom_cy' }
+    ]
+  },
+  {
     country: 'Czechia',
     cities: [
       { label: 'Brno, South Moravian', value: 'Brno, Czechia' },
-      { label: 'Czechia Remote', value: 'Czechia Remote, Czechia' },
+      { label: 'Ostrava, Moravian-Silesian', value: 'Ostrava, Czechia' },
+      { label: 'Plzeň, Plzeň Region', value: 'Plzeň, Czechia' },
       { label: 'Prague', value: 'Prague, Czechia' },
       { label: 'Custom / Other Czech City', value: 'custom_cz' }
     ]
@@ -67,19 +151,31 @@ export const LOCATION_DATA: CountryLocationGroup[] = [
   {
     country: 'Denmark',
     cities: [
+      { label: 'Aalborg, North Denmark', value: 'Aalborg, Denmark' },
       { label: 'Aarhus, Central Denmark', value: 'Aarhus, Denmark' },
       { label: 'Copenhagen', value: 'Copenhagen, Denmark' },
-      { label: 'Denmark Remote', value: 'Denmark Remote, Denmark' },
+      { label: 'Odense, Funen', value: 'Odense, Denmark' },
       { label: 'Custom / Other Danish City', value: 'custom_dk' }
+    ]
+  },
+  {
+    country: 'Estonia',
+    cities: [
+      { label: 'Narva, Ida-Viru', value: 'Narva, Estonia' },
+      { label: 'Pärnu', value: 'Pärnu, Estonia' },
+      { label: 'Tallinn, Harju', value: 'Tallinn, Estonia' },
+      { label: 'Tartu', value: 'Tartu, Estonia' },
+      { label: 'Custom / Other Estonian City', value: 'custom_ee' }
     ]
   },
   {
     country: 'Finland',
     cities: [
       { label: 'Espoo, Uusimaa', value: 'Espoo, Finland' },
-      { label: 'Finland Remote', value: 'Finland Remote, Finland' },
       { label: 'Helsinki, Uusimaa', value: 'Helsinki, Finland' },
+      { label: 'Oulu, North Ostrobothnia', value: 'Oulu, Finland' },
       { label: 'Tampere, Pirkanmaa', value: 'Tampere, Finland' },
+      { label: 'Turku, Southwest Finland', value: 'Turku, Finland' },
       { label: 'Custom / Other Finnish City', value: 'custom_fi' }
     ]
   },
@@ -87,12 +183,13 @@ export const LOCATION_DATA: CountryLocationGroup[] = [
     country: 'France',
     cities: [
       { label: 'Bordeaux, Nouvelle-Aquitaine', value: 'Bordeaux, France' },
-      { label: 'France Remote', value: 'France Remote, France' },
       { label: 'Lille, Hauts-de-France', value: 'Lille, France' },
       { label: 'Lyon, Auvergne-Rhône-Alpes', value: 'Lyon, France' },
       { label: 'Marseille, Provence-Alpes-Côte d\'Azur', value: 'Marseille, France' },
+      { label: 'Nantes, Pays de la Loire', value: 'Nantes, France' },
       { label: 'Nice, Provence-Alpes-Côte d\'Azur', value: 'Nice, France' },
       { label: 'Paris, Île-de-France', value: 'Paris, France' },
+      { label: 'Strasbourg, Grand Est', value: 'Strasbourg, France' },
       { label: 'Toulouse, Occitanie', value: 'Toulouse, France' },
       { label: 'Custom / Other French City', value: 'custom_fr' }
     ]
@@ -104,67 +201,176 @@ export const LOCATION_DATA: CountryLocationGroup[] = [
       { label: 'Cologne, North Rhine-Westphalia', value: 'Cologne, Germany' },
       { label: 'Düsseldorf, North Rhine-Westphalia', value: 'Düsseldorf, Germany' },
       { label: 'Frankfurt, Hesse', value: 'Frankfurt, Germany' },
-      { label: 'Germany Remote', value: 'Germany Remote, Germany' },
       { label: 'Hamburg', value: 'Hamburg, Germany' },
-      { label: 'Leipzig, Saxony', value: 'Leipzig, Germany' },
       { label: 'Munich, Bavaria', value: 'Munich, Germany' },
       { label: 'Stuttgart, Baden-Württemberg', value: 'Stuttgart, Germany' },
       { label: 'Custom / Other German City', value: 'custom_de' }
     ]
   },
   {
+    country: 'Greece',
+    cities: [
+      { label: 'Athens, Attica', value: 'Athens, Greece' },
+      { label: 'Heraklion, Crete', value: 'Heraklion, Greece' },
+      { label: 'Patras, Western Greece', value: 'Patras, Greece' },
+      { label: 'Thessaloniki, Central Macedonia', value: 'Thessaloniki, Greece' },
+      { label: 'Custom / Other Greek City', value: 'custom_gr' }
+    ]
+  },
+  {
+    country: 'Hungary',
+    cities: [
+      { label: 'Budapest', value: 'Budapest, Hungary' },
+      { label: 'Debrecen, Hajdú-Bihar', value: 'Debrecen, Hungary' },
+      { label: 'Győr, Győr-Moson-Sopron', value: 'Győr, Hungary' },
+      { label: 'Pécs, Baranya', value: 'Pécs, Hungary' },
+      { label: 'Szeged, Csongrád-Csanád', value: 'Szeged, Hungary' },
+      { label: 'Custom / Other Hungarian City', value: 'custom_hu' }
+    ]
+  },
+  {
+    country: 'Iceland',
+    cities: [
+      { label: 'Akureyri', value: 'Akureyri, Iceland' },
+      { label: 'Hafnarfjörður', value: 'Hafnarfjörður, Iceland' },
+      { label: 'Kópavogur', value: 'Kópavogur, Iceland' },
+      { label: 'Reykjavik', value: 'Reykjavik, Iceland' },
+      { label: 'Custom / Other Icelandic City', value: 'custom_is' }
+    ]
+  },
+  {
     country: 'India',
     cities: [
-      { label: 'Bangalore, Karnataka', value: 'Bangalore, India' },
-      { label: 'Chennai, Tamil Nadu', value: 'Chennai, India' },
+      { label: 'Bangalore / Bengaluru, KA', value: 'Bangalore, India' },
+      { label: 'Chennai, TN', value: 'Chennai, India' },
       { label: 'Delhi / NCR', value: 'Delhi, India' },
-      { label: 'Hyderabad, Telangana', value: 'Hyderabad, India' },
-      { label: 'India Remote', value: 'India Remote, India' },
-      { label: 'Mumbai, Maharashtra', value: 'Mumbai, India' },
-      { label: 'Pune, Maharashtra', value: 'Pune, India' },
+      { label: 'Hyderabad, TS', value: 'Hyderabad, India' },
+      { label: 'Mumbai / Pune, MH', value: 'Mumbai, India' },
       { label: 'Custom / Other Indian City', value: 'custom_in' }
     ]
   },
   {
     country: 'Ireland',
     cities: [
-      { label: 'Cork', value: 'Cork, Ireland' },
-      { label: 'Dublin', value: 'Dublin, Ireland' },
-      { label: 'Galway', value: 'Galway, Ireland' },
-      { label: 'Ireland Remote', value: 'Ireland Remote, Ireland' },
+      { label: 'Cork, Munster', value: 'Cork, Ireland' },
+      { label: 'Dublin, Leinster', value: 'Dublin, Ireland' },
+      { label: 'Galway, Connacht', value: 'Galway, Ireland' },
+      { label: 'Limerick, Munster', value: 'Limerick, Ireland' },
       { label: 'Custom / Other Irish City', value: 'custom_ie' }
     ]
   },
   {
     country: 'Italy',
     cities: [
-      { label: 'Italy Remote', value: 'Italy Remote, Italy' },
+      { label: 'Bologna, Emilia-Romagna', value: 'Bologna, Italy' },
+      { label: 'Florence, Tuscany', value: 'Florence, Italy' },
       { label: 'Milan, Lombardy', value: 'Milan, Italy' },
+      { label: 'Naples, Campania', value: 'Naples, Italy' },
       { label: 'Rome, Lazio', value: 'Rome, Italy' },
       { label: 'Turin, Piedmont', value: 'Turin, Italy' },
+      { label: 'Venice, Veneto', value: 'Venice, Italy' },
       { label: 'Custom / Other Italian City', value: 'custom_it' }
     ]
   },
   {
     country: 'Japan',
     cities: [
-      { label: 'Japan Remote', value: 'Japan Remote, Japan' },
-      { label: 'Kyoto', value: 'Kyoto, Japan' },
-      { label: 'Osaka', value: 'Osaka, Japan' },
-      { label: 'Tokyo', value: 'Tokyo, Japan' },
-      { label: 'Yokohama, Kanagawa', value: 'Yokohama, Japan' },
+      { label: 'Fukuoka, Kyushu', value: 'Fukuoka, Japan' },
+      { label: 'Kyoto, Kansai', value: 'Kyoto, Japan' },
+      { label: 'Nagoya, Aichi', value: 'Nagoya, Japan' },
+      { label: 'Osaka, Kansai', value: 'Osaka, Japan' },
+      { label: 'Tokyo, Kanto', value: 'Tokyo, Japan' },
       { label: 'Custom / Other Japanese City', value: 'custom_jp' }
+    ]
+  },
+  {
+    country: 'Kosovo',
+    cities: [
+      { label: 'Mitrovica', value: 'Mitrovica, Kosovo' },
+      { label: 'Peja', value: 'Peja, Kosovo' },
+      { label: 'Pristina', value: 'Pristina, Kosovo' },
+      { label: 'Prizren', value: 'Prizren, Kosovo' },
+      { label: 'Custom / Other Kosovar City', value: 'custom_xk' }
+    ]
+  },
+  {
+    country: 'Latvia',
+    cities: [
+      { label: 'Daugavpils', value: 'Daugavpils, Latvia' },
+      { label: 'Jelgava', value: 'Jelgava, Latvia' },
+      { label: 'Jūrmala', value: 'Jūrmala, Latvia' },
+      { label: 'Liepāja', value: 'Liepāja, Latvia' },
+      { label: 'Riga', value: 'Riga, Latvia' },
+      { label: 'Custom / Other Latvian City', value: 'custom_lv' }
+    ]
+  },
+  {
+    country: 'Liechtenstein',
+    cities: [
+      { label: 'Balzers', value: 'Balzers, Liechtenstein' },
+      { label: 'Schaan', value: 'Schaan, Liechtenstein' },
+      { label: 'Vaduz', value: 'Vaduz, Liechtenstein' },
+      { label: 'Custom / Other Liechtenstein City', value: 'custom_li' }
+    ]
+  },
+  {
+    country: 'Lithuania',
+    cities: [
+      { label: 'Kaunas', value: 'Kaunas, Lithuania' },
+      { label: 'Klaipėda', value: 'Klaipėda, Lithuania' },
+      { label: 'Panevėžys', value: 'Panevėžys, Lithuania' },
+      { label: 'Šiauliai', value: 'Šiauliai, Lithuania' },
+      { label: 'Vilnius', value: 'Vilnius, Lithuania' },
+      { label: 'Custom / Other Lithuanian City', value: 'custom_lt' }
     ]
   },
   {
     country: 'Luxembourg',
     cities: [
-      { label: 'Bertrange', value: 'Bertrange, Luxembourg' },
+      { label: 'Differdange', value: 'Differdange, Luxembourg' },
+      { label: 'Dudelange', value: 'Dudelange, Luxembourg' },
       { label: 'Esch-sur-Alzette', value: 'Esch-sur-Alzette, Luxembourg' },
-      { label: 'Kirchberg', value: 'Kirchberg, Luxembourg' },
-      { label: 'Luxembourg City', value: 'Luxembourg' },
-      { label: 'Strassen', value: 'Strassen, Luxembourg' },
-      { label: 'Custom / Other Luxembourg City', value: 'custom_lu' }
+      { label: 'Luxembourg City', value: 'Luxembourg City, Luxembourg' },
+      { label: 'Custom / Other Luxembourgish City', value: 'custom_lu' }
+    ]
+  },
+  {
+    country: 'Malta',
+    cities: [
+      { label: 'Birkirkara', value: 'Birkirkara, Malta' },
+      { label: 'Sliema', value: 'Sliema, Malta' },
+      { label: 'St. Julian\'s', value: 'St. Julian\'s, Malta' },
+      { label: 'Valletta', value: 'Valletta, Malta' },
+      { label: 'Custom / Other Maltese City', value: 'custom_mt' }
+    ]
+  },
+  {
+    country: 'Moldova',
+    cities: [
+      { label: 'Bălți', value: 'Bălți, Moldova' },
+      { label: 'Chisinau', value: 'Chisinau, Moldova' },
+      { label: 'Tiraspol', value: 'Tiraspol, Moldova' },
+      { label: 'Custom / Other Moldovan City', value: 'custom_md' }
+    ]
+  },
+  {
+    country: 'Monaco',
+    cities: [
+      { label: 'Fontvieille', value: 'Fontvieille, Monaco' },
+      { label: 'La Condamine', value: 'La Condamine, Monaco' },
+      { label: 'Monaco-Ville', value: 'Monaco-Ville, Monaco' },
+      { label: 'Monte Carlo', value: 'Monte Carlo, Monaco' },
+      { label: 'Custom / Other Monegasque City', value: 'custom_mc' }
+    ]
+  },
+  {
+    country: 'Montenegro',
+    cities: [
+      { label: 'Budva', value: 'Budva, Montenegro' },
+      { label: 'Kotor', value: 'Kotor, Montenegro' },
+      { label: 'Nikšić', value: 'Nikšić, Montenegro' },
+      { label: 'Podgorica', value: 'Podgorica, Montenegro' },
+      { label: 'Custom / Other Montenegrin City', value: 'custom_me' }
     ]
   },
   {
@@ -172,7 +378,7 @@ export const LOCATION_DATA: CountryLocationGroup[] = [
     cities: [
       { label: 'Amsterdam, North Holland', value: 'Amsterdam, Netherlands' },
       { label: 'Eindhoven, North Brabant', value: 'Eindhoven, Netherlands' },
-      { label: 'Netherlands Remote', value: 'Netherlands Remote, Netherlands' },
+      { label: 'Groningen', value: 'Groningen, Netherlands' },
       { label: 'Rotterdam, South Holland', value: 'Rotterdam, Netherlands' },
       { label: 'The Hague, South Holland', value: 'The Hague, Netherlands' },
       { label: 'Utrecht', value: 'Utrecht, Netherlands' },
@@ -180,11 +386,22 @@ export const LOCATION_DATA: CountryLocationGroup[] = [
     ]
   },
   {
+    country: 'North Macedonia',
+    cities: [
+      { label: 'Bitola', value: 'Bitola, North Macedonia' },
+      { label: 'Kumanovo', value: 'Kumanovo, North Macedonia' },
+      { label: 'Ohrid', value: 'Ohrid, North Macedonia' },
+      { label: 'Skopje', value: 'Skopje, North Macedonia' },
+      { label: 'Custom / Other Macedonian City', value: 'custom_mk' }
+    ]
+  },
+  {
     country: 'Norway',
     cities: [
       { label: 'Bergen, Vestland', value: 'Bergen, Norway' },
-      { label: 'Norway Remote', value: 'Norway Remote, Norway' },
       { label: 'Oslo', value: 'Oslo, Norway' },
+      { label: 'Stavanger, Rogaland', value: 'Stavanger, Norway' },
+      { label: 'Tromsø, Troms', value: 'Tromsø, Norway' },
       { label: 'Trondheim, Trøndelag', value: 'Trondheim, Norway' },
       { label: 'Custom / Other Norwegian City', value: 'custom_no' }
     ]
@@ -192,38 +409,106 @@ export const LOCATION_DATA: CountryLocationGroup[] = [
   {
     country: 'Poland',
     cities: [
-      { label: 'Gdansk, Pomeranian', value: 'Gdansk, Poland' },
+      { label: 'Gdańsk, Pomeranian', value: 'Gdańsk, Poland' },
+      { label: 'Katowice, Silesian', value: 'Katowice, Poland' },
       { label: 'Krakow, Lesser Poland', value: 'Krakow, Poland' },
-      { label: 'Poland Remote', value: 'Poland Remote, Poland' },
+      { label: 'Poznań, Greater Poland', value: 'Poznań, Poland' },
       { label: 'Warsaw, Masovian', value: 'Warsaw, Poland' },
-      { label: 'Wroclaw, Lower Silesian', value: 'Wroclaw, Poland' },
+      { label: 'Wrocław, Lower Silesian', value: 'Wrocław, Poland' },
       { label: 'Custom / Other Polish City', value: 'custom_pl' }
     ]
   },
   {
     country: 'Portugal',
     cities: [
+      { label: 'Braga', value: 'Braga, Portugal' },
+      { label: 'Coimbra', value: 'Coimbra, Portugal' },
+      { label: 'Faro, Algarve', value: 'Faro, Portugal' },
       { label: 'Lisbon', value: 'Lisbon, Portugal' },
       { label: 'Porto', value: 'Porto, Portugal' },
-      { label: 'Portugal Remote', value: 'Portugal Remote, Portugal' },
       { label: 'Custom / Other Portuguese City', value: 'custom_pt' }
+    ]
+  },
+  {
+    country: 'Romania',
+    cities: [
+      { label: 'Brașov, Transylvania', value: 'Brașov, Romania' },
+      { label: 'Bucharest', value: 'Bucharest, Romania' },
+      { label: 'Cluj-Napoca, Transylvania', value: 'Cluj-Napoca, Romania' },
+      { label: 'Constanța, Dobrogea', value: 'Constanța, Romania' },
+      { label: 'Iași, Moldavia', value: 'Iași, Romania' },
+      { label: 'Timișoara, Banat', value: 'Timișoara, Romania' },
+      { label: 'Custom / Other Romanian City', value: 'custom_ro' }
+    ]
+  },
+  {
+    country: 'Russia',
+    cities: [
+      { label: 'Kazan, Tatarstan', value: 'Kazan, Russia' },
+      { label: 'Moscow', value: 'Moscow, Russia' },
+      { label: 'Nizhny Novgorod', value: 'Nizhny Novgorod, Russia' },
+      { label: 'Novosibirsk, Siberia', value: 'Novosibirsk, Russia' },
+      { label: 'Saint Petersburg', value: 'Saint Petersburg, Russia' },
+      { label: 'Yekaterinburg, Urals', value: 'Yekaterinburg, Russia' },
+      { label: 'Custom / Other Russian City', value: 'custom_ru' }
+    ]
+  },
+  {
+    country: 'San Marino',
+    cities: [
+      { label: 'Borgo Maggiore', value: 'Borgo Maggiore, San Marino' },
+      { label: 'San Marino', value: 'San Marino, San Marino' },
+      { label: 'Serravalle', value: 'Serravalle, San Marino' },
+      { label: 'Custom / Other Sammarinese City', value: 'custom_sm' }
+    ]
+  },
+  {
+    country: 'Serbia',
+    cities: [
+      { label: 'Belgrade', value: 'Belgrade, Serbia' },
+      { label: 'Kragujevac', value: 'Kragujevac, Serbia' },
+      { label: 'Niš', value: 'Niš, Serbia' },
+      { label: 'Novi Sad, Vojvodina', value: 'Novi Sad, Serbia' },
+      { label: 'Subotica, Vojvodina', value: 'Subotica, Serbia' },
+      { label: 'Custom / Other Serbian City', value: 'custom_rs' }
     ]
   },
   {
     country: 'Singapore',
     cities: [
-      { label: 'Singapore', value: 'Singapore' },
-      { label: 'Singapore Remote', value: 'Singapore Remote, Singapore' }
+      { label: 'Singapore', value: 'Singapore' }
+    ]
+  },
+  {
+    country: 'Slovakia',
+    cities: [
+      { label: 'Banská Bystrica', value: 'Banská Bystrica, Slovakia' },
+      { label: 'Bratislava', value: 'Bratislava, Slovakia' },
+      { label: 'Košice', value: 'Košice, Slovakia' },
+      { label: 'Prešov', value: 'Prešov, Slovakia' },
+      { label: 'Žilina', value: 'Žilina, Slovakia' },
+      { label: 'Custom / Other Slovak City', value: 'custom_sk' }
+    ]
+  },
+  {
+    country: 'Slovenia',
+    cities: [
+      { label: 'Celje', value: 'Celje, Slovenia' },
+      { label: 'Koper', value: 'Koper, Slovenia' },
+      { label: 'Kranj', value: 'Kranj, Slovenia' },
+      { label: 'Ljubljana', value: 'Ljubljana, Slovenia' },
+      { label: 'Maribor', value: 'Maribor, Slovenia' },
+      { label: 'Custom / Other Slovenian City', value: 'custom_si' }
     ]
   },
   {
     country: 'Spain',
     cities: [
       { label: 'Barcelona, Catalonia', value: 'Barcelona, Spain' },
+      { label: 'Bilbao, Basque Country', value: 'Bilbao, Spain' },
       { label: 'Madrid', value: 'Madrid, Spain' },
       { label: 'Malaga, Andalusia', value: 'Malaga, Spain' },
       { label: 'Seville, Andalusia', value: 'Seville, Spain' },
-      { label: 'Spain Remote', value: 'Spain Remote, Spain' },
       { label: 'Valencia', value: 'Valencia, Spain' },
       { label: 'Custom / Other Spanish City', value: 'custom_es' }
     ]
@@ -236,7 +521,6 @@ export const LOCATION_DATA: CountryLocationGroup[] = [
       { label: 'Malmö, Skåne', value: 'Malmö, Sweden' },
       { label: 'Solna, Stockholm', value: 'Solna, Stockholm, Sweden' },
       { label: 'Stockholm', value: 'Stockholm, Sweden' },
-      { label: 'Sweden Remote', value: 'Sweden Remote, Sweden' },
       { label: 'Uppsala', value: 'Uppsala, Sweden' },
       { label: 'Custom / Other Swedish City', value: 'custom_se' }
     ]
@@ -248,17 +532,27 @@ export const LOCATION_DATA: CountryLocationGroup[] = [
       { label: 'Bern', value: 'Bern, Switzerland' },
       { label: 'Geneva', value: 'Geneva, Switzerland' },
       { label: 'Lausanne, Vaud', value: 'Lausanne, Switzerland' },
-      { label: 'Switzerland Remote', value: 'Switzerland Remote, Switzerland' },
+      { label: 'Lucerne', value: 'Lucerne, Switzerland' },
       { label: 'Zurich', value: 'Zurich, Switzerland' },
       { label: 'Custom / Other Swiss City', value: 'custom_ch' }
+    ]
+  },
+  {
+    country: 'Ukraine',
+    cities: [
+      { label: 'Dnipro', value: 'Dnipro, Ukraine' },
+      { label: 'Kharkiv', value: 'Kharkiv, Ukraine' },
+      { label: 'Kyiv', value: 'Kyiv, Ukraine' },
+      { label: 'Lviv', value: 'Lviv, Ukraine' },
+      { label: 'Odesa', value: 'Odesa, Ukraine' },
+      { label: 'Custom / Other Ukrainian City', value: 'custom_ua' }
     ]
   },
   {
     country: 'United Arab Emirates',
     cities: [
       { label: 'Abu Dhabi', value: 'Abu Dhabi, UAE' },
-      { label: 'Dubai', value: 'Dubai, UAE' },
-      { label: 'UAE Remote', value: 'UAE Remote, UAE' }
+      { label: 'Dubai', value: 'Dubai, UAE' }
     ]
   },
   {
@@ -273,7 +567,6 @@ export const LOCATION_DATA: CountryLocationGroup[] = [
       { label: 'London, England', value: 'London, United Kingdom' },
       { label: 'Manchester, England', value: 'Manchester, United Kingdom' },
       { label: 'Oxford, England', value: 'Oxford, United Kingdom' },
-      { label: 'UK Remote', value: 'UK Remote, United Kingdom' },
       { label: 'Custom / Other UK City', value: 'custom_uk' }
     ]
   },
@@ -292,9 +585,14 @@ export const LOCATION_DATA: CountryLocationGroup[] = [
       { label: 'San Francisco, CA', value: 'San Francisco, CA, United States' },
       { label: 'San Jose / Silicon Valley, CA', value: 'San Jose, CA, United States' },
       { label: 'Seattle, WA', value: 'Seattle, WA, United States' },
-      { label: 'US Remote', value: 'US Remote, United States' },
       { label: 'Washington, D.C.', value: 'Washington D.C., United States' },
       { label: 'Custom / Other US City', value: 'custom_us' }
+    ]
+  },
+  {
+    country: 'Vatican City',
+    cities: [
+      { label: 'Vatican City', value: 'Vatican City' }
     ]
   },
   {
