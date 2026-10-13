@@ -335,7 +335,11 @@ export function InterviewPrepStudio({
 
   // Snapshot current DOM innerHTML or ref memory of all pages
   const snapshotDomPages = useCallback((): string[] => {
-    const count = pages.length;
+    let count = pages.length;
+    if (count === 0) {
+      const fallbackContent = activeStory?.content || DEFAULT_PREP_DOCS[0].content;
+      return [fallbackContent];
+    }
     const result: string[] = [];
     for (let idx = 0; idx < count; idx++) {
       const el = pageRefs.current[idx];
@@ -348,11 +352,15 @@ export function InterviewPrepStudio({
       pagesContentRef.current[idx] = chosen;
       lastValidHtmlRef.current[idx] = chosen;
     }
+    if (result.every(p => !p || p.trim() === '<p><br></p>')) {
+      const fallbackContent = activeStory?.content || DEFAULT_PREP_DOCS[0].content;
+      return [fallbackContent];
+    }
     pageRefs.current.length = count;
     pagesContentRef.current.length = count;
     lastValidHtmlRef.current.length = count;
     return result;
-  }, [pages]);
+  }, [pages, activeStory]);
 
   // Auto-save active document content & pages
   const triggerAutoSave = useCallback(() => {
@@ -1098,7 +1106,10 @@ export function InterviewPrepStudio({
       </html>
     `;
 
-    triggerDirectPdfExport(fullHtml);
+    triggerDirectPdfExport(fullHtml, {
+      title: `Interview Prep - ${companyName || 'General Strategy'}`,
+      filename: `Interview_Prep_${(companyName || 'Dossier').replace(/\s+/g, '_')}.pdf`,
+    });
   };
 
   // Create new document

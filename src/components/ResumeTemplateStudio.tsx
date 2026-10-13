@@ -932,6 +932,10 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
         </head>
         <body>
           ${renderedHtml}
+          <div class="page-footer-print" style="margin-top: 24px; padding-top: 8px; border-top: 1px solid #e2e8f0; font-size: 8.5pt; color: #94a3b8; display: flex; justify-content: space-between;">
+            <span>Powered by Seekr <a href="https://seekr-v5am.onrender.com/" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">https://seekr-v5am.onrender.com/</a></span>
+            <span>Resume</span>
+          </div>
           <script>
             window.onload = function() {
               window.focus();
@@ -945,7 +949,10 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
       </html>
     `;
 
-    triggerDirectPdfExport(fullHtml);
+    triggerDirectPdfExport(fullHtml, {
+      title: `${fullName || 'Resume'} - ${activeTmpl} Resume`,
+      filename: `Resume_${(fullName || 'Applicant').replace(/\s+/g, '_')}.pdf`,
+    });
   };
 
   const studioBody = (

@@ -51,7 +51,16 @@ export function CoverLetterStudio({
 
   // Snapshot current DOM innerHTML or ref memory of all pages
   const snapshotDomPages = useCallback((): string[] => {
-    const count = pages.length;
+    let count = pages.length;
+    if (count === 0) {
+      let fallbackText = initialText || 'Dear Hiring Manager,\n\nI am writing to express my interest in this position.';
+      try {
+        const saved = localStorage.getItem(effectiveStorageKey);
+        if (saved && saved.trim() && saved.length > 10) fallbackText = saved;
+      } catch (e) {}
+      const fallbackHtml = fallbackText.startsWith('<') ? fallbackText : markdownOrTextToHtml(fallbackText);
+      return [fallbackHtml];
+    }
     const result: string[] = [];
     for (let idx = 0; idx < count; idx++) {
       const el = pageRefs.current[idx];
@@ -64,11 +73,20 @@ export function CoverLetterStudio({
       pagesContentRef.current[idx] = chosen;
       lastValidHtmlRef.current[idx] = chosen;
     }
+    if (result.every(p => !p || p.trim() === '<p><br></p>')) {
+      let fallbackText = initialText || 'Dear Hiring Manager,\n\nI am writing to express my interest in this position.';
+      try {
+        const saved = localStorage.getItem(effectiveStorageKey);
+        if (saved && saved.trim() && saved.length > 10) fallbackText = saved;
+      } catch (e) {}
+      const fallbackHtml = fallbackText.startsWith('<') ? fallbackText : markdownOrTextToHtml(fallbackText);
+      return [fallbackHtml];
+    }
     pageRefs.current.length = count;
     pagesContentRef.current.length = count;
     lastValidHtmlRef.current.length = count;
     return result;
-  }, [pages]);
+  }, [pages, initialText, effectiveStorageKey]);
 
   // Debounced auto-save engine: persists to localStorage and invokes onSave callback
   const triggerAutoSave = useCallback(() => {
@@ -766,7 +784,10 @@ export function CoverLetterStudio({
       </html>
     `;
 
-    triggerDirectPdfExport(fullHtml);
+    triggerDirectPdfExport(fullHtml, {
+      title: `Cover Letter - ${companyName || 'Application'}`,
+      filename: `Cover_Letter_${(companyName || 'Document').replace(/\s+/g, '_')}.pdf`,
+    });
   };
 
   const isAtBottomBoundary = (el: HTMLElement, nextRowNeeded: boolean = false): boolean => {

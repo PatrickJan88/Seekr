@@ -744,11 +744,18 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
             </div>
           </div>
         ` : ''}
+        <div class="page-footer-print" style="margin-top: 30px; padding-top: 12px; border-top: 1px solid #eaeaea; font-size: 12px; color: #64748b; display: flex; justify-content: space-between;">
+          <span>Powered by Seekr <a href="https://seekr-v5am.onrender.com/" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">https://seekr-v5am.onrender.com/</a></span>
+          <span>Company 360 Report</span>
+        </div>
       </body>
       </html>
     `;
 
-    triggerDirectPdfExport(html);
+    triggerDirectPdfExport(html, {
+      title: `${currentTeardown?.companyName || 'Company'} 360 Report`,
+      filename: `Company_360_${(currentTeardown?.companyName || 'Report').replace(/\s+/g, '_')}.pdf`,
+    });
   };
 
   // Find matching application for one-click add

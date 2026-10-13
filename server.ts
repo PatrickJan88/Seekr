@@ -10,6 +10,7 @@ import {
   getInitialIndustrySeedJobs,
   fetchArbetsformedlingenJobs
 } from './src/services/jobAggregator';
+import { generatePdfFromHtml } from './src/services/pdfGenerator';
 
 function safeParseJSON(text: string, fallback: any) {
   if (!text) return fallback;
@@ -989,10 +990,125 @@ const app = express();
     : 3000);
 
   app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
   // Health check endpoint
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  // PDF Export Session Store with TTL
+  interface PdfExportPayload {
+    id: string;
+    title: string;
+    filename: string;
+    html: string;
+    createdAt: number;
+  }
+  const pdfExportStore = new Map<string, PdfExportPayload>();
+
+  // Prune expired payloads older than 15 minutes
+  setInterval(() => {
+    const now = Date.now();
+    for (const [id, payload] of pdfExportStore.entries()) {
+      if (now - payload.createdAt > 15 * 60 * 1000) {
+        pdfExportStore.delete(id);
+      }
+    }
+  }, 60 * 1000);
+
+  // POST /api/export-pdf/prepare - stores studio HTML and returns an export ID
+  app.post("/api/export-pdf/prepare", (req, res) => {
+    try {
+      const { id: clientProvidedId, html, title = "Document", filename = "document.pdf" } = req.body;
+      if (!html) {
+        return res.status(400).json({ error: "No HTML content provided" });
+      }
+      const id = clientProvidedId || `export-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      pdfExportStore.set(id, {
+        id,
+        title,
+        filename,
+        html,
+        createdAt: Date.now(),
+      });
+      return res.json({ id, url: `/api/export-pdf/${id}` });
+    } catch (err: any) {
+      console.error("Failed to prepare PDF export:", err);
+      return res.status(500).json({ error: "Failed to prepare export" });
+    }
+  });
+
+  // GET /api/export-pdf/:id - converts HTML to binary PDF and streams to browser tab with inline disposition
+  app.get("/api/export-pdf/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Wait up to 5 seconds if payload is arriving from concurrent POST
+      let payload = pdfExportStore.get(id);
+      if (!payload) {
+        for (let attempt = 0; attempt < 50; attempt++) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          payload = pdfExportStore.get(id);
+          if (payload) break;
+        }
+      }
+
+      if (!payload) {
+        return res.status(404).send(`
+          <!DOCTYPE html>
+          <html>
+            <head><title>Export Expired</title></head>
+            <body style="font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #faf9f7; color: #334155;">
+              <div style="text-align: center; max-width: 420px; padding: 24px; background: white; border-radius: 12px; border: 1px solid #efefef; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <h2 style="color: #0f172a; margin-top: 0;">Export Session Expired</h2>
+                <p>This PDF preview link has expired. Please return to the studio and click <strong>Export PDF</strong> again.</p>
+                <button onclick="window.close()" style="background: #0068f9; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">Close Tab</button>
+              </div>
+            </body>
+          </html>
+        `);
+      }
+
+      const pdfBuffer = await generatePdfFromHtml(payload.html, {
+        title: payload.title,
+        filename: payload.filename,
+      });
+
+      const safeFilename = encodeURIComponent(payload.filename.replace(/[^a-zA-Z0-9._-]/g, "_"));
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `inline; filename="${safeFilename}"`);
+      res.setHeader("Cache-Control", "private, max-age=300");
+      res.setHeader("Content-Length", pdfBuffer.length);
+      return res.end(pdfBuffer);
+    } catch (err: any) {
+      console.error("Failed to serve PDF export:", err);
+      return res.status(500).send("Error generating PDF preview.");
+    }
+  });
+
+  // Direct POST /api/export-pdf - directly converts HTML to binary PDF and streams response
+  app.post("/api/export-pdf", async (req, res) => {
+    try {
+      const { html, title = "Document", filename = "document.pdf" } = req.body;
+      if (!html) {
+        return res.status(400).json({ error: "No HTML content provided" });
+      }
+      const pdfBuffer = await generatePdfFromHtml(html, {
+        title,
+        filename,
+      });
+
+      const safeFilename = encodeURIComponent(filename.replace(/[^a-zA-Z0-9._-]/g, "_"));
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `inline; filename="${safeFilename}"`);
+      res.setHeader("Cache-Control", "private, max-age=300");
+      res.setHeader("Content-Length", pdfBuffer.length);
+      return res.end(pdfBuffer);
+    } catch (err: any) {
+      console.error("Failed to directly generate PDF:", err);
+      return res.status(500).send("Error generating PDF preview.");
+    }
   });
 
   app.post("/api/extract-text", async (req, res) => {
