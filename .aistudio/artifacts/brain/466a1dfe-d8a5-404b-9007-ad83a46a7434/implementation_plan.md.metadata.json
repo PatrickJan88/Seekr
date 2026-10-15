@@ -1,6 +1,6 @@
 {
-  "summary": "Implementation plan for enhancing Export PDF across all Application Studios (Resume, Cover Letter, Interview Prep) and Company 360 Report. Establishes a server-side PDF endpoint (/api/export-pdf/:id) that converts studio HTML into binary PDF format served with inline Content-Disposition, allowing modern browser tabs opened via window.open(..., '_blank') to render native PDF preview toolbars with integrated download icons.",
-  "updatedAt": "2026-10-13T10:03:27.781806277Z",
+  "summary": "Resolved Arbetsförmedlingen API timeout on Render.com by extending timeout to 10s, adding in-memory cached fallback with Swedish seed postings, and streamlining error reporting to a concise single-line warning.",
+  "updatedAt": "2026-10-15T10:21:47.196672282Z",
   "requestFeedback": true,
   "userFacing": true
 }

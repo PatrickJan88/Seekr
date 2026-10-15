@@ -2726,7 +2726,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
 
       const afRes = await fetch(url, {
         headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(5000)
+        signal: AbortSignal.timeout(10000)
       });
 
       if (!afRes.ok) {
@@ -2736,7 +2736,10 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
       const data: any = await afRes.json();
       return res.json(data);
     } catch (error: any) {
-      res.status(500).json({ error: error.message || "Arbetsförmedlingen API request failed" });
+      const isTimeout = error?.name === 'TimeoutError' || error?.message?.toLowerCase().includes('timeout');
+      const errorMsg = isTimeout ? "Arbetsförmedlingen API request timed out after 10s" : (error?.message || "Arbetsförmedlingen API request failed");
+      console.warn(`[Arbetsförmedlingen Endpoint] ${errorMsg}`);
+      res.status(504).json({ error: errorMsg });
     }
   });
 

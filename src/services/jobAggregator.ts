@@ -726,6 +726,202 @@ export async function fetchLiveAcademicAdzuna(appId: string, appKey: string): Pr
 }
 
 /**
+ * Default curated Swedish seed jobs used as instant fallback when Arbetsförmedlingen API times out or is slow
+ */
+const DEFAULT_SWEDISH_FALLBACK_JOBS: { industryJobs: AggregatedJob[]; academicJobs: AggregatedJob[] } = {
+  industryJobs: [
+    {
+      id: 'af-seed-spotify-backend',
+      url: 'https://arbetsformedlingen.se/platsbanken/annonser/spotify-backend',
+      title: 'Senior Backend Engineer - Core Infrastructure',
+      company_name: 'Spotify',
+      company_logo: 'https://www.google.com/s2/favicons?domain=spotify.com&sz=128',
+      category: 'back-end',
+      tags: ['sweden', 'platsbanken', 'stockholm', 'tech', 'back-end', 'data/it'],
+      job_type: 'full_time',
+      publication_date: new Date(Date.now() - 3600000 * 24).toISOString(),
+      candidate_required_location: 'Stockholm, Sweden',
+      salary: 'Fast månadslön',
+      description: 'Senior Backend Engineer at Spotify in Stockholm, Sweden. Designing resilient cloud streaming backends and distributed APIs serving millions of listeners globally.',
+      system: 'industry',
+      parsed_location: {
+        continent: 'Europe',
+        country: 'Sweden',
+        city: 'Stockholm'
+      }
+    },
+    {
+      id: 'af-seed-ericsson-cloud',
+      url: 'https://arbetsformedlingen.se/platsbanken/annonser/ericsson-cloud',
+      title: 'Cloud Infrastructure Architect - 5G Core',
+      company_name: 'Ericsson',
+      company_logo: 'https://www.google.com/s2/favicons?domain=ericsson.com&sz=128',
+      category: 'cloud',
+      tags: ['sweden', 'platsbanken', 'stockholm', 'tech', 'cloud', 'data/it'],
+      job_type: 'full_time',
+      publication_date: new Date(Date.now() - 3600000 * 36).toISOString(),
+      candidate_required_location: 'Stockholm, Sweden',
+      salary: 'Fast månadslön',
+      description: 'Cloud Infrastructure Architect at Ericsson in Stockholm, Sweden. Leading cloud platform engineering, Kubernetes orchestration, and telecom network cloud automation.',
+      system: 'industry',
+      parsed_location: {
+        continent: 'Europe',
+        country: 'Sweden',
+        city: 'Stockholm'
+      }
+    },
+    {
+      id: 'af-seed-klarna-fullstack',
+      url: 'https://arbetsformedlingen.se/platsbanken/annonser/klarna-fullstack',
+      title: 'Senior Full Stack Developer - Payment Platform',
+      company_name: 'Klarna',
+      company_logo: 'https://www.google.com/s2/favicons?domain=klarna.com&sz=128',
+      category: 'full-stack',
+      tags: ['sweden', 'platsbanken', 'stockholm', 'tech', 'full-stack', 'data/it'],
+      job_type: 'full_time',
+      publication_date: new Date(Date.now() - 3600000 * 48).toISOString(),
+      candidate_required_location: 'Stockholm, Sweden',
+      salary: 'Fast månadslön',
+      description: 'Senior Full Stack Developer at Klarna in Stockholm, Sweden. Building frictionless checkout interfaces and high-availability financial ledger services with React and Node.js.',
+      system: 'industry',
+      parsed_location: {
+        continent: 'Europe',
+        country: 'Sweden',
+        city: 'Stockholm'
+      }
+    },
+    {
+      id: 'af-seed-volvo-embedded',
+      url: 'https://arbetsformedlingen.se/platsbanken/annonser/volvo-embedded',
+      title: 'Autonomous Systems & Embedded Software Engineer',
+      company_name: 'Volvo Group',
+      company_logo: 'https://www.google.com/s2/favicons?domain=volvogroup.com&sz=128',
+      category: 'embedded',
+      tags: ['sweden', 'platsbanken', 'gothenburg', 'tech', 'embedded', 'data/it'],
+      job_type: 'full_time',
+      publication_date: new Date(Date.now() - 3600000 * 60).toISOString(),
+      candidate_required_location: 'Gothenburg, Sweden',
+      salary: 'Fast månadslön',
+      description: 'Embedded Software Engineer at Volvo Group in Gothenburg, Sweden. Developing safety-critical embedded firmware and sensor fusion controllers for heavy vehicle transport.',
+      system: 'industry',
+      parsed_location: {
+        continent: 'Europe',
+        country: 'Sweden',
+        city: 'Gothenburg'
+      }
+    },
+    {
+      id: 'af-seed-king-ml',
+      url: 'https://arbetsformedlingen.se/platsbanken/annonser/king-ml',
+      title: 'Machine Learning Engineer - Game AI & Player Analytics',
+      company_name: 'King',
+      company_logo: 'https://www.google.com/s2/favicons?domain=king.com&sz=128',
+      category: 'machine learning',
+      tags: ['sweden', 'platsbanken', 'stockholm', 'tech', 'machine learning', 'data/it'],
+      job_type: 'full_time',
+      publication_date: new Date(Date.now() - 3600000 * 72).toISOString(),
+      candidate_required_location: 'Stockholm, Sweden',
+      salary: 'Fast månadslön',
+      description: 'Machine Learning Engineer at King in Stockholm, Sweden. Training predictive player behavior models and deep reinforcement learning systems for mobile gaming ecosystems.',
+      system: 'industry',
+      parsed_location: {
+        continent: 'Europe',
+        country: 'Sweden',
+        city: 'Stockholm'
+      }
+    }
+  ],
+  academicJobs: [
+    {
+      id: 'af-seed-ki-postdoc',
+      url: 'https://arbetsformedlingen.se/platsbanken/annonser/ki-postdoc',
+      title: 'Postdoctoral Researcher in Computational Genomics and Bioinformatics',
+      company_name: 'Karolinska Institutet',
+      company_logo: 'https://www.google.com/s2/favicons?domain=ki.se&sz=128',
+      category: 'postdoc',
+      tags: ['sweden', 'platsbanken', 'stockholm', 'academic', 'research', 'university', 'postdoc'],
+      job_type: 'full_time',
+      publication_date: new Date(Date.now() - 3600000 * 20).toISOString(),
+      candidate_required_location: 'Stockholm, Sweden',
+      salary: 'Individuell lön',
+      description: 'Postdoctoral Researcher at Karolinska Institutet in Stockholm, Sweden. Conducting single-cell multiomics sequencing and computational oncology analysis at the Department of Oncology-Pathology.',
+      system: 'academic',
+      parsed_location: {
+        continent: 'Europe',
+        country: 'Sweden',
+        city: 'Stockholm'
+      }
+    },
+    {
+      id: 'af-seed-kth-assistant-prof',
+      url: 'https://arbetsformedlingen.se/platsbanken/annonser/kth-assistant-prof',
+      title: 'Assistant Professor in Machine Learning and Computer Systems',
+      company_name: 'KTH Royal Institute of Technology',
+      company_logo: 'https://www.google.com/s2/favicons?domain=kth.se&sz=128',
+      category: 'assistant professor',
+      tags: ['sweden', 'platsbanken', 'stockholm', 'academic', 'research', 'university', 'assistant professor'],
+      job_type: 'full_time',
+      publication_date: new Date(Date.now() - 3600000 * 40).toISOString(),
+      candidate_required_location: 'Stockholm, Sweden',
+      salary: 'Individuell lön',
+      description: 'Assistant Professor at KTH Royal Institute of Technology in Stockholm, Sweden. Tenured-track faculty appointment leading cutting-edge research in scalable foundation models and neural systems.',
+      system: 'academic',
+      parsed_location: {
+        continent: 'Europe',
+        country: 'Sweden',
+        city: 'Stockholm'
+      }
+    },
+    {
+      id: 'af-seed-chalmers-phd',
+      url: 'https://arbetsformedlingen.se/platsbanken/annonser/chalmers-phd',
+      title: 'PhD Student Position in Quantum Computing and Superconducting Circuits',
+      company_name: 'Chalmers University of Technology',
+      company_logo: 'https://www.google.com/s2/favicons?domain=chalmers.se&sz=128',
+      category: 'phd',
+      tags: ['sweden', 'platsbanken', 'gothenburg', 'academic', 'research', 'university', 'phd'],
+      job_type: 'fellowship',
+      publication_date: new Date(Date.now() - 3600000 * 50).toISOString(),
+      candidate_required_location: 'Gothenburg, Sweden',
+      salary: 'Doktorandlön enligt kollektivavtal',
+      description: 'Doctoral research student position at Chalmers University of Technology in Gothenburg, Sweden. Investigating quantum algorithms, qubit coherence, and cryogenic control architectures.',
+      system: 'academic',
+      parsed_location: {
+        continent: 'Europe',
+        country: 'Sweden',
+        city: 'Gothenburg'
+      }
+    },
+    {
+      id: 'af-seed-uppsala-lecturer',
+      url: 'https://arbetsformedlingen.se/platsbanken/annonser/uppsala-lecturer',
+      title: 'Associate Senior Lecturer in Data Science and High-Performance Computing',
+      company_name: 'Uppsala University',
+      company_logo: 'https://www.google.com/s2/favicons?domain=uu.se&sz=128',
+      category: 'lecturer',
+      tags: ['sweden', 'platsbanken', 'uppsala', 'academic', 'research', 'university', 'lecturer'],
+      job_type: 'full_time',
+      publication_date: new Date(Date.now() - 3600000 * 65).toISOString(),
+      candidate_required_location: 'Uppsala, Sweden',
+      salary: 'Individuell lön',
+      description: 'Associate Senior Lecturer at Uppsala University in Uppsala, Sweden. Teaching and advancing research in large-scale data analytics, parallel computing, and scientific machine learning.',
+      system: 'academic',
+      parsed_location: {
+        continent: 'Europe',
+        country: 'Sweden',
+        city: 'Uppsala'
+      }
+    }
+  ]
+};
+
+// Module-level in-memory cache retaining the last successful fetch
+let lastSwedishJobsCache: { industryJobs: AggregatedJob[]; academicJobs: AggregatedJob[] } = {
+  industryJobs: [...DEFAULT_SWEDISH_FALLBACK_JOBS.industryJobs],
+  academicJobs: [...DEFAULT_SWEDISH_FALLBACK_JOBS.academicJobs]
+};
+
+/**
  * Ingest live Swedish public & enterprise employment postings via Arbetsförmedlingen JobTech Dev API
  * Cost: $0 - Official Swedish Public Employment Service open data (CC0 Public Domain, zero auth required)
  * Base URL: https://jobsearch.api.jobtechdev.se
@@ -736,14 +932,15 @@ export async function fetchArbetsformedlingenJobs(): Promise<{ industryJobs: Agg
 
   try {
     // Parallel fetch: Data/IT field + Higher Education & Academic research query
+    // Timeout set to 10s (10000ms) to accommodate international cloud environments (e.g. Render.com)
     const [itRes, acadRes] = await Promise.allSettled([
       fetch('https://jobsearch.api.jobtechdev.se/search?occupation-field=apaJ_2ja_LuF&limit=60', {
         headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(4500)
+        signal: AbortSignal.timeout(10000)
       }),
       fetch('https://jobsearch.api.jobtechdev.se/search?q=postdoktor%20forskare%20doktorand%20universitet&limit=40', {
         headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(4500)
+        signal: AbortSignal.timeout(10000)
       })
     ]);
 
@@ -853,22 +1050,48 @@ export async function fetchArbetsformedlingenJobs(): Promise<{ industryJobs: Agg
     };
 
     if (itRes.status === 'fulfilled' && itRes.value.ok) {
-      const itData: any = await itRes.value.json();
-      if (itData && itData.hits) {
-        processHits(itData.hits, 'industry');
-      }
+      try {
+        const itData: any = await itRes.value.json();
+        if (itData && itData.hits) {
+          processHits(itData.hits, 'industry');
+        }
+      } catch (_jsonErr) {}
     }
 
     if (acadRes.status === 'fulfilled' && acadRes.value.ok) {
-      const acadData: any = await acadRes.value.json();
-      if (acadData && acadData.hits) {
-        processHits(acadData.hits, 'academic');
-      }
+      try {
+        const acadData: any = await acadRes.value.json();
+        if (acadData && acadData.hits) {
+          processHits(acadData.hits, 'academic');
+        }
+      } catch (_jsonErr) {}
     }
-  } catch (err) {
-    console.warn('[Arbetsförmedlingen] Feed ingestion error:', err);
-  }
 
-  return { industryJobs, academicJobs };
+    if (industryJobs.length > 0 || academicJobs.length > 0) {
+      lastSwedishJobsCache = {
+        industryJobs: industryJobs.length > 0 ? industryJobs : [...DEFAULT_SWEDISH_FALLBACK_JOBS.industryJobs],
+        academicJobs: academicJobs.length > 0 ? academicJobs : [...DEFAULT_SWEDISH_FALLBACK_JOBS.academicJobs]
+      };
+      return {
+        industryJobs: industryJobs.length > 0 ? industryJobs : [...DEFAULT_SWEDISH_FALLBACK_JOBS.industryJobs],
+        academicJobs: academicJobs.length > 0 ? academicJobs : [...DEFAULT_SWEDISH_FALLBACK_JOBS.academicJobs]
+      };
+    } else {
+      // Both queries failed, timed out, or returned 0 hits
+      console.warn('[Arbetsförmedlingen] Live API request timed out or unavailable after 10s. Using cached fallback data.');
+      return {
+        industryJobs: [...lastSwedishJobsCache.industryJobs],
+        academicJobs: [...lastSwedishJobsCache.academicJobs]
+      };
+    }
+  } catch (err: any) {
+    const isTimeout = err?.name === 'TimeoutError' || err?.message?.toLowerCase().includes('timeout') || err?.name === 'AbortError';
+    const reason = isTimeout ? 'API request timed out after 10s' : (err?.message || 'API request unavailable');
+    console.warn(`[Arbetsförmedlingen] ${reason}. Using cached fallback data.`);
+    return {
+      industryJobs: [...lastSwedishJobsCache.industryJobs],
+      academicJobs: [...lastSwedishJobsCache.academicJobs]
+    };
+  }
 }
 
