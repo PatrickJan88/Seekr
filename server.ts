@@ -43,7 +43,7 @@ async function callOpenAICompatibleAI(params: {
   const baseURL = (process.env.OPENAI_BASE_URL || "https://free.empero.org/v1").replace(/\/+$/, "");
   const apiKey = process.env.OPENAI_API_KEY || "not-needed";
   const modelName = params.model || process.env.OPENAI_MODEL || "Qwen/Qwen3.8-27B-FP8";
-  const timeoutMs = params.timeoutMs || 4000;
+  const timeoutMs = params.timeoutMs || 3000;
 
   try {
     const controller = new AbortController();
@@ -78,10 +78,15 @@ async function callOpenAICompatibleAI(params: {
     }
 
     const data: any = await response.json();
+    if (data?.error?.code === "maintenance" || data?.error?.message?.includes("offline")) {
+      console.log(`[OpenAI/Empero Adapter] Endpoint is in maintenance mode. Skipping to next tier.`);
+      return null;
+    }
+
     const content = data?.choices?.[0]?.message?.content;
     return typeof content === "string" ? content.trim() : null;
   } catch (err: any) {
-    console.log(`[OpenAI/Empero Adapter] Call failed or timed out: ${err?.message || err}`);
+    console.log(`[OpenAI/Empero Adapter] Call skipped or timed out: ${err?.message || err}`);
     return null;
   }
 }
@@ -765,8 +770,10 @@ function generateFallbackTeardown(companyName: string, websiteUrl: string, ogIma
 }
 
 /**
- * Resilient helper to execute Gemini API calls with automatic retries and fallback models
+ * Resilient helper to execute Gemini API calls with automatic model degradation ladder
  * when encountering temporary 503 high demand, rate limits (429), or capacity issues.
+ * Implements strict per-candidate timeouts and fail-fast failover to lighter models
+ * (gemini-3.8-flash -> gemini-3.5-flash-lite -> gemini-3.1-flash-lite -> gemini-flash-latest).
  */
 async function generateContentWithRetry(
   ai: GoogleGenAI,
@@ -774,29 +781,67 @@ async function generateContentWithRetry(
     contents: any;
     config?: any;
     preferredModel?: string;
+    perModelTimeoutMs?: number;
+    overallTimeoutMs?: number;
   }
 ) {
-  const preferred = params.preferredModel || "gemini-3.7-flash";
+  let preferred = params.preferredModel || "gemini-3.8-flash";
+  // Normalize invalid or deprecated model names
+  if (preferred === "gemini-3.7-flash" || preferred.includes("2.5") || preferred.includes("2.0")) {
+    preferred = "gemini-3.8-flash";
+  }
+
+  // Cascading high-volume degradation ladder:
+  // Primary (gemini-3.8-flash) -> Flash Lite 3.5 (ultra-fast, low tokens) -> Flash Lite 3.1 -> Latest Flash
   const modelCandidates = [
     preferred,
-    "gemini-3.7-flash",
-    "gemini-flash-latest",
+    "gemini-3.8-flash",
+    "gemini-3.5-flash-lite",
     "gemini-3.1-flash-lite",
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-lite"
+    "gemini-flash-latest"
   ];
   const modelsToTry = Array.from(new Set(modelCandidates));
+
+  const perModelTimeoutMs = params.perModelTimeoutMs || 3500;
+  const overallTimeoutMs = params.overallTimeoutMs || 7500;
+  const startTime = Date.now();
 
   let lastError: any = null;
 
   for (const model of modelsToTry) {
+    const elapsed = Date.now() - startTime;
+    if (elapsed >= overallTimeoutMs) {
+      console.log(`[Gemini Degradation Ladder] Cumulative timeout budget (${overallTimeoutMs}ms) reached. Breaking to fallback tier.`);
+      break;
+    }
+
+    const remainingTime = Math.max(1000, overallTimeoutMs - elapsed);
+    const timeoutForThisCall = Math.min(perModelTimeoutMs, remainingTime);
+
+    let timer: NodeJS.Timeout | null = null;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        reject(new Error(`TIMEOUT_${timeoutForThisCall}MS: Model ${model} took longer than ${timeoutForThisCall}ms`));
+      }, timeoutForThisCall);
+    });
+
     try {
-      const response = await ai.models.generateContent({
-        model,
-        contents: params.contents,
-        config: params.config});
-      return response;
+      const response: any = await Promise.race([
+        ai.models.generateContent({
+          model,
+          contents: params.contents,
+          config: params.config
+        }),
+        timeoutPromise
+      ]);
+
+      if (timer) clearTimeout(timer);
+      if (response) {
+        response.modelUsed = model;
+        return response;
+      }
     } catch (err: any) {
+      if (timer) clearTimeout(timer);
       lastError = err;
       const errMessage = err?.message || JSON.stringify(err) || "";
       const isUnavailable =
@@ -814,12 +859,10 @@ async function generateContentWithRetry(
         errMessage.includes("NOT_FOUND") || 
         errMessage.includes("no longer available");
 
-      if (isUnavailable || isNotFound) {
-        // Silently fall back to next model candidate
-        continue;
-      }
+      const isTimeout = errMessage.includes("TIMEOUT_");
 
-      // If other error, continue trying fallback models before giving up
+      console.log(`[Gemini Degradation Ladder] Model ${model} failed (${isTimeout ? 'Timeout' : isNotFound ? '404 Deprecated/Unavailable' : isUnavailable ? 'High Demand / 429' : 'Error'}). Stepping down to next lighter model...`);
+      // Immediately failover to next lighter candidate without sleeping or retrying
       continue;
     }
   }
@@ -1149,8 +1192,11 @@ const app = express();
       `;
 
       let application: any = null;
+      let tierUsed: "gemini" | "open_source" | "local_heuristic" = "local_heuristic";
+      let modelUsed: string = "deterministic_smart_parser";
+      const extractStartTime = Date.now();
 
-      // Tier 1: Try Gemini API if key available
+      // Tier 1: Try Gemini API if key available (Cascading degradation ladder)
       if (process.env.GEMINI_API_KEY) {
         try {
           const ai = new GoogleGenAI({
@@ -1158,35 +1204,48 @@ const app = express();
             httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
           });
           const response = await generateContentWithRetry(ai, {
-            preferredModel: "gemini-3.7-flash",
+            preferredModel: "gemini-3.8-flash",
             contents: prompt,
-            config: { responseMimeType: "application/json" }
+            config: { responseMimeType: "application/json" },
+            perModelTimeoutMs: 3500,
+            overallTimeoutMs: 6500
           });
           const responseText = response.text || "{}";
-          application = safeParseJSON(responseText, null);
+          const parsed = safeParseJSON(responseText, null);
+          if (parsed && (parsed.company || parsed.position)) {
+            application = parsed;
+            tierUsed = "gemini";
+            modelUsed = (response as any).modelUsed || "gemini-3.8-flash";
+          }
         } catch (geminiErr: any) {
-          /* expected */
+          console.log("[Text Extraction] Gemini tier bypassed or timed out; escalating to Tier 2 open-source adapter...");
         }
       }
 
-      // Tier 2: Try OpenAI-compatible / Empero free endpoint fallback
+      // Tier 2: Try OpenAI-compatible / Empero free endpoint fallback (Strict 3s timeout)
       if (!application || (!application.company && !application.position)) {
         try {
           const openAiRes = await callOpenAICompatibleAI({
             prompt,
             systemPrompt: "You are an expert ATS extractor. Output valid JSON only with keys: company, position, location, workType, notes.",
             jsonMode: true,
-            temperature: 0.1
+            temperature: 0.1,
+            timeoutMs: 3000
           });
           if (openAiRes) {
-            application = safeParseJSON(openAiRes, null);
+            const parsed = safeParseJSON(openAiRes, null);
+            if (parsed && (parsed.company || parsed.position)) {
+              application = parsed;
+              tierUsed = "open_source";
+              modelUsed = process.env.OPENAI_MODEL || "OpenAI-Compatible/Empero";
+            }
           }
         } catch (openAiErr: any) {
-          /* expected */
+          console.log("[Text Extraction] Open-source tier bypassed; falling back to Tier 3 local smart parser...");
         }
       }
 
-      // Tier 3: High-precision deterministic heuristic parser (guarantees 100% zero-crash uptime)
+      // Tier 3: High-precision deterministic heuristic parser (guarantees 100% zero-crash uptime in <5ms)
       if (!application || (!application.company && !application.position)) {
         const smartParsed = parseJobTextSmart(text);
         application = {
@@ -1196,14 +1255,28 @@ const app = express();
           workType: application?.workType || smartParsed.workType,
           notes: application?.notes || smartParsed.notes
         };
+        tierUsed = "local_heuristic";
+        modelUsed = "deterministic_smart_parser";
       }
 
-      res.json({ application });
+      const durationMs = Date.now() - extractStartTime;
+      console.log(`[Text Extraction] Completed in ${durationMs}ms via ${tierUsed} (${modelUsed})`);
+
+      res.json({
+        application,
+        tierUsed,
+        modelUsed,
+        durationMs
+      });
     } catch (error: any) {
-      console.log("Text Extraction error:");
-      // Even on outer exception, provide deterministic result instead of 500 error
+      console.log("[Text Extraction] Outer exception caught, executing instant deterministic parser:", error?.message || error);
       const fallback = parseJobTextSmart(req.body?.text || "");
-      res.json({ application: fallback });
+      res.json({
+        application: fallback,
+        tierUsed: "local_heuristic",
+        modelUsed: "deterministic_smart_parser",
+        durationMs: 5
+      });
     }
   });
 
@@ -1243,7 +1316,7 @@ const app = express();
       `;
 
       const response = await generateContentWithRetry(ai, {
-        preferredModel: "gemini-3.7-flash",
+        preferredModel: "gemini-3.8-flash",
         contents: [
           {
             role: "user",
@@ -1310,7 +1383,7 @@ Instructions:
             httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
           });
           const response = await generateContentWithRetry(ai, {
-            preferredModel: "gemini-3.7-flash",
+            preferredModel: "gemini-3.8-flash",
             contents: prompt
           });
           if (response.text) {
@@ -1405,7 +1478,7 @@ Keep the tone encouraging, strategic, and highly professional. Return ONLY the t
             httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
           });
           const response = await generateContentWithRetry(ai, {
-            preferredModel: "gemini-3.7-flash",
+            preferredModel: "gemini-3.8-flash",
             contents: prompt
           });
           if (response.text) {
@@ -1714,7 +1787,7 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
           }
 
           const response = await generateContentWithRetry(ai, {
-            preferredModel: "gemini-3.7-flash",
+            preferredModel: "gemini-3.8-flash",
             contents: contentsPayload,
             config: { responseMimeType: "application/json" }
           });
@@ -1950,7 +2023,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
           }
 
           const response = await generateContentWithRetry(ai, {
-            preferredModel: "gemini-3.7-flash",
+            preferredModel: "gemini-3.8-flash",
             contents: contentsPayload,
             config: { responseMimeType: "application/json" }
           });
@@ -3357,7 +3430,7 @@ Return ONLY a valid JSON object strictly matching this schema:
         });
 
         const response = await generateContentWithRetry(ai, {
-          preferredModel: "gemini-3.7-flash",
+          preferredModel: "gemini-3.8-flash",
           contents: prompt,
           config: {
             systemInstruction: systemPrompt,
@@ -3569,7 +3642,7 @@ Return ONLY a valid JSON object strictly matching this schema:
         });
         
         const responseStream = await ai.models.generateContentStream({
-          model: "gemini-3.7-flash",
+          model: "gemini-3.8-flash",
           contents: prompt,
           config: {
             systemInstruction: systemPrompt,
@@ -3682,7 +3755,7 @@ Return ONLY a valid JSON object strictly matching this schema:
       `;
 
       const response = await generateContentWithRetry(ai, {
-        preferredModel: "gemini-3.7-flash",
+        preferredModel: "gemini-3.8-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json"

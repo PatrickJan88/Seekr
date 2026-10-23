@@ -371,6 +371,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
     setExtractError(null);
     try {
       let extracted: { company?: string; position?: string; location?: string; workType?: string; notes?: string } = {};
+      let extractMeta: { tierUsed?: string; modelUsed?: string; durationMs?: number } = {};
 
       if (isDemo) {
         extracted = parseJobDescriptionFallback(pasteText);
@@ -378,7 +379,8 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
         const res = await fetch('/api/extract-text', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: pasteText })
+          body: JSON.stringify({ text: pasteText }),
+          signal: AbortSignal.timeout(9000)
         }).catch(() => null);
 
         if (res && res.ok) {
@@ -387,6 +389,11 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
             const data = JSON.parse(responseText);
             if (data?.application) {
               extracted = data.application;
+              extractMeta = {
+                tierUsed: data.tierUsed,
+                modelUsed: data.modelUsed,
+                durationMs: data.durationMs
+              };
             }
           } catch {
             // Response was non-JSON (e.g. static hosting rewrite)
@@ -466,7 +473,17 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
           workType: extractedWorkType || prev.workType,
           notes: extracted.notes ? (prev.notes ? prev.notes + '\n\n' + extracted.notes : extracted.notes) : prev.notes
         }));
-        toast.success('Auto-fill success');
+
+        let successMsg = 'Auto-fill success';
+        if (extractMeta.tierUsed === 'gemini') {
+          const mName = extractMeta.modelUsed ? extractMeta.modelUsed.replace(/^gemini-/, '').replace(/-/g, ' ') : 'Flash';
+          successMsg = `Auto-filled via Gemini ${mName}${extractMeta.durationMs ? ` (${(extractMeta.durationMs / 1000).toFixed(1)}s)` : ''}`;
+        } else if (extractMeta.tierUsed === 'open_source') {
+          successMsg = `Auto-filled via Open-Source AI${extractMeta.durationMs ? ` (${(extractMeta.durationMs / 1000).toFixed(1)}s)` : ''}`;
+        } else if (extractMeta.tierUsed === 'local_heuristic') {
+          successMsg = `Auto-filled instantly via Smart Parser`;
+        }
+        toast.success(successMsg);
         setPasteText('');
       } else {
         // Check for urls even in raw paste
