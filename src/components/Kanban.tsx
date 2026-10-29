@@ -241,8 +241,10 @@ export function Kanban({
               isActive={!!locationFilter}
               activeClassName="bg-[#e8f1ff] text-[#0068f9] border border-[#0068f9]/30"
               onClear={() => onLocationSelect?.(null)}
+              searchable={true}
+              searchPlaceholder="Filter countries..."
               options={[
-                { value: '', label: 'All Locations' },
+                { value: '', label: 'Location' },
                 ...uniqueCountries.map(c => ({ value: c, label: c }))
               ]}
             />

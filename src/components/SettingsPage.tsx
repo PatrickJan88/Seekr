@@ -289,7 +289,7 @@ export function SettingsPage({
             <div className="flex items-center gap-4">
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
-                  <button className="flex items-center justify-between w-full sm:w-64 h-11 bg-white border border-[#efefef] rounded-full text-xs sm:text-sm px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#faf9f7] transition-all cursor-pointer">
+                  <button className="flex items-center justify-between w-full sm:w-64 h-11 bg-[#faf9f7] border border-[#efefef] rounded-full text-xs sm:text-sm px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#f3f2ef] transition-all cursor-pointer">
                     <div className="flex items-center gap-2.5 min-w-0">
                       {trackingSystem === 'academic' ? (
                         <GraduationCap className="text-[#0068f9] shrink-0" size={16} />
@@ -306,7 +306,7 @@ export function SettingsPage({
                 
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content 
-                    className="z-[100] min-w-[240px] bg-white rounded-2xl border border-[#efefef] shadow-lg p-1.5 animate-in fade-in-80 zoom-in-95"
+                    className="z-[100] min-w-[240px] bg-white rounded-2xl border border-[#efefef] shadow-xl p-1.5 animate-in fade-in-80 zoom-in-95"
                     sideOffset={6}
                     align="start"
                   >
@@ -352,7 +352,7 @@ export function SettingsPage({
             <div className="flex items-center gap-4">
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
-                  <button className="flex items-center justify-between w-full sm:w-64 h-11 bg-white border border-[#efefef] rounded-full text-xs sm:text-sm px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#faf9f7] transition-all cursor-pointer">
+                  <button className="flex items-center justify-between w-full sm:w-64 h-11 bg-[#faf9f7] border border-[#efefef] rounded-full text-xs sm:text-sm px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#f3f2ef] transition-all cursor-pointer">
                     <div className="flex items-center gap-2.5 min-w-0">
                       {trackingSystem === 'academic' ? (
                         <GraduationCap className="text-[#0068f9] shrink-0" size={16} />
@@ -369,7 +369,7 @@ export function SettingsPage({
                 
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content 
-                    className="z-[100] min-w-[260px] max-h-[60vh] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-lg p-1.5 animate-in fade-in-80 zoom-in-95"
+                    className="z-[100] min-w-[260px] max-h-[60vh] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-xl p-1.5 animate-in fade-in-80 zoom-in-95"
                     sideOffset={6}
                     align="start"
                   >

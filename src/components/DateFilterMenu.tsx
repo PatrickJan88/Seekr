@@ -30,7 +30,7 @@ export function DateFilterMenu({
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <button className={cn("flex items-center w-full sm:w-auto min-w-0 sm:min-w-[110px] sm:max-w-[150px] xl:max-w-[170px] h-[38px] bg-white border border-[#efefef] rounded-full text-sm font-medium px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#faf9f7] transition-all cursor-pointer", className)}>
+        <button className={cn("flex items-center w-full sm:w-auto min-w-0 sm:min-w-[110px] sm:max-w-[150px] xl:max-w-[170px] h-[38px] bg-[#faf9f7] border border-[#efefef] rounded-full text-sm font-medium px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#f3f2ef] transition-all cursor-pointer", className)}>
           <Clock className="text-[#a5a5a5] mr-2 shrink-0" size={15} />
           <span className="text-[#121722] truncate flex-1 text-left">{getDisplayText()}</span>
           <div className="text-[#a5a5a5] shrink-0 ml-1.5">
@@ -41,7 +41,7 @@ export function DateFilterMenu({
       
       <DropdownMenu.Portal>
         <DropdownMenu.Content 
-          className="z-[100] min-w-[200px] bg-white rounded-xl border border-[#efefef] shadow-lg p-1 animate-in fade-in-80 zoom-in-95"
+          className="z-[100] min-w-[200px] bg-white rounded-2xl border border-[#efefef] shadow-xl p-1 animate-in fade-in-80 zoom-in-95"
           sideOffset={8}
         >
           <DropdownMenu.Item 

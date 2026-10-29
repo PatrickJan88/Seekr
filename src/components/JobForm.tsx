@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { JobApplication, JobStatus, ApplicationLink, getStatusLabel } from '../types';
-import { Wand2, Loader2, X, ChevronDown, MapPin, Globe, Link2, ExternalLink, Plus, Trash2, Bookmark, Sparkles, Building2 } from 'lucide-react';
+import { Wand2, Loader2, X, ChevronDown, MapPin, Globe, Link2, ExternalLink, Plus, Trash2, Bookmark, Sparkles, Building2, Calendar } from 'lucide-react';
 import { FileUpload, UploadedFile } from './FileUpload';
 import { auth } from '../lib/firebase';
 import { addNotification } from '../lib/notifications';
 import { toast } from 'sonner';
 import { LOCATION_DATA, parseLocationToGroup } from '../data/locationData';
+import { SearchableSelect } from './ui/SearchableSelect';
 import { findBestCompanyHomepageUrl, classifyLink, normalizeHttpUrl } from '../lib/linkUtils';
 
 export const normalizeUrl = (url?: string): string => {
@@ -787,35 +788,23 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
               <label className="block text-xs font-semibold text-[#121722] mb-1.5">Location</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Level 1: Country Dropdown */}
-                <div className="relative">
-                  <select
-                    value={selectedCountry}
-                    onChange={e => handleCountrySelect(e.target.value)}
-                    className="w-full pl-3.5 pr-9 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722] appearance-none cursor-pointer"
-                  >
-                    <option value="">Select Country...</option>
-                    {LOCATION_DATA.map(g => (
-                      <option key={g.country} value={g.country}>{g.country}</option>
-                    ))}
-                  </select>
-                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#777c86] pointer-events-none" />
-                </div>
+                <SearchableSelect
+                  value={selectedCountry}
+                  onChange={handleCountrySelect}
+                  options={LOCATION_DATA.map(g => ({ value: g.country, label: g.country }))}
+                  placeholder="Select Country..."
+                  searchPlaceholder="Search country or type letter..."
+                />
 
                 {/* Level 2: City & Province Dropdown */}
-                <div className="relative">
-                  <select
-                    value={selectedCity}
-                    onChange={e => handleCitySelect(e.target.value)}
-                    disabled={!selectedCountry}
-                    className="w-full pl-3.5 pr-9 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722] appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <option value="">{selectedCountry ? 'Select City / State...' : 'Select Country First'}</option>
-                    {currentCountryGroup?.cities.map(c => (
-                      <option key={c.label} value={c.value}>{c.label}</option>
-                    ))}
-                  </select>
-                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#777c86] pointer-events-none" />
-                </div>
+                <SearchableSelect
+                  value={selectedCity}
+                  onChange={handleCitySelect}
+                  disabled={!selectedCountry}
+                  options={currentCountryGroup ? currentCountryGroup.cities.map(c => ({ value: c.value, label: c.label })) : []}
+                  placeholder={selectedCountry ? 'Select City / State...' : 'Select Country First'}
+                  searchPlaceholder="Search city..."
+                />
               </div>
 
               {/* Custom Location Details if Custom option is chosen */}
@@ -833,24 +822,29 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
             </div>
             <div>
               <label className="block text-xs font-semibold text-[#121722] mb-1.5">Work type</label>
-              <div className="relative">
-                <select name="workType" value={formData.workType || ''} onChange={handleChange} className="w-full pl-3.5 pr-9 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722] appearance-none cursor-pointer">
-                  <option value="">Select work type...</option>
-                  <option value="On-site">On-site</option>
-                  <option value="Hybrid">Hybrid</option>
-                  <option value="Remote">Remote</option>
-                </select>
-                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#777c86] pointer-events-none" />
-              </div>
+              <SearchableSelect
+                value={formData.workType || ''}
+                onChange={(val) => setFormData(prev => ({ ...prev, workType: (val as any) || undefined }))}
+                options={[
+                  { value: 'On-site', label: 'On-site' },
+                  { value: 'Hybrid', label: 'Hybrid' },
+                  { value: 'Remote', label: 'Remote' }
+                ]}
+                placeholder="Select work type..."
+                showSearch={false}
+                clearable={false}
+              />
             </div>
             <div>
               <label className="block text-xs font-semibold text-[#121722] mb-1.5">Status</label>
-              <div className="relative">
-                <select name="status" value={formData.status || 'Applied'} onChange={handleChange} className="w-full pl-3.5 pr-9 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722] appearance-none cursor-pointer">
-                  {STATUSES.map(s => <option key={s} value={s}>{getStatusLabel(s, trackingSystem)}</option>)}
-                </select>
-                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#777c86] pointer-events-none" />
-              </div>
+              <SearchableSelect
+                value={formData.status || 'Applied'}
+                onChange={(val) => setFormData(prev => ({ ...prev, status: val as JobStatus }))}
+                options={STATUSES.map(s => ({ value: s, label: getStatusLabel(s, trackingSystem) }))}
+                placeholder="Select status..."
+                showSearch={false}
+                clearable={false}
+              />
             </div>
             <div>
               <label className="block text-xs font-semibold text-[#121722] mb-1.5">Applied Date</label>
@@ -858,23 +852,58 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
             </div>
             <div>
               <label className="block text-xs font-semibold text-[#121722] mb-1.5">Next Interview</label>
-              <input type="datetime-local" name="nextInterviewDate" value={formData.nextInterviewDate?.slice(0, 16) || ''} onChange={handleChange} className={`w-full px-3.5 py-2 border rounded-2xl bg-[#faf9f7] focus:ring-1 outline-none transition-all text-xs text-[#121722] ${isPastInterview ? 'border-amber-400 focus:border-amber-500 focus:ring-amber-200' : 'border-[#efefef] focus:border-[#0068f9] focus:ring-[#0068f9]'}`} />
+              <div className="relative flex items-center">
+                <input
+                  type="datetime-local"
+                  name="nextInterviewDate"
+                  value={formData.nextInterviewDate?.slice(0, 16) || ''}
+                  onChange={handleChange}
+                  className={`w-full px-3.5 py-2 border rounded-2xl bg-[#faf9f7] focus:ring-1 outline-none transition-all text-xs text-[#121722] [color-scheme:light] ${
+                    isPastInterview
+                      ? 'border-amber-400 focus:border-amber-500 focus:ring-amber-200'
+                      : 'border-[#efefef] focus:border-[#0068f9] focus:ring-[#0068f9]'
+                  }`}
+                />
+                {formData.nextInterviewDate && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        nextInterviewDate: '',
+                        reminder: 'none',
+                        customReminderDate: '',
+                        customReminderEndDate: ''
+                      }));
+                    }}
+                    className="absolute right-[30px] p-0.5 text-[#a5a5a5] hover:text-[#121722] hover:bg-[#eaeaea] rounded-full transition-colors cursor-pointer z-10"
+                    title="Clear next interview time"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
               {isPastInterview && <p className="text-[10px] text-amber-600 mt-1">This time is in the past. Reminders cannot be set.</p>}
             </div>
             <div className="flex flex-col justify-end">
               <label className="block text-xs font-semibold text-[#121722] mb-1.5">Reminder</label>
-              <div className="relative">
-                <select name="reminder" value={(formData.nextInterviewDate && !isPastInterview) ? (formData.reminder || 'none') : 'none'} onChange={handleChange} disabled={!formData.nextInterviewDate || isPastInterview} className="w-full pl-3.5 pr-9 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722] disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer">
-                  <option value="none">None</option>
-                  <option value="15 mins">15 mins before</option>
-                  <option value="1 hour">1 hour before</option>
-                  <option value="2 hours">2 hours before</option>
-                  <option value="1 day">1 day before</option>
-                  <option value="2 days">2 days before</option>
-                  <option value="custom">Custom</option>
-                </select>
-                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#777c86] pointer-events-none" />
-              </div>
+              <SearchableSelect
+                value={(formData.nextInterviewDate && !isPastInterview) ? (formData.reminder || 'none') : 'none'}
+                onChange={(val) => setFormData(prev => ({ ...prev, reminder: val }))}
+                disabled={!formData.nextInterviewDate || isPastInterview}
+                clearable={false}
+                showSearch={false}
+                options={[
+                  { value: 'none', label: 'None' },
+                  { value: '15 mins', label: '15 mins before' },
+                  { value: '1 hour', label: '1 hour before' },
+                  { value: '2 hours', label: '2 hours before' },
+                  { value: '1 day', label: '1 day before' },
+                  { value: '2 days', label: '2 days before' },
+                  { value: 'custom', label: 'Custom' }
+                ]}
+                placeholder="Select reminder..."
+              />
               {formData.reminder === 'custom' && (
                 <div className="mt-2 flex items-center gap-2">
                   <input type="date" name="customReminderDate" value={formData.customReminderDate?.split('T')[0] || ''} onChange={handleChange} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" placeholder="Start Date" />

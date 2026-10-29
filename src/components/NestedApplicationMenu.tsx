@@ -45,7 +45,7 @@ export function NestedApplicationMenu({
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <button className="flex items-center w-full h-10 bg-white border border-[#efefef] rounded-2xl text-xs px-3.5 focus:outline-none focus:ring-1 focus:ring-[#0068f9] shadow-sm hover:bg-[#faf9f7] transition-all cursor-pointer font-medium">
+        <button className="flex items-center w-full h-10 bg-[#faf9f7] border border-[#efefef] rounded-2xl text-xs px-3.5 focus:outline-none focus:ring-1 focus:ring-[#0068f9] shadow-2xs hover:bg-[#f3f2ef] transition-all cursor-pointer font-medium">
           <Briefcase className="text-[#a5a5a5] mr-2 shrink-0" size={14} />
           <span className="text-[#121722] truncate flex-1 text-left">
             {selectedApp
@@ -60,7 +60,7 @@ export function NestedApplicationMenu({
 
       <DropdownMenu.Portal>
         <DropdownMenu.Content
-          className="z-[100] min-w-[280px] w-[var(--radix-dropdown-menu-trigger-width)] max-h-[50vh] overflow-y-auto bg-white rounded-xl border border-[#efefef] shadow-lg p-1 animate-in fade-in-80 zoom-in-95 custom-scrollbar"
+          className="z-[100] min-w-[280px] w-[var(--radix-dropdown-menu-trigger-width)] max-h-[50vh] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-xl p-1 animate-in fade-in-80 zoom-in-95 custom-scrollbar"
           sideOffset={8}
         >
           <div className="p-2 sticky top-0 bg-white z-10 pb-1">
@@ -76,16 +76,6 @@ export function NestedApplicationMenu({
               />
             </div>
           </div>
-
-          <DropdownMenu.Item
-            className="flex items-center px-3 py-2 text-xs text-[#121722] rounded-lg cursor-pointer hover:bg-[#faf9f7] outline-none select-none mt-1"
-            onClick={() => onSelectApplication("")}
-          >
-            -- Clear Selection --
-            {!selectedAppId && <Check size={14} className="ml-auto text-[#0068f9]" />}
-          </DropdownMenu.Item>
-
-          <DropdownMenu.Separator className="h-px bg-[#efefef] my-1 mx-2" />
 
           {searchTerm.trim() ? (
             // Search Results

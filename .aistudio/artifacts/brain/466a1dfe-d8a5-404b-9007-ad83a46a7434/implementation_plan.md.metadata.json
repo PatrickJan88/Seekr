@@ -1,6 +1,6 @@
 {
-  "summary":  "Implementation plan to align Cover Letter Studio and PDF preview typography, margins, and page boundaries 1:1, eliminating the huge bottom margin gap in exported PDFs.",
-  "updatedAt":  "2026-10-29T10:24:06.101990556Z",
+  "summary":  "Implementation plan for refining the Location dropdown components across JobForm (New/Edit application), Kanban, and GlobalMarket with quick search input, first-letter filter/jump, 1/3 viewport height guardrails, and renaming 'All Locations' to 'Location'.",
+  "updatedAt":  "2026-10-29T16:08:24.853523229Z",
   "requestFeedback":  true,
   "userFacing":  true
 }

@@ -33,7 +33,7 @@ export function NestedRoleMenu({
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <button className={cn("flex items-center w-full sm:w-auto min-w-0 sm:min-w-[110px] sm:max-w-[180px] xl:max-w-[220px] h-[38px] bg-white border border-[#efefef] rounded-full text-sm font-medium px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#faf9f7] transition-all cursor-pointer", className)}>
+        <button className={cn("flex items-center w-full sm:w-auto min-w-0 sm:min-w-[110px] sm:max-w-[180px] xl:max-w-[220px] h-[38px] bg-[#faf9f7] border border-[#efefef] rounded-full text-sm font-medium px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#f3f2ef] transition-all cursor-pointer", className)}>
           <Briefcase className="text-[#a5a5a5] mr-2 shrink-0" size={15} />
           <span className="text-[#121722] truncate flex-1 text-left">{getDisplayText()}</span>
           <div className="text-[#a5a5a5] shrink-0 ml-1.5">
@@ -44,11 +44,11 @@ export function NestedRoleMenu({
       
       <DropdownMenu.Portal>
         <DropdownMenu.Content 
-          className="z-[100] min-w-[260px] max-h-[50vh] overflow-y-auto bg-white rounded-xl border border-[#efefef] shadow-lg p-1 animate-in fade-in-80 zoom-in-95"
+          className="z-[100] min-w-[260px] max-h-[50vh] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-xl p-1 animate-in fade-in-80 zoom-in-95 custom-scrollbar"
           sideOffset={8}
         >
           <DropdownMenu.Item 
-            className="flex items-center px-3 py-2 text-sm text-[#121722] rounded-lg cursor-pointer hover:bg-[#faf9f7] outline-none select-none"
+            className="flex items-center px-3 py-2 text-sm text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none"
             onClick={() => onSelectType("")}
           >
             All Roles
@@ -62,7 +62,7 @@ export function NestedRoleMenu({
 
             return (
               <DropdownMenu.Sub key={category}>
-                <DropdownMenu.SubTrigger className="flex items-center px-3 py-2 text-sm text-[#121722] rounded-lg cursor-pointer hover:bg-[#faf9f7] outline-none select-none data-[state=open]:bg-[#faf9f7]">
+                <DropdownMenu.SubTrigger className="flex items-center px-3 py-2 text-sm text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none data-[state=open]:bg-[#faf9f7]">
                   {category}
                   {hasActiveRole && <Check size={16} className="ml-auto text-[#0068f9] mr-2" />}
                   <ChevronRight size={16} className="ml-auto text-[#a5a5a5]" />
@@ -70,7 +70,7 @@ export function NestedRoleMenu({
                 
                 <DropdownMenu.Portal>
                   <DropdownMenu.SubContent 
-                    className="z-[100] min-w-[260px] max-h-[50vh] overflow-y-auto bg-white rounded-xl border border-[#efefef] shadow-lg p-1 animate-in fade-in-80 zoom-in-95"
+                    className="z-[100] min-w-[260px] max-h-[50vh] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-xl p-1 animate-in fade-in-80 zoom-in-95 custom-scrollbar"
                     sideOffset={4}
                   >
                     {roles.map(role => (

@@ -45,7 +45,7 @@ export function QSTierDropdownMenu({
             'flex items-center w-full sm:w-auto min-w-0 sm:min-w-[110px] sm:max-w-[170px] xl:max-w-[190px] h-[38px] rounded-full text-sm font-medium px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs transition-all cursor-pointer select-none',
             isActive
               ? 'bg-blue-50/80 border border-[#0068f9]/40 text-[#0068f9] hover:bg-blue-50 font-semibold'
-              : 'bg-white border border-[#efefef] text-[#121722] hover:bg-[#faf9f7]',
+              : 'bg-[#faf9f7] border border-[#efefef] text-[#121722] hover:bg-[#f3f2ef]',
             className
           )}
           title={

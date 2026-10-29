@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { JobApplication, JobStatus, getStatusLabel } from '../types';
 import { ApplicationMap } from './ApplicationMap';
 import { 
@@ -14,10 +14,6 @@ interface AnalyticsProps {
 }
 
 export function Analytics({ applications, isDemo = false, onLocationSelect, trackingSystem = 'industry' }: AnalyticsProps) {
-  const [linkedinViews, setLinkedinViews] = useState('');
-  const [linkedinSearches, setLinkedinSearches] = useState('');
-  const [savedInsights, setSavedInsights] = useState<{views: number, searches: number} | null>(null);
-
   const statusCounts = applications.reduce((acc, app) => {
     acc[app.status] = (acc[app.status] || 0) + 1;
     return acc;
@@ -38,14 +34,14 @@ export function Analytics({ applications, isDemo = false, onLocationSelect, trac
   }));
   
   const statusColors: Record<string, string> = {
-    'Wishlist': '#c7d2fe',
-    'Applied': '#86efac',
-    'Ghosted': '#cbd5e1',
-    'Rejected': '#fca5a5',
-    'Screening': '#8ec5ff',
-    'Technical': '#8ec5ff',
-    'Final': '#8ec5ff',
-    'Offer': '#8ec5ff'
+    'Wishlist': '#fbbf24',
+    'Applied': '#0068f9',
+    'Ghosted': '#94a3b8',
+    'Rejected': '#ef4444',
+    'Screening': '#38bdf8',
+    'Technical': '#60a5fa',
+    'Final': '#93c5fd',
+    'Offer': '#22c55e'
   };
 
   const getStatusColor = (labelOrKey: string) => {
@@ -56,7 +52,7 @@ export function Analytics({ applications, isDemo = false, onLocationSelect, trac
     if (labelOrKey === getStatusLabel('Technical', 'academic')) return statusColors['Technical'];
     if (labelOrKey === getStatusLabel('Final', 'academic')) return statusColors['Final'];
     if (labelOrKey === getStatusLabel('Offer', 'academic')) return statusColors['Offer'];
-    return '#8ec5ff';
+    return '#0068f9';
   };
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -64,7 +60,7 @@ export function Analytics({ applications, isDemo = false, onLocationSelect, trac
       const item = payload[0];
       const name = item.name || item.payload?.name || '';
       const value = item.value ?? 0;
-      const color = getStatusColor(name) || item.color || '#3b82f6';
+      const color = getStatusColor(name) || item.color || '#0068f9';
 
       return (
         <div className="bg-white border border-slate-200 rounded-lg shadow-md p-3">
@@ -76,14 +72,6 @@ export function Analytics({ applications, isDemo = false, onLocationSelect, trac
       );
     }
     return null;
-  };
-
-  const handleSaveInsights = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSavedInsights({
-      views: parseInt(linkedinViews) || 0,
-      searches: parseInt(linkedinSearches) || 0
-    });
   };
 
   return (
@@ -136,42 +124,9 @@ export function Analytics({ applications, isDemo = false, onLocationSelect, trac
         <div className="text-sm text-slate-300 leading-relaxed text-center font-normal">
           Active distribution across <span className="text-white font-bold">{applications.length}</span> total roles.
         </div>
-      </div>
-
-      <div className="col-span-12 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 shadow-none">
-        <h3 className="text-sm font-bold text-[#121722] mb-4">LinkedIn Premium Insights</h3>
-        {!savedInsights ? (
-          <form onSubmit={handleSaveInsights} className="flex flex-col md:flex-row gap-4 items-end">
-            <div className="flex-1 w-full">
-              <label className="block text-xs font-medium text-[#777c86] mb-1">Profile Views (90 Days)</label>
-              <input type="number" value={linkedinViews} onChange={e => setLinkedinViews(e.target.value)} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" placeholder="e.g. 1500" />
-            </div>
-            <div className="flex-1 w-full">
-              <label className="block text-xs font-medium text-[#777c86] mb-1">Search Appearances</label>
-              <input type="number" value={linkedinSearches} onChange={e => setLinkedinSearches(e.target.value)} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" placeholder="e.g. 450" />
-            </div>
-            <button type="submit" className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-all bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-9 px-5 py-2 w-full md:w-auto cursor-pointer">
-              Save Insights
-            </button>
-          </form>
-        ) : (
-          <div className="flex gap-12 p-4 bg-[#faf9f7] rounded-2xl border border-[#efefef]">
-            <div>
-              <div className="text-xs font-medium text-[#777c86] mb-1">Profile Views</div>
-              <div className="text-3xl font-extrabold text-[#121722]">{savedInsights.views}</div>
-            </div>
-            <div>
-              <div className="text-xs font-medium text-[#777c86] mb-1">Search Appearances</div>
-              <div className="text-3xl font-extrabold text-[#121722]">{savedInsights.searches}</div>
-            </div>
-            <button onClick={() => setSavedInsights(null)} className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-all border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] h-9 px-5 py-2 mt-auto ml-auto cursor-pointer shadow-2xs">
-              Edit
-            </button>
-          </div>
-        )}
-      </div>
         </div>
       </div>
     </div>
+  </div>
   );
 }

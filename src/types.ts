@@ -130,9 +130,9 @@ export const predictWorkType = (job?: {
 export const getWorkTypeBadgeStyle = (workType?: WorkType | string) => {
   switch (workType) {
     case 'On-site':
-      return 'bg-amber-50 text-amber-700 border-amber-200/80';
+      return 'bg-[#d0e2ff] text-[#0040a8] border-[#0040a8]/30';
     case 'Hybrid':
-      return 'bg-indigo-50 text-indigo-700 border-indigo-200/80';
+      return 'bg-[#e8f1ff] text-[#0068f9] border-[#0068f9]/25';
     case 'Remote':
       return 'bg-emerald-50 text-emerald-700 border-emerald-200/80';
     default:

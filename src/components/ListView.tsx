@@ -17,11 +17,11 @@ interface ListViewProps {
 }
 
 const STATUS_COLORS: Record<JobStatus, string> = {
-  Wishlist: 'bg-indigo-100 text-indigo-700',
-  Applied: 'bg-slate-100 text-slate-700',
-  Screening: 'bg-blue-100 text-blue-700',
-  Technical: 'bg-purple-100 text-purple-700',
-  Final: 'bg-orange-100 text-orange-700',
+  Wishlist: 'bg-amber-100 text-amber-800',
+  Applied: 'bg-[#e8f1ff] text-[#0068f9]',
+  Screening: 'bg-[#e8f1ff] text-[#0068f9]',
+  Technical: 'bg-[#e8f1ff] text-[#0068f9]',
+  Final: 'bg-[#e8f1ff] text-[#0068f9]',
   Offer: 'bg-green-100 text-green-700',
   Rejected: 'bg-red-100 text-red-700',
   Ghosted: 'bg-gray-100 text-gray-700',
@@ -45,19 +45,21 @@ function StatusDropdown({ status, onChange, trackingSystem = 'industry' }: { sta
     <div className="relative" ref={ref}>
       <button
         onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
-        className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-colors border border-transparent hover:border-slate-300 ${STATUS_COLORS[status]}`}
+        className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all border cursor-pointer ${
+          open ? 'border-[#0068f9] ring-1 ring-[#0068f9]' : 'border-transparent hover:border-slate-300'
+        } ${STATUS_COLORS[status]}`}
       >
         {getStatusLabel(status, trackingSystem)}
-        <ChevronDown size={12} className="ml-1 opacity-70" />
+        <ChevronDown size={12} className={`ml-1 opacity-70 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       
       {open && (
-        <div className="absolute top-full left-0 mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg z-10 py-1">
+        <div className="absolute top-full left-0 mt-1.5 w-44 bg-white border border-[#efefef] rounded-2xl shadow-xl z-20 py-1.5 animate-in fade-in-50 zoom-in-95 duration-150">
           {STATUSES.map(s => (
             <button
               key={s}
               onClick={(e) => { e.stopPropagation(); onChange(s); setOpen(false); }}
-              className={`w-full text-left px-4 py-2 text-sm transition-colors hover:bg-slate-50 flex items-center justify-between ${s === status ? 'font-bold' : ''}`}
+              className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-[#faf9f7] flex items-center justify-between cursor-pointer ${s === status ? 'font-bold' : ''}`}
             >
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${STATUS_COLORS[s]}`}>
                 {getStatusLabel(s, trackingSystem)}
@@ -224,17 +226,17 @@ function ActionDropdown({ onEdit, onDelete }: { onEdit: () => void, onDelete: ()
       </button>
       
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-32 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1 overflow-hidden">
+        <div className="absolute right-0 top-full mt-1.5 w-32 bg-white border border-[#efefef] rounded-2xl shadow-xl z-20 py-1.5 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150">
           <button
             onClick={(e) => { e.stopPropagation(); setOpen(false); onEdit(); }}
-            className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+            className="w-full flex items-center gap-2 px-3.5 py-1.5 text-xs font-medium text-[#121722] hover:bg-[#faf9f7] transition-colors cursor-pointer"
           >
-            <Edit2 size={13} className="text-slate-400" />
+            <Edit2 size={13} className="text-[#777c86]" />
             Edit
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); setOpen(false); onDelete(); }}
-            className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors"
+            className="w-full flex items-center gap-2 px-3.5 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
           >
             <Trash2 size={13} className="text-rose-500" />
             Delete
