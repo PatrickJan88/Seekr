@@ -647,7 +647,7 @@ export function CoverLetterStudio({
       fontStyle = "font-family: 'Times New Roman', Georgia, serif; font-size: 11pt; line-height: 1.6; color: #111;";
     } else if (style === 'executive') {
       fontStyle = "font-family: 'Georgia', serif; font-size: 10.5pt; line-height: 1.65; color: #0f172a;";
-      accentHeader = `<div style="border-top: 3px solid #0068f9; margin-bottom: 20px;"></div>`;
+      accentHeader = `<div class="executive-accent-bar" style="border-top: 3px solid #0068f9; margin-bottom: 20px;"></div>`;
     } else if (style === 'academic') {
       fontStyle = "font-family: 'Computer Modern', 'Times New Roman', serif; font-size: 11pt; line-height: 1.7; color: #000;";
     }
@@ -669,7 +669,7 @@ export function CoverLetterStudio({
     const pagesHtml = currentDomPages.map((content, i) => {
       const sanitized = sanitizePrintHtml(content);
       return `
-      <div class="a4-page-sheet">
+      <div class="a4-page-sheet" data-style="${style}">
         ${i === 0 ? accentHeader : ''}
         <div class="content">${sanitized}</div>
         <div class="page-footer-print">
@@ -685,6 +685,7 @@ export function CoverLetterStudio({
       <html>
         <head>
           <title>${companyName ? `${companyName} Cover Letter` : 'Cover Letter'} - Seekr</title>
+          <meta name="format-detection" content="telephone=no">
           <style>
             @page { 
               size: A4 portrait; 
@@ -769,7 +770,7 @@ export function CoverLetterStudio({
             }
           </style>
         </head>
-        <body>
+        <body data-studio="cover-letter" data-style="${style}" style="${fontStyle}">
           ${pagesHtml}
           <script>
             window.onload = function() {

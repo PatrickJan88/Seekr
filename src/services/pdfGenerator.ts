@@ -15,13 +15,42 @@ export async function generatePdfFromHtml(html: string, options: GeneratePdfOpti
       // Extract document title
       const pageTitle = options.title || document.querySelector('title')?.textContent?.trim() || 'Document';
 
+      // Inspect style cues and preset indicators prior to stripping style elements
+      const styleTagContent = document.querySelector('style')?.textContent || '';
+      const bodyEl = document.body;
+      const bodyStyleAttr = bodyEl?.getAttribute('style') || '';
+      const dataStyleAttr = bodyEl?.getAttribute('data-style') || document.querySelector('[data-style]')?.getAttribute('data-style') || '';
+      const combinedStyle = `${styleTagContent} ${bodyStyleAttr} ${dataStyleAttr} ${html}`.toLowerCase();
+
+      const isStudioA4 = document.querySelector('.a4-page-sheet') !== null || html.includes('a4-page-sheet');
+
+      // Style preset detection (Classic, Executive, Academic use serif typography; Modern uses sans-serif)
+      const isSerif =
+        dataStyleAttr === 'classic' ||
+        dataStyleAttr === 'executive' ||
+        dataStyleAttr === 'academic' ||
+        combinedStyle.includes('times new roman') ||
+        combinedStyle.includes('georgia') ||
+        combinedStyle.includes('computer modern') ||
+        combinedStyle.includes('font-serif');
+
+      const baseFont = isSerif ? 'Times-Roman' : 'Helvetica';
+      const boldFont = isSerif ? 'Times-Bold' : 'Helvetica-Bold';
+      const italicFont = isSerif ? 'Times-Italic' : 'Helvetica-Oblique';
+
       // Remove non-content elements and existing HTML-level print footers
       document.querySelectorAll('script, style, noscript, .page-footer-print').forEach(el => el.remove());
+
+      // 22mm A4 Geometry: 1mm = 2.83465pt
+      // Margins: Left 22mm (62.4pt), Right 22mm (62.4pt), Top 24mm (68pt), Bottom 20mm (56pt)
+      const docMargins = isStudioA4
+        ? { top: 68, bottom: 56, left: 62.4, right: 62.4 }
+        : { top: 36, bottom: 45, left: 36, right: 36 };
 
       // Create PDFKit document
       const doc = new PDFDocument({
         size: 'A4',
-        margins: { top: 36, bottom: 45, left: 36, right: 36 },
+        margins: docMargins,
         bufferPages: true,
         info: {
           Title: pageTitle,
@@ -60,8 +89,11 @@ export async function generatePdfFromHtml(html: string, options: GeneratePdfOpti
           // Text node
           const text = cleanText(node.textContent);
           if (text) {
-            checkPageBreak(14);
-            doc.font('Helvetica').fontSize(9.5).fillColor('#334155').text(text, { lineGap: 2.5 });
+            checkPageBreak(16);
+            doc.font(baseFont)
+               .fontSize(isStudioA4 ? 11 : 9.5)
+               .fillColor('#1e293b')
+               .text(text, { lineGap: isStudioA4 ? 4.5 : 2.5 });
             hasRenderedContent = true;
           }
           return;
@@ -73,6 +105,22 @@ export async function generatePdfFromHtml(html: string, options: GeneratePdfOpti
         const tag = el.tagName.toLowerCase();
         const className = el.className || '';
         const style = el.getAttribute('style') || '';
+
+        // Executive Style Accent Bar
+        if (
+          hasClass(el, 'executive-accent-bar') ||
+          style.includes('border-top: 3px solid #0068f9')
+        ) {
+          checkPageBreak(25);
+          doc.strokeColor('#0068f9')
+             .lineWidth(3)
+             .moveTo(doc.page.margins.left, doc.y)
+             .lineTo(doc.page.width - doc.page.margins.right, doc.y)
+             .stroke();
+          doc.moveDown(0.8);
+          hasRenderedContent = true;
+          return;
+        }
 
         // Explicit multi-page break boundary (e.g. .a4-page-sheet or page-card or page-break-after/before)
         if (
@@ -89,7 +137,7 @@ export async function generatePdfFromHtml(html: string, options: GeneratePdfOpti
           if (text) {
             checkPageBreak(35);
             doc.moveDown(0.3);
-            doc.font('Helvetica-Bold').fontSize(19).fillColor('#0f172a').text(text);
+            doc.font(boldFont).fontSize(19).fillColor('#0f172a').text(text);
             doc.moveDown(0.2);
             doc.strokeColor('#0068f9').lineWidth(1.5).moveTo(doc.x, doc.y).lineTo(doc.x + Math.min(pageWidth, 160), doc.y).stroke();
             doc.moveDown(0.4);
@@ -103,7 +151,7 @@ export async function generatePdfFromHtml(html: string, options: GeneratePdfOpti
           if (text) {
             checkPageBreak(28);
             doc.moveDown(0.4);
-            doc.font('Helvetica-Bold').fontSize(12.5).fillColor('#0f172a').text(text);
+            doc.font(boldFont).fontSize(13).fillColor('#0f172a').text(text);
             doc.strokeColor('#e2e8f0').lineWidth(0.8).moveTo(doc.x, doc.y + 2).lineTo(doc.x + pageWidth, doc.y + 2).stroke();
             doc.moveDown(0.35);
             hasRenderedContent = true;
@@ -116,7 +164,7 @@ export async function generatePdfFromHtml(html: string, options: GeneratePdfOpti
           if (text) {
             checkPageBreak(24);
             doc.moveDown(0.3);
-            doc.font('Helvetica-Bold').fontSize(11).fillColor('#1e293b').text(text);
+            doc.font(boldFont).fontSize(11.5).fillColor('#1e293b').text(text);
             doc.moveDown(0.2);
             hasRenderedContent = true;
             return;
@@ -127,7 +175,7 @@ export async function generatePdfFromHtml(html: string, options: GeneratePdfOpti
           const text = cleanText(el.textContent);
           if (text) {
             checkPageBreak(18);
-            doc.font('Helvetica-Bold').fontSize(11).fillColor('#0068f9').text(text);
+            doc.font(boldFont).fontSize(11.5).fillColor('#0068f9').text(text);
             doc.moveDown(0.25);
             hasRenderedContent = true;
             return;
@@ -138,7 +186,7 @@ export async function generatePdfFromHtml(html: string, options: GeneratePdfOpti
           const text = cleanText(el.textContent);
           if (text) {
             checkPageBreak(16);
-            doc.font('Helvetica-Oblique').fontSize(9).fillColor('#475569').text(text);
+            doc.font(italicFont).fontSize(9.5).fillColor('#475569').text(text);
             doc.moveDown(0.2);
             hasRenderedContent = true;
             return;
@@ -148,11 +196,11 @@ export async function generatePdfFromHtml(html: string, options: GeneratePdfOpti
         // Handle specific HTML tags
         switch (tag) {
           case 'h1': {
-            checkPageBreak(36);
+            checkPageBreak(40);
             const text = cleanText(el.textContent);
             if (text) {
               doc.moveDown(0.35);
-              doc.font('Helvetica-Bold').fontSize(18).fillColor('#0f172a').text(text);
+              doc.font(boldFont).fontSize(isStudioA4 ? 19 : 18).fillColor('#0f172a').text(text);
               doc.moveDown(0.2);
               doc.strokeColor('#0068f9').lineWidth(1.5).moveTo(doc.x, doc.y).lineTo(doc.x + Math.min(pageWidth, 160), doc.y).stroke();
               doc.moveDown(0.4);
@@ -162,11 +210,11 @@ export async function generatePdfFromHtml(html: string, options: GeneratePdfOpti
           }
 
           case 'h2': {
-            checkPageBreak(28);
+            checkPageBreak(32);
             const text = cleanText(el.textContent);
             if (text) {
               doc.moveDown(0.4);
-              doc.font('Helvetica-Bold').fontSize(13).fillColor('#0f172a').text(text);
+              doc.font(boldFont).fontSize(isStudioA4 ? 14 : 13).fillColor('#0f172a').text(text);
               doc.strokeColor('#e2e8f0').lineWidth(0.8).moveTo(doc.x, doc.y + 2).lineTo(doc.x + pageWidth, doc.y + 2).stroke();
               doc.moveDown(0.35);
               hasRenderedContent = true;
@@ -175,11 +223,11 @@ export async function generatePdfFromHtml(html: string, options: GeneratePdfOpti
           }
 
           case 'h3': {
-            checkPageBreak(24);
+            checkPageBreak(28);
             const text = cleanText(el.textContent);
             if (text) {
               doc.moveDown(0.35);
-              doc.font('Helvetica-Bold').fontSize(11).fillColor('#1e293b').text(text);
+              doc.font(boldFont).fontSize(isStudioA4 ? 12 : 11).fillColor('#1e293b').text(text);
               doc.moveDown(0.2);
               hasRenderedContent = true;
             }
@@ -189,11 +237,11 @@ export async function generatePdfFromHtml(html: string, options: GeneratePdfOpti
           case 'h4':
           case 'h5':
           case 'h6': {
-            checkPageBreak(20);
+            checkPageBreak(22);
             const text = cleanText(el.textContent);
             if (text) {
               doc.moveDown(0.25);
-              doc.font('Helvetica-Bold').fontSize(10).fillColor('#334155').text(text);
+              doc.font(boldFont).fontSize(isStudioA4 ? 11 : 10).fillColor('#334155').text(text);
               doc.moveDown(0.2);
               hasRenderedContent = true;
             }
@@ -201,28 +249,31 @@ export async function generatePdfFromHtml(html: string, options: GeneratePdfOpti
           }
 
           case 'p': {
-            checkPageBreak(18);
+            checkPageBreak(22);
             // Handle paragraphs that may have <br> elements
             const lines = el.innerHTML.split(/<br\s*\/?>/i);
-            lines.forEach((lineHtml, lineIdx) => {
+            lines.forEach((lineHtml) => {
               // Strip any inner html tags to get text
               const tempDom = new JSDOM(`<body>${lineHtml}</body>`);
               const lineText = cleanText(tempDom.window.document.body.textContent);
               if (lineText) {
-                checkPageBreak(14);
-                doc.font('Helvetica').fontSize(9.5).fillColor('#334155').text(lineText, {
-                  lineGap: 3,
-                  width: pageWidth,
-                });
+                checkPageBreak(16);
+                doc.font(baseFont)
+                   .fontSize(isStudioA4 ? 11 : 9.5)
+                   .fillColor('#1e293b')
+                   .text(lineText, {
+                     lineGap: isStudioA4 ? 4.5 : 3,
+                     width: pageWidth,
+                   });
                 hasRenderedContent = true;
               }
             });
-            doc.moveDown(0.35);
+            doc.moveDown(isStudioA4 ? 0.85 : 0.35);
             break;
           }
 
           case 'br': {
-            doc.moveDown(0.35);
+            doc.moveDown(isStudioA4 ? 0.6 : 0.35);
             break;
           }
 
@@ -230,39 +281,39 @@ export async function generatePdfFromHtml(html: string, options: GeneratePdfOpti
           case 'ol': {
             const items = el.querySelectorAll(':scope > li');
             items.forEach((li, idx) => {
-              checkPageBreak(16);
+              checkPageBreak(18);
               const bullet = tag === 'ol' ? `${idx + 1}. ` : '• ';
               const liText = cleanText(li.textContent);
               if (liText) {
                 const prevX = doc.x;
-                doc.font('Helvetica').fontSize(9.5).fillColor('#0068f9').text(bullet, prevX + 6, doc.y, { continued: true });
-                doc.font('Helvetica').fontSize(9.5).fillColor('#334155').text(liText, {
-                  lineGap: 2.5,
+                doc.font(boldFont).fontSize(isStudioA4 ? 11 : 9.5).fillColor('#0068f9').text(bullet, prevX + 6, doc.y, { continued: true });
+                doc.font(baseFont).fontSize(isStudioA4 ? 11 : 9.5).fillColor('#1e293b').text(liText, {
+                  lineGap: isStudioA4 ? 4.5 : 2.5,
                   width: pageWidth - 20,
                 });
                 doc.x = prevX;
-                doc.moveDown(0.2);
+                doc.moveDown(isStudioA4 ? 0.3 : 0.2);
                 hasRenderedContent = true;
               }
             });
-            doc.moveDown(0.25);
+            doc.moveDown(isStudioA4 ? 0.5 : 0.25);
             break;
           }
 
           case 'blockquote': {
-            checkPageBreak(32);
+            checkPageBreak(36);
             const text = cleanText(el.textContent);
             if (text) {
               const startY = doc.y;
               const quoteX = doc.x + 14;
-              doc.font('Helvetica-Oblique').fontSize(9.5).fillColor('#1e293b').text(text, quoteX, startY + 4, {
+              doc.font(italicFont).fontSize(isStudioA4 ? 11 : 9.5).fillColor('#1e293b').text(text, quoteX, startY + 4, {
                 width: pageWidth - 24,
-                lineGap: 3,
+                lineGap: isStudioA4 ? 4.5 : 3,
               });
               const endY = doc.y + 4;
               doc.strokeColor('#0068f9').lineWidth(3).moveTo(doc.x, startY).lineTo(doc.x, endY).stroke();
               doc.x = doc.page.margins.left;
-              doc.y = endY + 6;
+              doc.y = endY + (isStudioA4 ? 8 : 6);
               hasRenderedContent = true;
             }
             break;
@@ -287,8 +338,8 @@ export async function generatePdfFromHtml(html: string, options: GeneratePdfOpti
               cells.forEach((cell, cellIndex) => {
                 const cellText = cleanText(cell.textContent);
                 const cellX = doc.page.margins.left + cellIndex * colWidth + 4;
-                doc.font(isHeader ? 'Helvetica-Bold' : 'Helvetica')
-                  .fontSize(8.5)
+                doc.font(isHeader ? boldFont : baseFont)
+                  .fontSize(9)
                   .fillColor(isHeader ? '#0f172a' : '#334155')
                   .text(cellText, cellX, rowY + 4, { width: colWidth - 8 });
               });
@@ -323,7 +374,7 @@ export async function generatePdfFromHtml(html: string, options: GeneratePdfOpti
                 const badgeW = textWidth + 14;
                 const badgeH = 16;
                 doc.roundedRect(doc.x, doc.y, badgeW, badgeH, 4).fill('#e8f1ff');
-                doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#0068f9').text(text, doc.x + 7, doc.y - badgeH + 4);
+                doc.font(boldFont).fontSize(8.5).fillColor('#0068f9').text(text, doc.x + 7, doc.y - badgeH + 4);
                 doc.moveDown(0.3);
                 hasRenderedContent = true;
                 return;
@@ -349,9 +400,9 @@ export async function generatePdfFromHtml(html: string, options: GeneratePdfOpti
 
       // Safety guard: if no content was extracted from HTML, render title and fallback
       if (!hasRenderedContent) {
-        doc.font('Helvetica-Bold').fontSize(16).fillColor('#0f172a').text(pageTitle);
+        doc.font(boldFont).fontSize(16).fillColor('#0f172a').text(pageTitle);
         doc.moveDown(0.5);
-        doc.font('Helvetica').fontSize(10).fillColor('#64748b').text('Document content generated by Seekr Application Studio.');
+        doc.font(baseFont).fontSize(11).fillColor('#64748b').text('Document content generated by Seekr Application Studio.');
       }
 
       // Add platform watermark page footer on each buffered page
@@ -371,7 +422,7 @@ export async function generatePdfFromHtml(html: string, options: GeneratePdfOpti
            .stroke();
 
         // Platform watermark on bottom left with link
-        doc.font('Helvetica').fontSize(8).fillColor('#64748b');
+        doc.font('Helvetica').fontSize(8.5).fillColor('#64748b');
         doc.text(
           'Powered by Seekr https://seekr-v5am.onrender.com/',
           doc.page.margins.left,
