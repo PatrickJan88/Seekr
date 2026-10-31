@@ -527,7 +527,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
 
         <div class="section-title">Education</div>
         ${education.map(edu => `
-          <div class="item-block" style="display: flex; justify-content: space-between; font-size: 9.5pt; margin-bottom: 3px;">
+          <div class="item-block edu-block" style="display: flex; justify-content: space-between; font-size: 9.5pt; margin-bottom: 3px;">
             <div><strong>${edu.institution}</strong> — ${edu.degree} ${edu.details ? `<em>(${edu.details})</em>` : ''}</div>
             <div>${edu.year}</div>
           </div>
@@ -614,7 +614,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
         .pill { 
           display: inline-block; 
           background: #f1f5f9; 
-          color: #1e293b;
+          color: #1e293b; 
           padding: 2px 7px; 
           border-radius: 4px; 
           font-size: 8.5pt; 
@@ -657,7 +657,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
 
         <div class="section-title">Education</div>
         ${education.map(edu => `
-          <div class="item-block" style="display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 9.5pt;">
+          <div class="item-block edu-block" style="display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 9.5pt;">
             <div><strong>${edu.degree}</strong> — ${edu.institution} ${edu.details ? `<span style="color: #64748b;">(${edu.details})</span>` : ''}</div>
             <div style="color: #64748b;">${edu.year}</div>
           </div>
@@ -693,6 +693,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
           display: grid; 
           grid-template-columns: 2.1in 1fr; 
           gap: 18px; 
+          min-height: 8.2in;
         }
         .sidebar { 
           border-right: 1px solid #ccc; 
@@ -765,8 +766,8 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
             <div class="section-title">Professional Experience</div>
             ${experience.map(exp => `
               <div class="item-block">
-                <div style="font-weight: bold; font-size: 9.5pt;">${exp.role}</div>
-                <div style="font-style: italic; font-size: 8.5pt; color: #444; margin-bottom: 2px;">
+                <div class="exp-header" style="font-weight: bold; font-size: 9.5pt;">${exp.role}</div>
+                <div class="exp-sub" style="font-style: italic; font-size: 8.5pt; color: #444; margin-bottom: 2px;">
                   ${exp.company} | ${exp.period} ${exp.location ? `(${exp.location})` : ''}
                 </div>
                 <ul>${exp.bullets.map(b => `<li>${b}</li>`).join('')}</ul>
@@ -841,8 +842,8 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
           border-radius: 3px; 
           margin: 1.5px 1.5px 1.5px 0; 
         }
-        .item-block {
-          margin-bottom: 8px;
+        .item-block { 
+          margin-bottom: 8px; 
           page-break-inside: avoid;
         }
         ul { 
@@ -852,7 +853,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
         li { 
           margin-bottom: 2px; 
           color: #334155; 
-          font-size: 8.5pt;
+          font-size: 8.5pt; 
         }
       `;
 
@@ -886,7 +887,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
             `).join('')}
           </div>
 
-          <div>
+          <div class="main-col">
             ${summary ? `
               <div class="main-h" style="margin-top:0;">Profile Summary</div>
               <p style="margin: 0 0 8px 0; color: #334155; font-size: 8.5pt;">${summary}</p>
@@ -895,11 +896,11 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
             <div class="main-h">Professional Experience</div>
             ${experience.map(exp => `
               <div class="item-block">
-                <div style="display: flex; justify-content: space-between; font-weight: 700; color: #0f172a; font-size: 9pt;">
+                <div class="exp-header" style="display: flex; justify-content: space-between; font-weight: 700; color: #0f172a; font-size: 9pt;">
                   <span>${exp.role}</span>
                   <span style="color: #64748b; font-weight: normal; font-size: 8pt;">${exp.period}</span>
                 </div>
-                <div style="color: #0068f9; font-weight: 600; font-size: 8.5pt;">${exp.company} ${exp.location ? '• ' + exp.location : ''}</div>
+                <div class="exp-company" style="color: #0068f9; font-weight: 600; font-size: 8.5pt;">${exp.company} ${exp.location ? '• ' + exp.location : ''}</div>
                 <ul>${exp.bullets.map(b => `<li>${b}</li>`).join('')}</ul>
               </div>
             `).join('')}
@@ -930,7 +931,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
             }
           </style>
         </head>
-        <body>
+        <body data-studio="resume" data-template="${activeTmpl}">
           ${renderedHtml}
           <div class="page-footer-print" style="margin-top: 24px; padding-top: 8px; border-top: 1px solid #e2e8f0; font-size: 8.5pt; color: #94a3b8; display: flex; justify-content: space-between;">
             <span>Powered by Seekr <a href="https://seekr-v5am.onrender.com/" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">https://seekr-v5am.onrender.com/</a></span>
@@ -1430,7 +1431,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
 
               {/* Right Paper Canvas Preview */}
               <div className="flex-1 p-6 md:p-10 overflow-y-auto flex justify-center bg-[#f4f5f6] custom-scrollbar">
-                <div className="w-full max-w-3xl bg-white shadow-md border border-[#e2e8f0] p-8 sm:p-12 min-h-[11in] rounded-sm text-[#121722]">
+                <div className="w-full max-w-3xl bg-white shadow-md border border-[#e2e8f0] p-8 sm:p-12 min-h-[11in] rounded-sm text-[#121722] flex flex-col">
                   
                   {/* Template 1: Classic Single Column (Resume Matcher LaTeX Style) */}
                   {selectedTemplate === 'classic-single' && (
@@ -1563,12 +1564,12 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
 
                   {/* Template 3: Classic Two Column */}
                   {selectedTemplate === 'classic-two' && (
-                    <div className="font-serif text-xs leading-relaxed">
+                    <div className="font-serif text-xs leading-relaxed flex flex-col flex-1">
                       <div className="border-b-2 border-black pb-3 mb-4">
                         <h1 className="text-2xl font-bold uppercase">{resumeData.fullName}</h1>
                         <p className="text-sm italic text-gray-700">{resumeData.title}</p>
                       </div>
-                      <div className="grid grid-cols-12 gap-6">
+                      <div className="grid grid-cols-12 gap-6 flex-1 min-h-[800px] mb-[80px]">
                         <div className="col-span-4 border-r border-gray-300 pr-4 space-y-4 text-[11px]">
                           <div>
                             <h4 className="font-bold uppercase border-b border-gray-400 pb-1 mb-1">Contact</h4>

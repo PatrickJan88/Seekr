@@ -941,9 +941,10 @@ export function InterviewPrepStudio({
     const currentDomPages = snapshotDomPages();
     const pagesHtml = currentDomPages.map((content, i) => {
       const sanitized = sanitizePrintHtml(content);
+      const hasTopHeading = /^\s*<h[1-3][^>]*>/i.test(sanitized);
       return `
       <div class="a4-page-sheet">
-        ${i === 0 ? `
+        ${(i === 0 && !hasTopHeading) ? `
           <div class="story-header-print">
             ${activeStory.tags && activeStory.tags.length > 0 ? `
               <div class="badge-row">
@@ -1002,9 +1003,7 @@ export function InterviewPrepStudio({
               break-after: avoid;
             }
             .story-header-print {
-              border-bottom: 2px solid #e2e8f0;
-              padding-bottom: 12px;
-              margin-bottom: 18px;
+              margin-bottom: 14px;
             }
             .badge-row {
               display: flex;
@@ -1049,8 +1048,6 @@ export function InterviewPrepStudio({
               color: #0f172a;
               margin-top: 14pt;
               margin-bottom: 5pt;
-              border-bottom: 1px solid #f1f5f9;
-              padding-bottom: 2pt;
             }
             .content p {
               margin-top: 0;

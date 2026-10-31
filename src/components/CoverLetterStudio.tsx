@@ -750,7 +750,7 @@ export function CoverLetterStudio({
             .content h1 { font-size: 18pt; font-weight: bold; margin: 0.8em 0 0.3em; }
             .content h2 { font-size: 14pt; font-weight: bold; margin: 0.7em 0 0.3em; }
             .content h3 { font-size: 12pt; font-weight: bold; margin: 0.6em 0 0.25em; }
-            .content blockquote { border-left: 3px solid #0068f9; padding-left: 12px; margin: 0.8em 0; font-style: italic; color: #334155; }
+            .content blockquote { border-left: 3.5px solid #0068f9; padding-left: 12px; margin: 0.8em 0; font-style: italic; color: #334155; background-color: #f8fafc; border-radius: 0 4px 4px 0; padding-top: 4px; padding-bottom: 4px; }
             .content mark { background-color: #fef08a; padding: 0 2px; }
             .content a { color: #0068f9; text-decoration: underline; }
             .content ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 0.85em; }
