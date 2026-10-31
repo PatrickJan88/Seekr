@@ -21,6 +21,7 @@ import {
   Search
 } from 'lucide-react';
 import { auth } from '../lib/firebase';
+import { getAccountScopeId } from '../lib/accountStorage';
 import { getEvaluations, deleteEvaluation, updateEvaluation } from '../db/evaluations';
 import { CVEvaluation, JobApplication, TailoredResumeData } from '../types';
 import { AgentAvatar } from './AgentAvatar';
@@ -40,6 +41,7 @@ interface EvaluateHistoryPageProps {
 }
 
 export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist, setNestedBreadcrumb, isDemo = false }: EvaluateHistoryPageProps) {
+  const accountScope = getAccountScopeId(auth.currentUser, isDemo);
   const [evaluations, setEvaluations] = useState<CVEvaluation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEval, setSelectedEval] = useState<CVEvaluation | null>(null);
@@ -1107,7 +1109,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
           targetRole={studioTargetRole}
           onClose={handleCloseStudio}
           onSave={handleSaveCoverLetter}
-          storageKey={studioEvalId ? `studio_cl_${studioEvalId}` : `studio_cl_${activeStudio.evalKey}`}
+          storageKey={studioEvalId ? `studio_cl_${accountScope}_${studioEvalId}` : `studio_cl_${accountScope}_${activeStudio.evalKey}`}
           isDemo={isDemo}
         />
       )}
@@ -1119,7 +1121,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
           targetRole={studioTargetRole}
           onClose={handleCloseStudio}
           onSave={handleSaveInterviewGuide}
-          storageKey={studioEvalId ? `studio_interview_prep_${studioEvalId}` : `studio_interview_prep_${activeStudio.evalKey}`}
+          storageKey={studioEvalId ? `studio_interview_prep_${accountScope}_${studioEvalId}` : `studio_interview_prep_${accountScope}_${activeStudio.evalKey}`}
           isDemo={isDemo}
         />
       )}
@@ -1131,7 +1133,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
           companyName={studioCompanyName}
           onClose={handleCloseStudio}
           onSave={handleSaveResume}
-          storageKey={studioEvalId ? `studio_resume_${studioEvalId}` : `studio_resume_${activeStudio.evalKey}`}
+          storageKey={studioEvalId ? `studio_resume_${accountScope}_${studioEvalId}` : `studio_resume_${accountScope}_${activeStudio.evalKey}`}
           isDemo={isDemo}
         />
       )}

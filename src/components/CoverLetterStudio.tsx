@@ -4,6 +4,8 @@ import { toast } from 'sonner';
 import { Toolbar } from './ui/toolbar';
 import { markdownOrTextToHtml, executeRichTextCommand, queryEditorState, paginateHtml, normalizeUrl } from '../lib/editor-utils';
 import { triggerDirectPdfExport } from '../lib/pdf-export';
+import { isGuestSession, getAccountScopeId } from '../lib/accountStorage';
+import { auth } from '../lib/firebase';
 
 interface CoverLetterStudioProps {
   initialText: string;
@@ -46,7 +48,8 @@ export function CoverLetterStudio({
   onSaveRef.current = onSave;
   const isInitializedRef = useRef<string | null>(null);
 
-  const fallbackKey = `studio_cover_letter_${(companyName || 'general').replace(/\s+/g, '_')}_${(_targetRole || 'general').replace(/\s+/g, '_')}`;
+  const accountScope = getAccountScopeId(auth.currentUser, isDemo);
+  const fallbackKey = `studio_cover_letter_${accountScope}_${(companyName || 'general').replace(/\s+/g, '_')}_${(_targetRole || 'general').replace(/\s+/g, '_')}`;
   const effectiveStorageKey = storageKey || fallbackKey;
 
   // Snapshot current DOM innerHTML or ref memory of all pages
@@ -276,18 +279,18 @@ export function CoverLetterStudio({
     let textToUse = initialText;
     let savedPagesList: string[] | null = null;
     try {
-      const saved = localStorage.getItem(effectiveStorageKey) || (fallbackKey !== effectiveStorageKey ? localStorage.getItem(fallbackKey) : null);
+      const saved = localStorage.getItem(effectiveStorageKey);
       if (saved && saved.trim() && saved.length > 10) {
         textToUse = saved;
       }
-      const rawPages = localStorage.getItem(`${effectiveStorageKey}_pages`) || (fallbackKey !== effectiveStorageKey ? localStorage.getItem(`${fallbackKey}_pages`) : null);
+      const rawPages = localStorage.getItem(`${effectiveStorageKey}_pages`);
       if (rawPages) {
         const parsed = JSON.parse(rawPages);
         if (Array.isArray(parsed) && parsed.length > 0) {
           savedPagesList = parsed;
         }
       }
-      const savedStyle = localStorage.getItem(`${effectiveStorageKey}_style`) || (fallbackKey !== effectiveStorageKey ? localStorage.getItem(`${fallbackKey}_style`) : null);
+      const savedStyle = localStorage.getItem(`${effectiveStorageKey}_style`);
       if (savedStyle && ['classic', 'modern', 'executive', 'academic'].includes(savedStyle)) {
         setStyle(savedStyle as CoverLetterStyle);
       }

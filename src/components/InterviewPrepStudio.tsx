@@ -25,6 +25,7 @@ import {
 import { PersonalStory } from '../types';
 import { triggerDirectPdfExport } from '../lib/pdf-export';
 import { auth } from '../lib/firebase';
+import { getAccountScopeId, isGuestSession } from '../lib/accountStorage';
 
 export interface InterviewPrepStudioProps {
   initialText?: string;
@@ -91,16 +92,17 @@ export function InterviewPrepStudio({
   isDemo = false,
   trackingSystem = 'industry'
 }: InterviewPrepStudioProps) {
-  const uid = isDemo ? 'demo' : (auth.currentUser?.uid || 'guest');
+  const accountScope = getAccountScopeId(auth.currentUser, isDemo);
+  const isGuest = isGuestSession(auth.currentUser, isDemo);
   const isWorkspace = embedded;
 
-  // Dedicated storage keys: Workspace is isolated from evaluation-specific sessions
-  const workspaceStorageKey = `seekr_interview_prep_workspace_docs_${uid}`;
-  const legacyStorageKey = `seekr_interview_prep_docs_${uid}`;
-  const legacyPersonalStoriesKey = `seekr_personal_stories_${uid}`;
+  // Dedicated storage keys: strictly scoped by accountScope
+  const workspaceStorageKey = `seekr_interview_prep_workspace_docs_${accountScope}`;
+  const legacyStorageKey = `seekr_interview_prep_docs_${accountScope}`;
+  const legacyPersonalStoriesKey = `seekr_personal_stories_${accountScope}`;
   
   const cleanCompany = cleanCompanyName(companyName);
-  const effectiveSingleDocKey = storageKey || (cleanCompany || targetRole ? `studio_interview_prep_${(cleanCompany || 'general').replace(/\s+/g, '_')}_${(targetRole || 'general').replace(/\s+/g, '_')}` : `studio_interview_prep_custom_${Date.now()}`);
+  const effectiveSingleDocKey = storageKey || (cleanCompany || targetRole ? `studio_interview_prep_${accountScope}_${(cleanCompany || 'general').replace(/\s+/g, '_')}_${(targetRole || 'general').replace(/\s+/g, '_')}` : `studio_interview_prep_${accountScope}_custom_${Date.now()}`);
 
   const onSaveRef = useRef(onSave);
   onSaveRef.current = onSave;
@@ -132,7 +134,9 @@ export function InterviewPrepStudio({
       // WORKSPACE MODE (Main Workspace Studio):
       let list: PersonalStory[] = [];
       try {
-        const saved = localStorage.getItem(workspaceStorageKey) || localStorage.getItem(legacyStorageKey) || localStorage.getItem(legacyPersonalStoriesKey);
+        const saved = isGuest
+          ? localStorage.getItem(workspaceStorageKey)
+          : (localStorage.getItem(workspaceStorageKey) || localStorage.getItem(legacyStorageKey) || localStorage.getItem(legacyPersonalStoriesKey));
         if (saved) {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
@@ -186,9 +190,10 @@ export function InterviewPrepStudio({
 
       try {
         localStorage.setItem(workspaceStorageKey, JSON.stringify(list));
-        // Clean out legacy keys so evaluation titles do not linger
-        localStorage.setItem(legacyStorageKey, JSON.stringify(list));
-        localStorage.setItem(legacyPersonalStoriesKey, JSON.stringify(list));
+        if (!isGuest) {
+          localStorage.setItem(legacyStorageKey, JSON.stringify(list));
+          localStorage.setItem(legacyPersonalStoriesKey, JSON.stringify(list));
+        }
       } catch {}
 
       return list;

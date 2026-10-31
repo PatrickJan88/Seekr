@@ -12,6 +12,8 @@ import { Footer } from './components/Footer';
 
 import { Github, Linkedin, Info } from 'lucide-react';
 
+import { purgeAllGuestAndLegacyData } from './lib/accountStorage';
+
 const checkIsDemo = () => {
   if (typeof window === 'undefined') return false;
   try {
@@ -73,6 +75,7 @@ export default function App() {
         setLoading(false);
       },
       () => {
+        purgeAllGuestAndLegacyData();
         setUser(null);
         setNeedsAuth(true);
         setLoading(false);
@@ -114,9 +117,7 @@ export default function App() {
     if (e) e.preventDefault();
     setIsLoggingIn(true);
     try {
-      try {
-        localStorage.removeItem('seekr_recent_searches');
-      } catch (e) {}
+      purgeAllGuestAndLegacyData();
       const result = await anonymousSignIn();
       if (result) {
         setUser(result.user);

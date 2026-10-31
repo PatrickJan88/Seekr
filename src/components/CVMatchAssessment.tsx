@@ -10,6 +10,7 @@ import {
   RESUME_UPDATED_EVENT 
 } from '../db/resumes';
 import { auth } from '../lib/firebase';
+import { getAccountScopeId } from '../lib/accountStorage';
 import AgentAvatar from './AgentAvatar';
 import PersonaOrbCarousel, { TECH_ROLES } from './PersonaOrbCarousel';
 import { InlineLoader } from 'generative-loaders';
@@ -68,6 +69,7 @@ interface CVMatchAssessmentProps {
 }
 
 export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlist, onViewHistory, setNestedBreadcrumb, trackingSystem = 'industry' }: CVMatchAssessmentProps & { trackingSystem?: 'industry' | 'academic' }) {
+  const accountScope = getAccountScopeId(auth.currentUser, isDemo);
   const [isNormsModalOpen, setIsNormsModalOpen] = useState(false);
 
   const DEMO_RESULT: MatchResult = {
@@ -1515,7 +1517,7 @@ ${app.notes || 'No extra description provided.'}`;
               });
             }
           }}
-          storageKey={activeEvaluationId ? `studio_cl_${activeEvaluationId}` : `studio_cl_${(result?.company_name || 'general').replace(/\s+/g, '_')}`}
+          storageKey={activeEvaluationId ? `studio_cl_${accountScope}_${activeEvaluationId}` : `studio_cl_${accountScope}_${(result?.company_name || 'general').replace(/\s+/g, '_')}`}
           isDemo={isDemo}
         />
       )}
@@ -1537,7 +1539,7 @@ ${app.notes || 'No extra description provided.'}`;
               });
             }
           }}
-          storageKey={activeEvaluationId ? `studio_interview_prep_${activeEvaluationId}` : `studio_interview_prep_${((result?.company_name && result.company_name !== 'Unknown Company') ? result.company_name : 'general').replace(/\s+/g, '_')}`}
+          storageKey={activeEvaluationId ? `studio_interview_prep_${accountScope}_${activeEvaluationId}` : `studio_interview_prep_${accountScope}_${((result?.company_name && result.company_name !== 'Unknown Company') ? result.company_name : 'general').replace(/\s+/g, '_')}`}
           isDemo={isDemo}
         />
       )}
@@ -1556,7 +1558,7 @@ ${app.notes || 'No extra description provided.'}`;
               });
             }
           }}
-          storageKey={activeEvaluationId ? `studio_resume_${activeEvaluationId}` : `studio_resume_${(result?.company_name || 'general').replace(/\s+/g, '_')}`}
+          storageKey={activeEvaluationId ? `studio_resume_${accountScope}_${activeEvaluationId}` : `studio_resume_${accountScope}_${(result?.company_name || 'general').replace(/\s+/g, '_')}`}
           isDemo={isDemo}
         />
       )}

@@ -35,6 +35,7 @@ import { Sparkles } from 'lucide-react';
 import { isRoleInTrackingSystem } from '../data/roles';
 import { getStoredLocalResume, getUserResume, RESUME_UPDATED_EVENT } from '../db/resumes';
 import { OnboardingModal } from './OnboardingModal';
+import { getAccountScopeId, purgeAllGuestAndLegacyData } from '../lib/accountStorage';
 
 interface DashboardProps {
   isDemo?: boolean;
@@ -136,6 +137,7 @@ const MIMIC_RESUME_DATA: TailoredResumeData = {
 const recentlyGhostedIds = new Set<string>();
 
 export function Dashboard({ isDemo = false }: DashboardProps) {
+  const accountScope = getAccountScopeId(auth.currentUser, isDemo);
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -160,8 +162,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   const [trackingSystem, setTrackingSystem] = useState<'industry' | 'academic'>('industry');
   const [industryRole, setIndustryRole] = useState<string>(() => {
     try {
-      const uid = isDemo ? 'demo' : (auth.currentUser?.uid || 'guest');
-      return localStorage.getItem(`seekr_selected_role_industry_${uid}`) || '';
+      return localStorage.getItem(`seekr_selected_role_industry_${accountScope}`) || '';
     } catch {
       return '';
     }
@@ -169,8 +170,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
 
   const [academicRole, setAcademicRole] = useState<string>(() => {
     try {
-      const uid = isDemo ? 'demo' : (auth.currentUser?.uid || 'guest');
-      return localStorage.getItem(`seekr_selected_role_academic_${uid}`) || '';
+      return localStorage.getItem(`seekr_selected_role_academic_${accountScope}`) || '';
     } catch {
       return '';
     }
@@ -179,31 +179,22 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   const selectedRole = trackingSystem === 'academic' ? academicRole : industryRole;
 
   const handleSetSelectedRole = (role: string) => {
-    const uid = isDemo ? 'demo' : (auth.currentUser?.uid || 'guest');
     if (trackingSystem === 'academic') {
       setAcademicRole(role);
       try {
         if (role) {
-          localStorage.setItem(`seekr_selected_role_academic_${uid}`, role);
-          localStorage.setItem('seekr_selected_role_academic', role);
+          localStorage.setItem(`seekr_selected_role_academic_${accountScope}`, role);
         } else {
-          localStorage.removeItem(`seekr_selected_role_academic_${uid}`);
-          localStorage.removeItem('seekr_selected_role_academic');
+          localStorage.removeItem(`seekr_selected_role_academic_${accountScope}`);
         }
       } catch (e) {}
     } else {
       setIndustryRole(role);
       try {
         if (role) {
-          localStorage.setItem(`seekr_selected_role_industry_${uid}`, role);
-          localStorage.setItem('seekr_selected_role_industry', role);
-          localStorage.setItem(`seekr_selected_role_${uid}`, role);
-          localStorage.setItem('seekr_selected_role', role);
+          localStorage.setItem(`seekr_selected_role_industry_${accountScope}`, role);
         } else {
-          localStorage.removeItem(`seekr_selected_role_industry_${uid}`);
-          localStorage.removeItem('seekr_selected_role_industry');
-          localStorage.removeItem(`seekr_selected_role_${uid}`);
-          localStorage.removeItem('seekr_selected_role');
+          localStorage.removeItem(`seekr_selected_role_industry_${accountScope}`);
         }
       } catch (e) {}
     }
@@ -1102,7 +1093,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                   initialText={MIMIC_COVER_LETTER}
                   companyName="Target Company"
                   targetRole="Target Position"
-                  storageKey="studio_cover_letter_dashboard_draft"
+                  storageKey={`studio_cover_letter_dashboard_${accountScope}`}
                   onClose={() => setView('sankey')}
                   isDemo={isDemo}
                 />
@@ -1116,7 +1107,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                   initialText={MIMIC_INTERVIEW_PREP}
                   companyName="Target Company"
                   targetRole="Target Position"
-                  storageKey="studio_interview_prep_dashboard_draft"
+                  storageKey={`studio_interview_prep_dashboard_${accountScope}`}
                   onClose={() => setView('sankey')}
                   isDemo={isDemo}
                   trackingSystem={trackingSystem}
@@ -1131,7 +1122,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                   initialData={MIMIC_RESUME_DATA}
                   companyName="Target Company"
                   targetRole="Target Position"
-                  storageKey="studio_resume_dashboard_draft"
+                  storageKey={`studio_resume_dashboard_${accountScope}`}
                   onClose={() => setView('sankey')}
                   isDemo={isDemo}
                 />

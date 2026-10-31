@@ -24,6 +24,8 @@ import {
 import { toast } from 'sonner';
 import { TailoredResumeData, ResumeTemplateId, ResumeTemplateMeta, TailoredResumeExperience, TailoredResumeEducation, TailoredResumeProject } from '../types';
 import { triggerDirectPdfExport } from '../lib/pdf-export';
+import { auth } from '../lib/firebase';
+import { getAccountScopeId } from '../lib/accountStorage';
 
 export const RESUME_TEMPLATES: ResumeTemplateMeta[] = [
   {
@@ -138,7 +140,8 @@ export function ResumeTemplateStudio({
   onSaveRef.current = onSave;
   const isInitializedRef = useRef<string | null>(null);
 
-  const effectiveStorageKey = storageKey || `studio_resume_${(companyName || 'general').replace(/\s+/g, '_')}_${(targetRole || 'general').replace(/\s+/g, '_')}`;
+  const accountScope = getAccountScopeId(auth.currentUser, isDemo);
+  const effectiveStorageKey = storageKey || `studio_resume_${accountScope}_${(companyName || 'general').replace(/\s+/g, '_')}_${(targetRole || 'general').replace(/\s+/g, '_')}`;
 
   const resumeDataRef = useRef(resumeData);
   resumeDataRef.current = resumeData;
