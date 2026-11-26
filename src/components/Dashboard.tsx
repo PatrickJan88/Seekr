@@ -4,7 +4,7 @@ import { getApplications, addApplication, updateApplication, deleteApplication, 
 import { Kanban } from './Kanban';
 import { Analytics } from './Analytics';
 import { GlobalMarket } from './GlobalMarket';
-import { SankeyChart } from './SankeyChart';
+import { SankeyChart, OverviewIndustryRoleFilter } from './SankeyChart';
 import { JobForm } from './JobForm';
 import { FileUpload } from './FileUpload';
 
@@ -277,6 +277,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   const [locationFilter, setLocationFilter] = useState<string | null>(null);
   const [kanbanLayoutMode, setKanbanLayoutMode] = useState<'kanban' | 'list'>('kanban');
   const [kanbanStatusFilter, setKanbanStatusFilter] = useState<JobStatus | null>(null);
+  const [kanbanOverviewFilter, setKanbanOverviewFilter] = useState<OverviewIndustryRoleFilter | null>(null);
   const [focusedAppId, setFocusedAppId] = useState<string | null>(null);
 
   const handleNavigateToGhosted = (notification?: AppNotification) => {
@@ -298,16 +299,25 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
       setFocusedAppId(targetId);
     }
     setKanbanStatusFilter(null);
+    setKanbanOverviewFilter(null);
     setKanbanLayoutMode('kanban');
     setView('kanban');
   };
 
   const handleSankeyCategoryClick = (status: JobStatus | 'Total') => {
+    setKanbanOverviewFilter(null);
     if (status === 'Total' || !status) {
       setKanbanStatusFilter(null);
     } else {
       setKanbanStatusFilter(status);
     }
+    setKanbanLayoutMode('list');
+    setView('kanban');
+  };
+
+  const handleSankeyIndustryRoleClick = (filter: OverviewIndustryRoleFilter) => {
+    setKanbanStatusFilter(null);
+    setKanbanOverviewFilter(filter);
     setKanbanLayoutMode('list');
     setView('kanban');
   };
@@ -967,6 +977,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
            onSelect={(id) => {
              if (id === 'kanban') {
                setKanbanStatusFilter(null);
+               setKanbanOverviewFilter(null);
                setKanbanLayoutMode('kanban');
              }
              setView(id as any);
@@ -1043,6 +1054,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                 }} 
                 trackingSystem={trackingSystem} 
                 onCategoryClick={handleSankeyCategoryClick}
+                onIndustryRoleClick={handleSankeyIndustryRoleClick}
               />
             )}
             {view === 'global-market' && <GlobalMarket isDemo={isDemo} onAddToWishlist={handleSave} trackingSystem={trackingSystem} selectedRole={selectedRole} />}
@@ -1058,6 +1070,8 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                 initialLayoutMode={kanbanLayoutMode}
                 statusFilter={kanbanStatusFilter}
                 onStatusFilterChange={setKanbanStatusFilter}
+                overviewFilter={kanbanOverviewFilter}
+                onClearOverviewFilter={() => setKanbanOverviewFilter(null)}
                 focusedApplicationId={focusedAppId}
                 onClearFocusedApplication={() => setFocusedAppId(null)}
               />

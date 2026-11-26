@@ -18,6 +18,8 @@ interface KanbanProps {
   initialLayoutMode?: 'kanban' | 'list';
   statusFilter?: JobStatus | null;
   onStatusFilterChange?: (status: JobStatus | null) => void;
+  overviewFilter?: { label: string; applicationIds: string[] } | null;
+  onClearOverviewFilter?: () => void;
   focusedApplicationId?: string | null;
   onClearFocusedApplication?: () => void;
 }
@@ -33,6 +35,8 @@ export function Kanban({
   initialLayoutMode = 'kanban',
   statusFilter = null,
   onStatusFilterChange,
+  overviewFilter = null,
+  onClearOverviewFilter,
   focusedApplicationId = null,
   onClearFocusedApplication
 }: KanbanProps) {
@@ -155,9 +159,15 @@ export function Kanban({
         }
       }
       
-      return passTime && passLocation;
+      // 3. Overview Industry / Role Filter
+      let passOverviewFilter = true;
+      if (overviewFilter && overviewFilter.applicationIds.length > 0) {
+        passOverviewFilter = overviewFilter.applicationIds.includes(app.id);
+      }
+
+      return passTime && passLocation && passOverviewFilter;
     });
-  }, [applications, timeFilter, customStartDate, customEndDate, locationFilter]);
+  }, [applications, timeFilter, customStartDate, customEndDate, locationFilter, overviewFilter]);
 
   const prevLocationFilter = React.useRef<string | null | undefined>(undefined);
 
@@ -225,6 +235,19 @@ export function Kanban({
                 }}
                 className="hover:text-blue-900 cursor-pointer p-0.5 rounded-full hover:bg-blue-200/50 transition-colors"
                 title="Clear status filter"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          )}
+
+          {overviewFilter && (
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-[#e8f1ff] text-[#0068f9] rounded-full text-xs font-semibold border border-[#0068f9]/20 shadow-2xs animate-in fade-in">
+              <span>{overviewFilter.label}</span>
+              <button
+                onClick={() => onClearOverviewFilter?.()}
+                className="hover:text-blue-900 cursor-pointer p-0.5 rounded-full hover:bg-blue-200/50 transition-colors"
+                title="Clear industry/role filter"
               >
                 <X size={12} />
               </button>
@@ -431,7 +454,11 @@ export function Kanban({
           </div>
       ) : (
         <ListView 
-          applications={filteredApplications.filter(app => (currentStatusFilter ? isStatusMatching(app.status, currentStatusFilter) : displayStatuses.some(s => isStatusMatching(app.status, s))))} 
+          applications={
+            overviewFilter
+              ? filteredApplications
+              : filteredApplications.filter(app => (currentStatusFilter ? isStatusMatching(app.status, currentStatusFilter) : displayStatuses.some(s => isStatusMatching(app.status, s))))
+          } 
           onEdit={(app) => {
             if (internalFocusedId === app.id) {
               setInternalFocusedId(null);
