@@ -64,8 +64,18 @@ const createRng = (seed: number) => {
 
 type HSL = [hue: number, saturation: number, lightness: number];
 
-/** Derive a 3-color palette within the same hue family */
-const generatePalette = (hash: number): [HSL, HSL, HSL] => {
+const ALL_ROUNDED_SEED = "All-round Evaluator";
+
+/** Derive a 3-color palette within the same hue family, or a distinct multi-spectrum palette for All-round Evaluator */
+const generatePalette = (hash: number, seed?: string): [HSL, HSL, HSL] => {
+  if (seed === ALL_ROUNDED_SEED) {
+    return [
+      [216, 95, 58], // Cobalt Blue
+      [282, 88, 62], // Electric Violet
+      [162, 86, 50], // Emerald Teal
+    ];
+  }
+
   const rng = createRng(hash);
   const baseHue = rng() * 360;
   const sat = 75 + rng() * 20; // 75-95%
@@ -139,7 +149,7 @@ export const AgentAvatar = ({
     ctx.scale(dpr, dpr);
 
     const hash = hashSeed(seed);
-    const palette = generatePalette(hash);
+    const palette = generatePalette(hash, seed);
     const grid = generateGrid(hash);
     const cellSize = size / GRID_SIZE;
     const half = size / 2;

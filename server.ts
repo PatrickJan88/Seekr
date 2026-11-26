@@ -218,10 +218,17 @@ function parseJobTextSmart(rawText: string) {
  * High-precision deterministic ATS keyword and 6-dimension normative matching fallback
  */
 function evaluateCVSmart(cvText: string, jobDescription: string, targetRole?: string) {
-  const commonTech = [
+  const isAllRounded = !targetRole || targetRole === "All-round Evaluator";
+  const inferredRole = isAllRounded
+    ? (parseJobTextSmart(jobDescription || "").position || "Target Role")
+    : targetRole;
+  const commonSkills = [
     "TypeScript", "JavaScript", "Python", "React", "Node.js", "SQL", "PostgreSQL",
     "Docker", "Kubernetes", "AWS", "GCP", "Git", "REST API", "GraphQL", "Java",
-    "Go", "C#", "Next.js", "Tailwind CSS", "CI/CD", "TDD", "Jest", "Microservices"
+    "Go", "C#", "Next.js", "Tailwind CSS", "CI/CD", "TDD", "Jest", "Microservices",
+    "Product Management", "Roadmap", "Agile", "Scrum", "UX", "UI", "Figma",
+    "Data Analysis", "Machine Learning", "PyTorch", "LLM", "Leadership",
+    "Research", "Statistics", "Project Management", "Strategy"
   ];
 
   const jdLower = (jobDescription || "").toLowerCase();
@@ -230,7 +237,7 @@ function evaluateCVSmart(cvText: string, jobDescription: string, targetRole?: st
   const matched_keywords: any[] = [];
   const missing_keywords: any[] = [];
 
-  for (const skill of commonTech) {
+  for (const skill of commonSkills) {
     const inJD = jdLower.includes(skill.toLowerCase());
     const inCV = cvLower.includes(skill.toLowerCase());
 
@@ -253,9 +260,11 @@ function evaluateCVSmart(cvText: string, jobDescription: string, targetRole?: st
 
   if (matched_keywords.length === 0) {
     matched_keywords.push({
-      keyword: "Core Engineering Principles",
+      keyword: isAllRounded ? "Core Role Competencies" : "Core Engineering Principles",
       category: "Hard Skills",
-      context: "Solid foundational development background demonstrated"
+      context: isAllRounded
+        ? "Foundational cross-domain background aligned with role expectations"
+        : "Solid foundational development background demonstrated"
     });
   }
 
@@ -400,8 +409,8 @@ function evaluateCVSmart(cvText: string, jobDescription: string, targetRole?: st
         weightedScore: Math.round(seniorityScore * 0.20),
         status: seniorityScore >= 80 ? 'Pass' as const : 'Partial' as const,
         metricType: 'Delta Score (Target vs Actual Years)',
-        extractedCv: 'Demonstrated experience in software development and project delivery',
-        requiredJd: targetRole || 'Target Role Experience',
+        extractedCv: 'Demonstrated experience in core deliverables and domain execution',
+        requiredJd: inferredRole || 'Target Role Experience',
         evidence: ['Consistent career progression across professional engineering positions'],
         gaps: seniorityScore < 80 ? ['Could emphasize higher-level architectural decisions and team leadership scope'] : []
       },
@@ -502,9 +511,9 @@ function evaluateCVSmart(cvText: string, jobDescription: string, targetRole?: st
     gaps: missing_keywords.slice(0, 2).map(m => `Strengthen explicit documentation of ${m.keyword}`),
     actionable_polish: "Quantify your achievements with concrete metrics (e.g., 'reduced latency by 30%', 'scaled to 10k users') and align technical phrasing with the exact keywords in the job description.",
     interview_questions: [
-      `Walk me through an end-to-end technical project you engineered related to ${targetRole || 'this role'}.`,
-      "How do you approach debugging and optimizing performance bottlenecks in production?",
-      "Can you describe a situation where you had to quickly adapt to a new framework or shifting technical requirement?"
+      `Walk me through an end-to-end project you delivered related to ${inferredRole || 'this role'}.`,
+      "How do you approach diagnosing and resolving high-impact bottlenecks or trade-offs?",
+      "Can you describe a situation where you had to quickly adapt to a new domain or shifting requirements?"
     ]
   };
 }
@@ -1436,10 +1445,14 @@ Candidate`;
   app.post(["/api/generate-interview-guide", "/api/interview-prep"], async (req, res) => {
     try {
       const { cvText, pdfBase64, jobDescription, targetRole, gaps, strengths, companyName } = req.body;
+      const isAllRounded = !targetRole || targetRole === "All-round Evaluator";
+      const resolvedRole = isAllRounded
+        ? (parseJobTextSmart(jobDescription || "").position || "target")
+        : targetRole;
       
       const prompt = `
-You are an expert technical interviewer and career coach.
-Generate a comprehensive Interview Preparation Guide for a candidate applying for the ${targetRole || 'target'} role at ${companyName || 'the target company'}.
+You are an expert interviewer and career coach.
+Generate a comprehensive Interview Preparation Guide for a candidate applying for the ${resolvedRole} role at ${companyName || 'the target company'}.
 
 Job Description:
 ${jobDescription ? jobDescription.substring(0, 5000) : 'Not provided'}
@@ -1538,14 +1551,22 @@ Focus on highlighting hands-on problem solving, end-to-end architecture delivery
         return res.status(400).json({ error: "CV text or PDF file is required" });
       }
 
-      const role = targetRole || "Tech Hiring Manager";
+      const isAllRounded = !targetRole || targetRole === "All-round Evaluator";
+      const role = isAllRounded ? "General Cross-Domain Evaluation (Inferred from Job Description)" : targetRole;
       const isAcademic = trackingSystem === 'academic';
       const evaluatorTitle = isAcademic 
-        ? `Senior Faculty Search Committee Member, Postdoc Recruiter, and Academic Lead Evaluator`
-        : `Senior Hiring Manager, Technical Recruiter, and Lead Evaluator`;
+        ? (isAllRounded
+            ? `Principal Interdisciplinary Academic Evaluator & General Search Committee Chair`
+            : `Senior Faculty Search Committee Member, Postdoc Recruiter, and Academic Lead Evaluator`)
+        : (isAllRounded
+            ? `Principal Generalist AI Talent Evaluator & Cross-Functional Hiring Lead`
+            : `Senior Hiring Manager, Technical Recruiter, and Lead Evaluator`);
+      const roleScopeInstruction = isAllRounded
+        ? `You are acting as the All-round Evaluator, using broad general AI assessment capabilities. Do NOT bias toward any single specialist role—dynamically infer the exact discipline, role scope, domain expectations, and seniority level directly from the Job Description and evaluate the candidate holistically across all relevant dimensions.`
+        : `You are specializing in the role/domain of: ${role}.`;
         
       const promptText = `
-You are a ${evaluatorTitle} specializing in the role/domain of: ${role}.
+You are a ${evaluatorTitle}. ${roleScopeInstruction}
 You will be given a candidate's CV (resume) and a Job Description (JD).
 Your task is to conduct a rigorous, standardized normative evaluation of the candidate's CV against the Job Description using the 6 Core Matching Dimensions:
 
@@ -1934,15 +1955,19 @@ ${cvText ? `Candidate CV Text:\n${cvText.substring(0, 20000)}` : ''}
     try {
       const { cvText, pdfBase64, jobDescription, targetRole, companyName, trackingSystem } = req.body;
       const isAcademic = trackingSystem === 'academic';
+      const isAllRounded = !targetRole || targetRole === "All-round Evaluator";
+      const resolvedTargetRole = isAllRounded
+        ? (parseJobTextSmart(jobDescription || "").position || (isAcademic ? "Academic Candidate" : "Target Role"))
+        : targetRole;
       const prompt = `
 You are an executive resume writer and ATS optimization specialist (specializing in ${isAcademic ? 'academic CVs, research portfolios, and faculty applications' : 'industry tech CVs and ATS-compliance'}).
 Generate a structured, tailored resume data object based strictly on the candidate's existing CV and the target job/position description.
-Tailor the summary, skill categories, and bullet points to explicitly highlight keywords and accomplishments that match the target role (${targetRole || 'Target Role'}) at ${companyName || 'Target Organization'}.
+Tailor the summary, skill categories, and bullet points to explicitly highlight keywords and accomplishments that match the target role (${resolvedTargetRole}) at ${companyName || 'Target Organization'}.
 
 Return ONLY a JSON object with this exact schema:
 {
   "fullName": "Candidate Full Name (or extract from CV)",
-  "title": "Target Role Title (e.g. ${targetRole || 'Senior Engineer'})",
+  "title": "Target Role Title (e.g. ${resolvedTargetRole || 'Senior Engineer'})",
   "contact": {
     "email": "candidate email extracted from CV or alex.morgan@email.com",
     "phone": "candidate phone or placeholder",
@@ -2054,9 +2079,10 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
       // Tier 3: Deterministic fallback structure
       if (!parsedResume || !parsedResume.fullName) {
         const smartJob = parseJobTextSmart(jobDescription || "");
+        const fallbackRoleTitle = (targetRole && targetRole !== "All-round Evaluator") ? targetRole : (smartJob.position || "Senior Software Engineer");
         parsedResume = {
           fullName: "Candidate Profile",
-          title: targetRole || smartJob.position || "Senior Software Engineer",
+          title: fallbackRoleTitle,
           contact: {
             email: "candidate@email.com",
             phone: "+44 20 7946 0912",
@@ -2065,7 +2091,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
             github: "github.com/candidate",
             website: "portfolio.dev"
           },
-          summary: `High-impact engineering professional with proven expertise in building modern, scalable applications. Dedicated to driving engineering excellence and collaborating effectively at ${companyName || smartJob.company || 'the target organization'}.`,
+          summary: `High-impact professional with proven expertise in delivering modern, scalable solutions. Dedicated to driving excellence and collaborating effectively at ${companyName || smartJob.company || 'the target organization'}.`,
           skills: {
             technical: ["TypeScript", "React", "Node.js", "PostgreSQL", "REST APIs"],
             tools: ["Git", "Docker", "Jest", "Tailwind CSS", "CI/CD"],
@@ -2073,7 +2099,7 @@ ${cvText ? `Candidate Existing CV Text:\n${cvText.substring(0, 10000)}` : ''}
           },
           experience: [
             {
-              role: targetRole || smartJob.position || "Senior Software Engineer",
+              role: fallbackRoleTitle,
               company: "Technology Solutions Ltd",
               location: "London, UK",
               period: "2022 - Present",
@@ -3782,8 +3808,9 @@ Return ONLY a valid JSON object strictly matching this schema:
 
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
-      server: { middlewareMode: true, hmr: false },
-      appType: "spa"});
+      server: { middlewareMode: true, hmr: false, ws: false },
+      appType: "spa"
+    });
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
@@ -3798,4 +3825,7 @@ Return ONLY a valid JSON object strictly matching this schema:
   });
 }
 
-startServer();
+startServer().catch((err) => {
+  console.error("Fatal server startup error:", err);
+  process.exit(1);
+});

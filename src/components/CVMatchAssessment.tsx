@@ -253,7 +253,7 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
 
   const currentUid = auth.currentUser?.uid;
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [targetRole, setTargetRole] = useState('');
+  const [targetRole, setTargetRole] = useState('All-round Evaluator');
   const [storedResume, setStoredResume] = useState<UserResume | null>(() => getStoredLocalResume(auth.currentUser?.uid));
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [cvText, setCvText] = useState<string>(() => {
@@ -337,7 +337,7 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
           label: 'Match Analysis',
           onBack: () => {
             setResult(null);
-            setTargetRole('');
+            setTargetRole('All-round Evaluator');
             setJobDescription('');
             setCurrentStep(1);
             setCoverLetterText(null);
@@ -433,13 +433,14 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
     } catch (err: any) {
       console.warn('Interview Guide API warning, falling back to local synthesis:', err);
       const company = result?.company_name || 'Target Company';
+      const effectiveRoleTitle = targetRole && targetRole !== 'All-round Evaluator' ? targetRole : (trackingSystem === 'academic' ? 'Academic Position' : 'Target Position');
       const questionsList = (result?.interview_questions || [
-        `Describe a key challenge you overcame in ${targetRole || 'this role'}.`,
+        `Describe a key challenge you overcame in ${effectiveRoleTitle}.`,
         `How do you prioritize technical trade-offs?`,
         `Walk me through your most impactful achievement.`
       ]).map((q: string, i: number) => `### Question ${i + 1}: ${q}\n**Recommended Strategy:** Use the STAR method (Situation, Task, Action, Result) highlighting quantified business impact.\n`).join('\n');
 
-      const fallbackText = `# Interview Preparation Master Guide: ${targetRole || 'Professional Role'}\nTarget Company: ${company}\n\n## 1. Key Alignment Summary\n${result?.actionable_polish || 'Focus on demonstrating mastery of required competencies and metrics.'}\n\n## 2. Forecasted Questions & Tactical Frameworks\n${questionsList}`;
+      const fallbackText = `# Interview Preparation Master Guide: ${effectiveRoleTitle}\nTarget Company: ${company}\n\n## 1. Key Alignment Summary\n${result?.actionable_polish || 'Focus on demonstrating mastery of required competencies and metrics.'}\n\n## 2. Forecasted Questions & Tactical Frameworks\n${questionsList}`;
       setInterviewGuideText(fallbackText);
       if (userRequestedOpenInterviewPrepRef.current) {
         setShowInterviewPrepStudio(true);
@@ -459,7 +460,8 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
     }
 
     if (isDemo) {
-      setCoverLetterText(`Dear Hiring Manager,\n\nI am writing to express my strong interest in the ${targetRole || 'Frontend Engineer'} position at ${result?.company_name || 'TechFlow Solutions'}. With a proven track record in React, TypeScript, and modern frontend architecture, I am enthusiastic about contributing to your engineering team.\n\nThroughout my career, I have focused on engineering scalable, performant user interfaces and modular design systems. In my previous roles, I led initiatives that streamlined client-side performance, reduced bundle sizes by over 35%, and established robust component standards. Your mission to build cutting-edge user experiences strongly resonates with my background in state architecture and frontend quality.\n\nI welcome the opportunity to discuss how my technical expertise and passion for high-impact software development can benefit ${result?.company_name || 'your organization'}. Thank you for your time and consideration.\n\nSincerely,\nAlex Morgan`);
+      const demoRoleTitle = targetRole && targetRole !== 'All-round Evaluator' ? targetRole : 'Frontend Engineer';
+      setCoverLetterText(`Dear Hiring Manager,\n\nI am writing to express my strong interest in the ${demoRoleTitle} position at ${result?.company_name || 'TechFlow Solutions'}. With a proven track record in React, TypeScript, and modern frontend architecture, I am enthusiastic about contributing to your engineering team.\n\nThroughout my career, I have focused on engineering scalable, performant user interfaces and modular design systems. In my previous roles, I led initiatives that streamlined client-side performance, reduced bundle sizes by over 35%, and established robust component standards. Your mission to build cutting-edge user experiences strongly resonates with my background in state architecture and frontend quality.\n\nI welcome the opportunity to discuss how my technical expertise and passion for high-impact software development can benefit ${result?.company_name || 'your organization'}. Thank you for your time and consideration.\n\nSincerely,\nAlex Morgan`);
       setShowCoverLetterStudio(true);
       return;
     }
@@ -502,7 +504,8 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
       console.warn('Cover Letter API warning, falling back to local synthesis:', err);
       const company = result?.company_name || 'Target Company';
       const matched = (result?.matched_keywords || []).map((k: any) => k.keyword).join(', ');
-      const fallbackText = `Dear Hiring Team at ${company},\n\nI am writing to express my strong enthusiasm for the ${targetRole || 'target position'} role. Having reviewed the job requirements in detail, I am confident that my technical background and problem-solving abilities align directly with ${company}'s current initiatives.\n\nThroughout my career, I have cultivated deep expertise across core areas including ${matched || 'software architecture, scalable engineering, and system design'}. In my recent work, I spearheaded high-impact deliverables, optimized operational workflows, and collaborated cross-functionally to drive measurable improvements.\n\nI would welcome the opportunity to discuss how my experience and skill set can support ${company}'s immediate and long-term milestones. Thank you for your consideration, and I look forward to speaking with you.\n\nSincerely,\nCandidate`;
+      const fallbackRoleTitle = targetRole && targetRole !== 'All-round Evaluator' ? targetRole : 'target position';
+      const fallbackText = `Dear Hiring Team at ${company},\n\nI am writing to express my strong enthusiasm for the ${fallbackRoleTitle} role. Having reviewed the job requirements in detail, I am confident that my technical background and problem-solving abilities align directly with ${company}'s current initiatives.\n\nThroughout my career, I have cultivated deep expertise across core areas including ${matched || 'software architecture, scalable engineering, and system design'}. In my recent work, I spearheaded high-impact deliverables, optimized operational workflows, and collaborated cross-functionally to drive measurable improvements.\n\nI would welcome the opportunity to discuss how my experience and skill set can support ${company}'s immediate and long-term milestones. Thank you for your consideration, and I look forward to speaking with you.\n\nSincerely,\nCandidate`;
       setCoverLetterText(fallbackText);
       setShowCoverLetterStudio(true);
     } finally {
@@ -518,9 +521,10 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
     }
 
     if (isDemo) {
+      const demoRoleTitle = targetRole && targetRole !== 'All-round Evaluator' ? targetRole : 'Senior Frontend Engineer';
       setTailoredResume({
         fullName: "Alex Morgan",
-        title: targetRole || "Senior Frontend Engineer",
+        title: demoRoleTitle,
         contact: {
           email: "alex.morgan@example.com",
           phone: "+1 (555) 234-5678",
@@ -528,7 +532,7 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
           linkedin: "linkedin.com/in/alexmorgan",
           github: "github.com/alexmorgan"
         },
-        summary: `Results-driven ${targetRole || 'Senior Frontend Engineer'} with 5+ years of experience specializing in React 18, TypeScript, and high-performance UI systems. Proven expertise in cutting load times by 35% and constructing modular design systems tailored to ${result?.company_name || 'TechFlow Solutions'}.`,
+        summary: `Results-driven ${demoRoleTitle} with 5+ years of experience specializing in React 18, TypeScript, and high-performance UI systems. Proven expertise in cutting load times by 35% and constructing modular design systems tailored to ${result?.company_name || 'TechFlow Solutions'}.`,
         skills: {
           technical: ["React 18", "TypeScript", "Next.js", "Tailwind CSS", "JavaScript ES6+"],
           tools: ["Git", "Vite", "Jest", "Docker", "Webpack"],
@@ -610,16 +614,17 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
       console.warn('Tailor Resume API warning, falling back to local synthesis:', err);
       const company = result?.company_name || 'Target Company';
       const matched = (result?.matched_keywords || []).map((k: any) => k.keyword);
+      const fallbackRoleTitle = targetRole && targetRole !== 'All-round Evaluator' ? targetRole : 'Professional Role';
       setTailoredResume({
         fullName: "Alex Morgan",
-        title: targetRole || "Professional Role",
+        title: fallbackRoleTitle,
         contact: {
           email: "alex.morgan@example.com",
           phone: "+1 (555) 234-5678",
           location: "San Francisco, CA",
           linkedin: "linkedin.com/in/alexmorgan"
         },
-        summary: `Accomplished ${targetRole || 'Professional'} with proven expertise aligning directly with requirements for ${company}. Focused on delivering high-impact contributions and maintaining engineering excellence.`,
+        summary: `Accomplished ${targetRole && targetRole !== 'All-round Evaluator' ? targetRole : 'Professional'} with proven expertise aligning directly with requirements for ${company}. Focused on delivering high-impact contributions and maintaining engineering excellence.`,
         skills: {
           technical: matched.length > 0 ? matched.slice(0, 6) : ["Core Architecture", "TypeScript", "React", "System Design"],
           tools: ["Git", "Docker", "CI/CD", "Vite", "Cloud Platforms"],
@@ -627,7 +632,7 @@ export function CVMatchAssessment({ applications, isDemo = false, onAddToWishlis
         },
         experience: [
           {
-            role: targetRole || "Lead Specialist",
+            role: targetRole && targetRole !== 'All-round Evaluator' ? targetRole : "Lead Specialist",
             company: company !== 'Unknown Company' ? company : 'Tech Enterprise Inc.',
             period: "2022 - Present",
             bullets: [
@@ -916,7 +921,7 @@ ${app.notes || 'No extra description provided.'}`;
                 type="button"
                 onClick={() => {
                   setResult(null);
-                  setTargetRole('');
+                  setTargetRole('All-round Evaluator');
                   setCurrentStep(1);
                   setActiveEvaluationId(null);
                 }}
@@ -931,7 +936,7 @@ ${app.notes || 'No extra description provided.'}`;
                   onClick={() => {
                     onAddToWishlist({
                       company: result.company_name || 'Unknown Company',
-                      position: targetRole,
+                      position: targetRole === 'All-round Evaluator' ? 'Target Role' : targetRole,
                       status: 'Wishlist',
                       notes: `Added from CV Evaluation. Score: ${result.score}%`,
                     });
@@ -1153,7 +1158,7 @@ ${app.notes || 'No extra description provided.'}`;
                     <HelpCircle size={18} />
                   </div>
                   <h4 className="text-xs font-bold text-[#121722]">
-                    Forecasted {targetRole} interview questions
+                    Forecasted {targetRole === 'All-round Evaluator' ? 'general AI' : targetRole} interview questions
                   </h4>
                 </div>
               </div>

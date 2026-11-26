@@ -6,11 +6,17 @@ export interface TechRole {
   id: string;
   label: string;
   desc: string;
-  category: 'engineering' | 'ai_data' | 'product_design';
+  category: 'all_rounded' | 'engineering' | 'ai_data' | 'product_design';
 }
 
 
 export const ACADEMIC_ROLES: TechRole[] = [
+  {
+    id: 'All-round Evaluator',
+    label: 'All-round Evaluator',
+    desc: 'Focus: General AI Assessment Across Disciplines, Research Tracks & Academic CVs',
+    category: 'all_rounded'
+  },
   { id: 'Computer Science', label: 'Computer Science', desc: 'Focus: Algorithms, AI/ML, Systems & Theory', category: 'engineering' },
   { id: 'Life Sciences', label: 'Life Sciences', desc: 'Focus: Biology, Genetics, Bioinformatics & Medical', category: 'ai_data' },
   { id: 'Physics & Astronomy', label: 'Physics & Astronomy', desc: 'Focus: Quantum, Astrophysics, Mechanics & Particles', category: 'engineering' },
@@ -24,6 +30,12 @@ export const ACADEMIC_ROLES: TechRole[] = [
 ];
 
 export const TECH_ROLES: TechRole[] = [
+  {
+    id: 'All-round Evaluator',
+    label: 'All-round Evaluator',
+    desc: 'Focus: General AI Assessment Across Any Role, Industry & Cross-Functional JD',
+    category: 'all_rounded'
+  },
   { 
     id: 'Game Developer', 
     label: 'Game Developer', 
