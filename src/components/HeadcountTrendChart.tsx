@@ -108,7 +108,7 @@ export const HeadcountTrendChart: React.FC<HeadcountTrendChartProps> = ({
             </div>
           </div>
         </div>
-        <div className="hidden sm:flex items-center gap-1.5 text-xs text-[#777c86] bg-[#faf9f7] px-2.5 py-1 rounded-md border border-[#efefef]">
+        <div className="hidden sm:flex items-center gap-1.5 text-xs text-[#777c86] bg-[#faf9f7] px-2.5 py-1 rounded-[4px] border border-[#efefef]">
           <span className="w-2 h-2 rounded-full bg-blue-600"></span>
           <span>{'LinkedIn Org Dynamics'}</span>
         </div>
@@ -233,7 +233,7 @@ export const HeadcountTrendChart: React.FC<HeadcountTrendChartProps> = ({
               transform: `translate(${tooltipTranslateX}, -100%) translateY(-14px)`
             }}
           >
-            <div className="relative bg-white border border-[#e5e7eb] rounded-xl shadow-xl px-3.5 py-2.5 min-w-[170px] whitespace-nowrap">
+            <div className="relative bg-white border border-[#e5e7eb] rounded-lg shadow-xl px-3.5 py-2.5 min-w-[170px] whitespace-nowrap">
               <div className="flex items-center gap-2 text-xs font-bold text-[#111827]">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#2563eb] shrink-0" />
                 <span>{`Employee headcount · ${activePoint.headcount}`}</span>

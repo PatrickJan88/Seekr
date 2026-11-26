@@ -1010,7 +1010,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
            <div className="flex items-center gap-3">
              <button 
                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-               className="p-1.5 rounded-md text-[#a5a5a5] hover:bg-[#faf9f7] hover:text-[#121722] transition-colors cursor-pointer -ml-1.5"
+               className="p-1.5 rounded-lg text-[#a5a5a5] hover:bg-[#faf9f7] hover:text-[#121722] transition-colors cursor-pointer -ml-1.5"
              >
                {isSidebarOpen ? <PanelLeftClose className="w-[18px] h-[18px]" strokeWidth={1.5} /> : <PanelLeftOpen className="w-[18px] h-[18px]" strokeWidth={1.5} />}
              </button>
@@ -1162,7 +1162,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
           <div className="bg-white rounded-2xl border border-[#efefef] shadow-lg w-full max-w-md overflow-hidden flex flex-col p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-[#121722]">Import Data</h2>
-              <button onClick={() => { setShowImportModal(false); syncLockRef.current = false; }} className="text-[#a5a5a5] hover:text-[#121722] transition-colors cursor-pointer">
+              <button onClick={() => { setShowImportModal(false); syncLockRef.current = false; }} className="p-1 rounded-lg text-[#a5a5a5] hover:text-[#121722] hover:bg-[#faf9f7] transition-colors cursor-pointer">
                 <X size={20} />
               </button>
             </div>
@@ -1188,7 +1188,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
               </div>
             )}
             {syncError && (
-               <div className="mt-4 p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium text-center">
+               <div className="mt-4 p-3 bg-red-50 border border-red-100 text-red-600 rounded-lg text-sm font-medium text-center">
                  {syncError}
                </div>
             )}
@@ -1208,14 +1208,14 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                 <button
                   type="button"
                   onClick={() => setDeleteConfirmId(null)}
-                  className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-all border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] h-9 px-5 py-2 cursor-pointer"
+                  className="inline-flex items-center justify-center rounded-lg text-[13px] font-medium transition-all border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] h-[38px] px-5 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={confirmDeleteApp}
-                  className="px-5 py-2 font-medium text-white bg-red-600 hover:bg-red-700 rounded-full transition-colors flex items-center gap-2 cursor-pointer text-sm"
+                  className="inline-flex items-center justify-center h-[38px] px-5 font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors gap-2 cursor-pointer text-[13px]"
                 >
                   <Trash2 size={16} />
                   Yes, Delete
@@ -1238,14 +1238,14 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                 <button
                   type="button"
                   onClick={() => setShowClearConfirm(false)}
-                  className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-all border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] h-9 px-5 py-2 cursor-pointer"
+                  className="inline-flex items-center justify-center rounded-lg text-[13px] font-medium transition-all border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] h-[38px] px-5 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={confirmClearData}
-                  className="px-5 py-2 font-medium text-white bg-red-600 hover:bg-red-700 rounded-full transition-colors flex items-center gap-2 cursor-pointer text-sm"
+                  className="inline-flex items-center justify-center h-[38px] px-5 font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors gap-2 cursor-pointer text-[13px]"
                 >
                   <Trash2 size={16} />
                   Yes, Clear Data

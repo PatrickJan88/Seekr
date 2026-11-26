@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { GraduationCap } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { cn, computeDropdownAlign, DropdownAlign } from '../lib/utils';
 
 export type QSTier = 'all' | 'top50' | 'top100' | 'top250' | 'top500';
 
@@ -25,6 +25,8 @@ export function QSTierDropdownMenu({
   className,
 }: QSTierDropdownMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [menuAlign, setMenuAlign] = useState<DropdownAlign>('start');
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   // Trigger button label
   const getDisplayText = () => {
@@ -38,11 +40,20 @@ export function QSTierDropdownMenu({
   const isActive = selectedTier !== 'all';
 
   return (
-    <DropdownMenu.Root open={isOpen} onOpenChange={setIsOpen}>
+    <DropdownMenu.Root
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (open) {
+          setMenuAlign(computeDropdownAlign(triggerRef.current, 360));
+        }
+        setIsOpen(open);
+      }}
+    >
       <DropdownMenu.Trigger asChild>
         <button
+          ref={triggerRef}
           className={cn(
-            'flex items-center w-full sm:w-auto min-w-0 sm:min-w-[110px] sm:max-w-[170px] xl:max-w-[190px] h-[38px] rounded-full text-sm font-medium px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs transition-all cursor-pointer select-none',
+            'flex items-center w-full sm:w-auto min-w-0 sm:min-w-[110px] sm:max-w-[170px] xl:max-w-[190px] h-[38px] rounded-lg text-[13px] font-medium px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs transition-all cursor-pointer select-none',
             isActive
               ? 'bg-blue-50/80 border border-[#0068f9]/40 text-[#0068f9] hover:bg-blue-50 font-semibold'
               : 'bg-[#faf9f7] border border-[#efefef] text-[#121722] hover:bg-[#f3f2ef]',
@@ -69,26 +80,27 @@ export function QSTierDropdownMenu({
 
       <DropdownMenu.Portal>
         <DropdownMenu.Content
-          className="z-[100] w-[320px] sm:w-[360px] bg-white rounded-2xl border border-[#efefef] shadow-xl p-3 animate-in fade-in-80 zoom-in-95 outline-none select-none flex flex-col gap-2"
+          className="z-[100] w-[320px] sm:w-[360px] bg-white rounded-2xl border border-[#efefef] shadow-xl p-2 animate-in fade-in-80 zoom-in-95 outline-none select-none flex flex-col gap-2"
           sideOffset={8}
-          align="start"
+          align={menuAlign}
+          collisionPadding={16}
         >
-          {/* Rank Tier Section - Exactly matching user screenshot */}
+          {/* Rank Tier Section */}
           <div>
-            <div className="flex items-center justify-between mb-2.5 px-1">
-              <span className="text-xs font-semibold text-[#777c86]">Rank Tier:</span>
+            <div className="flex items-center justify-between mb-2 px-1 pt-0.5">
+              <span className="text-[13px] font-semibold text-[#777c86]">Rank Tier:</span>
               {selectedTier !== 'all' && (
                 <button
                   type="button"
                   onClick={() => onSelectTier('all')}
-                  className="text-[11px] font-semibold text-[#0068f9] hover:underline cursor-pointer"
+                  className="text-xs font-semibold text-[#0068f9] hover:underline cursor-pointer"
                 >
                   Reset
                 </button>
               )}
             </div>
 
-            {/* Tier Pills row matching Screenshot 1 */}
+            {/* Tier Buttons: 16px outer - 8px (p-2) padding = 8px (rounded-lg) */}
             <div className="flex items-center gap-1.5 flex-wrap">
               {TIER_OPTIONS.map((tier) => {
                 const isSelected = selectedTier === tier.value;
@@ -101,7 +113,7 @@ export function QSTierDropdownMenu({
                       setIsOpen(false);
                     }}
                     className={cn(
-                      'px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer border select-none',
+                      'px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all cursor-pointer border select-none',
                       isSelected
                         ? 'bg-[#0068f9] text-white border-[#0068f9] shadow-2xs font-semibold'
                         : 'bg-[#faf9f7] text-[#555a64] border-[#efefef] hover:bg-[#efefef] hover:text-[#121722]'

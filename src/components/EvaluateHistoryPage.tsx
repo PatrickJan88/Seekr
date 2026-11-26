@@ -471,7 +471,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
               <button
                 type="button"
                 onClick={() => setSelectedEval(null)}
-                className="h-[38px] px-4 rounded-full border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] text-sm font-medium transition-all flex items-center justify-center cursor-pointer shadow-2xs"
+                className="h-[38px] px-4 rounded-lg border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] text-[13px] font-medium transition-all flex items-center justify-center cursor-pointer shadow-2xs"
               >
                 <span>Back</span>
               </button>
@@ -499,7 +499,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                       notes: `Added from CV Evaluation. ATS Match: ${finalScore}%`,
                     });
                   }}
-                  className="h-[38px] px-4 rounded-full border border-[#0068f9]/20 bg-[#e8f1ff] text-[#0068f9] hover:bg-[#d1e4ff] text-sm font-semibold transition-all flex items-center justify-center cursor-pointer shadow-2xs"
+                  className="h-[38px] px-4 rounded-lg border border-[#0068f9]/20 bg-[#e8f1ff] text-[#0068f9] hover:bg-[#d1e4ff] text-[13px] font-semibold transition-all flex items-center justify-center cursor-pointer shadow-2xs"
                 >
                   <span>Add to Wishlist</span>
                 </button>
@@ -508,23 +508,23 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
               )}
             </div>
           ) : (
-            /* Evaluations List Header: Filter Buttons, Search Box, Counter, New Evaluation button (all matching h-[38px]) */
+            /* Evaluations List Header: Company 360 Tabs, Search Box, Counter */
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-              {/* Left: Filter Buttons matching Active Progress / Closed / Wishlist */}
+              {/* Left: Company 360 Filter Tabs */}
               <div className="flex flex-wrap items-center gap-2">
-                <div className="flex bg-[#faf9f7] p-1 rounded-full border border-[#efefef] shadow-2xs overflow-x-auto max-w-full">
+                <div className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0 overflow-x-auto max-w-full">
                   <button
                     type="button"
                     onClick={() => setMatchCategoryFilter('all')}
-                    className={`h-[38px] flex items-center justify-center px-4 rounded-full font-medium text-sm transition-all cursor-pointer whitespace-nowrap ${
+                    className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                       matchCategoryFilter === 'all'
-                        ? 'bg-white text-[#121722] shadow-2xs'
-                        : 'text-[#777c86] hover:text-[#121722]'
+                        ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]'
+                        : 'text-[#777c86] hover:text-[#121722] border border-transparent'
                     }`}
                   >
                     All
                     {evaluations.length > 0 && (
-                      <span className="ml-1.5 text-xs text-[#777c86] font-normal">
+                      <span className="ml-1.5 text-[11px] text-[#777c86] font-normal">
                         ({evaluations.length})
                       </span>
                     )}
@@ -532,15 +532,15 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                   <button
                     type="button"
                     onClick={() => setMatchCategoryFilter('high')}
-                    className={`h-[38px] flex items-center justify-center px-4 rounded-full font-medium text-sm transition-all cursor-pointer whitespace-nowrap ${
+                    className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                       matchCategoryFilter === 'high'
-                        ? 'bg-white text-[#121722] shadow-2xs'
-                        : 'text-[#777c86] hover:text-[#121722]'
+                        ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]'
+                        : 'text-[#777c86] hover:text-[#121722] border border-transparent'
                     }`}
                   >
                     High Match
                     {evaluations.filter(ev => (ev.result?.keyword_score ?? ev.result?.score ?? 0) >= 80).length > 0 && (
-                      <span className="ml-1.5 text-xs text-[#777c86] font-normal">
+                      <span className="ml-1.5 text-[11px] text-[#777c86] font-normal">
                         ({evaluations.filter(ev => (ev.result?.keyword_score ?? ev.result?.score ?? 0) >= 80).length})
                       </span>
                     )}
@@ -548,10 +548,10 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                   <button
                     type="button"
                     onClick={() => setMatchCategoryFilter('medium')}
-                    className={`h-[38px] flex items-center justify-center px-4 rounded-full font-medium text-sm transition-all cursor-pointer whitespace-nowrap ${
+                    className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                       matchCategoryFilter === 'medium'
-                        ? 'bg-white text-[#121722] shadow-2xs'
-                        : 'text-[#777c86] hover:text-[#121722]'
+                        ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]'
+                        : 'text-[#777c86] hover:text-[#121722] border border-transparent'
                     }`}
                   >
                     Medium Match
@@ -559,7 +559,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                       const s = ev.result?.keyword_score ?? ev.result?.score ?? 0;
                       return s >= 60 && s < 80;
                     }).length > 0 && (
-                      <span className="ml-1.5 text-xs text-[#777c86] font-normal">
+                      <span className="ml-1.5 text-[11px] text-[#777c86] font-normal">
                         ({evaluations.filter(ev => {
                           const s = ev.result?.keyword_score ?? ev.result?.score ?? 0;
                           return s >= 60 && s < 80;
@@ -570,15 +570,15 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                   <button
                     type="button"
                     onClick={() => setMatchCategoryFilter('low')}
-                    className={`h-[38px] flex items-center justify-center px-4 rounded-full font-medium text-sm transition-all cursor-pointer whitespace-nowrap ${
+                    className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                       matchCategoryFilter === 'low'
-                        ? 'bg-white text-[#121722] shadow-2xs'
-                        : 'text-[#777c86] hover:text-[#121722]'
+                        ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]'
+                        : 'text-[#777c86] hover:text-[#121722] border border-transparent'
                     }`}
                   >
                     Low Match
                     {evaluations.filter(ev => (ev.result?.keyword_score ?? ev.result?.score ?? 0) < 60).length > 0 && (
-                      <span className="ml-1.5 text-xs text-[#777c86] font-normal">
+                      <span className="ml-1.5 text-[11px] text-[#777c86] font-normal">
                         ({evaluations.filter(ev => (ev.result?.keyword_score ?? ev.result?.score ?? 0) < 60).length})
                       </span>
                     )}
@@ -586,7 +586,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                 </div>
               </div>
 
-              {/* Middle & Right: Search Box, Counter & New Evaluation Button */}
+              {/* Middle & Right: Search Box, Counter */}
               <div className="flex flex-wrap items-center gap-3">
                 <div className="relative flex-1 min-w-[140px] sm:min-w-[180px] max-w-sm flex items-center">
                   <div className="relative w-full">
@@ -596,7 +596,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                       placeholder="Search evaluations..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-4 h-[38px] bg-white border border-[#efefef] rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#0068f9] transition-all shadow-2xs hover:bg-[#faf9f7] truncate placeholder:font-normal placeholder:text-[#a5a5a5]"
+                      className="w-full pl-9 pr-4 h-[38px] bg-white border border-[#efefef] rounded-lg text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#0068f9] transition-all shadow-2xs hover:bg-[#faf9f7] truncate placeholder:font-normal placeholder:text-[#a5a5a5]"
                     />
                   </div>
                 </div>
@@ -648,14 +648,14 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
           <div className="p-4 sm:p-6 space-y-6 overflow-y-auto max-h-full animate-in fade-in duration-200">
             
             {/* Target Header Banner */}
-            <div className="bg-[#faf9f7] border border-[#efefef] rounded-2xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4">
+            <div className="bg-[#faf9f7] border border-[#efefef] rounded-xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <AgentAvatar seed={selectedEval.role} size={40} animated={true} />
                 <div>
                   <div className="flex items-center gap-2">
                     <h4 className="text-base font-bold text-[#121722]">{selectedEval.role}</h4>
                     {selectedEval.result?.company_name && selectedEval.result.company_name !== 'Unknown Company' && (
-                      <span className="px-2.5 py-0.5 rounded-full bg-white border border-[#efefef] text-[11px] font-semibold text-[#121722]">
+                      <span className="px-2 py-0.5 rounded-[4px] bg-white border border-[#efefef] text-[11px] font-semibold text-[#121722]">
                         {selectedEval.result.company_name}
                       </span>
                     )}
@@ -669,7 +669,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
               </div>
 
               <div className="flex items-center gap-2">
-                <span className={`text-xs font-bold px-3 py-1 rounded-full border ${getCategoryStyles(selectedEval.result?.score || 0).badgeBg}`}>
+                <span className={`text-xs font-bold px-2.5 py-0.5 rounded-[4px] border ${getCategoryStyles(selectedEval.result?.score || 0).badgeBg}`}>
                   {selectedEval.result?.matchCategory || getCategoryStyles(selectedEval.result?.score || 0).label}
                 </span>
               </div>
@@ -677,7 +677,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
 
             {/* Quick Action Studio Hub */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-[#faf9f7] border border-[#efefef] hover:border-[#0068f9]/50 rounded-2xl p-4 transition-all flex flex-col justify-between space-y-3">
+              <div className="bg-[#faf9f7] border border-[#efefef] hover:border-[#0068f9]/50 rounded-xl p-4 transition-all flex flex-col justify-between space-y-3">
                 <div>
                   <h4 className="text-xs font-bold text-[#121722]">Cover Letter Generator</h4>
                   <p className="text-xs text-[#777c86]">Tailored to role & competencies</p>
@@ -685,7 +685,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                 <button
                   onClick={() => handleOpenCoverLetter(selectedEval)}
                   disabled={loadingAction?.evalId === (selectedEval.id || `${selectedEval.role}-${selectedEval.result?.company_name}`)}
-                  className="w-full py-2 px-3 bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-semibold rounded-full transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
+                  className="w-full py-2 px-3 bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
                 >
                   {loadingAction?.evalId === (selectedEval.id || `${selectedEval.role}-${selectedEval.result?.company_name}`) && loadingAction.type === 'cover' && (
                     <Loader2 size={13} className="animate-spin" />
@@ -694,7 +694,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                 </button>
               </div>
 
-              <div className="bg-[#faf9f7] border border-[#efefef] hover:border-[#0068f9]/50 rounded-2xl p-4 transition-all flex flex-col justify-between space-y-3">
+              <div className="bg-[#faf9f7] border border-[#efefef] hover:border-[#0068f9]/50 rounded-xl p-4 transition-all flex flex-col justify-between space-y-3">
                 <div>
                   <h4 className="text-xs font-bold text-[#121722]">Interview Preparation</h4>
                   <p className="text-xs text-[#777c86]">STAR-framework tactical guide</p>
@@ -702,7 +702,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                 <button
                   onClick={() => handleOpenInterviewGuide(selectedEval)}
                   disabled={loadingAction?.evalId === (selectedEval.id || `${selectedEval.role}-${selectedEval.result?.company_name}`)}
-                  className="w-full py-2 px-3 bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-semibold rounded-full transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
+                  className="w-full py-2 px-3 bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
                 >
                   {loadingAction?.evalId === (selectedEval.id || `${selectedEval.role}-${selectedEval.result?.company_name}`) && loadingAction.type === 'interview' && (
                     <Loader2 size={13} className="animate-spin" />
@@ -711,7 +711,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                 </button>
               </div>
 
-              <div className="bg-[#faf9f7] border border-[#efefef] hover:border-[#0068f9]/50 rounded-2xl p-4 transition-all flex flex-col justify-between space-y-3">
+              <div className="bg-[#faf9f7] border border-[#efefef] hover:border-[#0068f9]/50 rounded-xl p-4 transition-all flex flex-col justify-between space-y-3">
                 <div>
                   <h4 className="text-xs font-bold text-[#121722]">4 Resume Templates</h4>
                   <p className="text-xs text-[#777c86]">ATS-optimized & PDF Export</p>
@@ -719,7 +719,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                 <button
                   onClick={() => handleOpenResumeStudio(selectedEval)}
                   disabled={loadingAction?.evalId === (selectedEval.id || `${selectedEval.role}-${selectedEval.result?.company_name}`)}
-                  className="w-full py-2 px-3 bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-semibold rounded-full transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
+                  className="w-full py-2 px-3 bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
                 >
                   {loadingAction?.evalId === (selectedEval.id || `${selectedEval.role}-${selectedEval.result?.company_name}`) && loadingAction.type === 'resume' && (
                     <Loader2 size={13} className="animate-spin" />
@@ -741,10 +741,10 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
               
               {/* Score Ring (Col 4) */}
-              <div className="md:col-span-4 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 flex flex-col items-center justify-between text-center">
+              <div className="md:col-span-4 bg-[#faf9f7] border border-[#efefef] rounded-xl p-6 flex flex-col items-center justify-between text-center">
                 <div className="w-full flex items-center justify-between border-b border-[#efefef] pb-3 mb-4">
                   <h4 className="text-xs font-bold text-[#121722]">Score overview</h4>
-                  <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${getCategoryStyles(selectedEval.result?.keyword_score ?? selectedEval.result?.score ?? 0).badgeBg}`}>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-[4px] border ${getCategoryStyles(selectedEval.result?.keyword_score ?? selectedEval.result?.score ?? 0).badgeBg}`}>
                     {selectedEval.result?.matchCategory || getCategoryStyles(selectedEval.result?.keyword_score ?? selectedEval.result?.score ?? 0).label}
                   </span>
                 </div>
@@ -777,7 +777,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
               </div>
 
               {/* Actionable Polish (Col 8) */}
-              <div className="md:col-span-8 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 flex flex-col justify-between space-y-4">
+              <div className="md:col-span-8 bg-[#faf9f7] border border-[#efefef] rounded-xl p-6 flex flex-col justify-between space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-[#e8f1ff] text-[#0068f9] flex items-center justify-center">
@@ -788,13 +788,13 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                   <button
                     type="button"
                     onClick={() => copyPolishToClipboard(selectedEval.result?.actionable_polish || '')}
-                    className="text-xs font-medium text-[#121722] bg-white hover:bg-[#faf9f7] border border-[#efefef] shadow-2xs px-3.5 py-1.5 rounded-full transition-all flex items-center justify-center cursor-pointer"
+                    className="text-xs font-medium text-[#121722] bg-white hover:bg-[#faf9f7] border border-[#efefef] shadow-2xs px-3.5 py-1.5 rounded-lg transition-all flex items-center justify-center cursor-pointer"
                   >
                     <span>{copiedPolish ? 'Copied' : 'Copy guidelines'}</span>
                   </button>
                 </div>
 
-                <div className="bg-[#f4f8ff] border border-[#0068f9]/20 rounded-2xl p-4 text-[#121722] text-xs sm:text-sm leading-relaxed">
+                <div className="bg-[#f4f8ff] border border-[#0068f9]/20 rounded-lg p-4 text-[#121722] text-xs sm:text-sm leading-relaxed">
                   {selectedEval.result?.actionable_polish || 'No polish notes available.'}
                 </div>
 
@@ -805,7 +805,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
               </div>
 
               {/* Strongest Technical Alignments (Col 6) */}
-              <div className="md:col-span-6 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-5 space-y-3">
+              <div className="md:col-span-6 bg-[#faf9f7] border border-[#efefef] rounded-xl p-5 space-y-3">
                 <div className="flex items-center gap-2 border-b border-[#efefef] pb-3">
                   <div className="w-6 h-6 rounded-full bg-[#e8f1ff] text-[#0068f9] flex items-center justify-center">
                     <CheckCircle2 size={16} />
@@ -814,7 +814,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                 </div>
                 <ul className="space-y-2">
                   {(selectedEval.result?.strengths || []).map((s: string, i: number) => (
-                    <li key={i} className="text-xs text-[#121722] bg-white border border-[#efefef] rounded-xl p-2.5 flex items-start gap-2">
+                    <li key={i} className="text-xs text-[#121722] bg-white border border-[#efefef] rounded-lg p-2.5 flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#0068f9] shrink-0 mt-1.5"></span>
                       <span className="font-medium text-xs">{s}</span>
                     </li>
@@ -823,7 +823,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
               </div>
 
               {/* Gaps (Col 6) - Warning / Reminder Box in Minimal Red */}
-              <div className="md:col-span-6 bg-[#faf9f7] border border-red-200/60 rounded-2xl p-5 space-y-3">
+              <div className="md:col-span-6 bg-[#faf9f7] border border-red-200/60 rounded-xl p-5 space-y-3">
                 <div className="flex items-center gap-2 border-b border-red-100 pb-3">
                   <div className="w-6 h-6 rounded-full bg-red-50 text-red-600 flex items-center justify-center">
                     <AlertTriangle size={16} />
@@ -832,7 +832,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                 </div>
                 <ul className="space-y-2">
                   {(selectedEval.result?.gaps || []).map((g: string, i: number) => (
-                    <li key={i} className="text-xs text-[#121722] bg-white border border-red-100 rounded-xl p-2.5 flex items-start gap-2">
+                    <li key={i} className="text-xs text-[#121722] bg-white border border-red-100 rounded-lg p-2.5 flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0 mt-1.5"></span>
                       <span className="font-medium text-xs">{g}</span>
                     </li>
@@ -842,7 +842,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
 
               {/* Forecasted Interview Questions (Col 12) */}
               {selectedEval.result?.interview_questions && selectedEval.result.interview_questions.length > 0 && (
-                <div className="md:col-span-12 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 space-y-4">
+                <div className="md:col-span-12 bg-[#faf9f7] border border-[#efefef] rounded-xl p-6 space-y-4">
                   <div className="flex items-center gap-2 border-b border-[#efefef] pb-3">
                     <div className="w-7 h-7 rounded-full bg-[#e8f1ff] text-[#0068f9] flex items-center justify-center">
                       <HelpCircle size={17} />
@@ -853,7 +853,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {selectedEval.result.interview_questions.map((q: string, idx: number) => (
-                      <div key={idx} className="bg-white border border-[#efefef] rounded-2xl p-4 space-y-2 hover:border-[#0068f9]/40 transition-all">
+                      <div key={idx} className="bg-white border border-[#efefef] rounded-lg p-4 space-y-2 hover:border-[#0068f9]/40 transition-all">
                         <span className="w-6 h-6 rounded-full bg-[#0068f9]/10 text-[#0068f9] font-bold flex items-center justify-center text-xs">
                           {idx + 1}
                         </span>
@@ -899,7 +899,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                     <button
                       type="button"
                       onClick={() => { setSearchQuery(''); setMatchCategoryFilter('all'); }}
-                      className="h-[38px] px-4 rounded-full border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] text-sm font-medium transition-all shadow-2xs cursor-pointer mt-2"
+                      className="h-[38px] px-4 rounded-lg border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] text-xs font-medium transition-all shadow-2xs cursor-pointer mt-2"
                     >
                       Clear Filters
                     </button>
@@ -931,7 +931,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                               {ev.role}
                             </span>
                             {ev.result?.company_name && ev.result.company_name !== 'Unknown Company' && (
-                              <span className="px-2.5 py-0.5 rounded-full bg-[#faf9f7] border border-[#efefef] text-xs font-semibold text-[#121722] flex items-center gap-1">
+                              <span className="px-2 py-0.5 rounded-[4px] bg-[#faf9f7] border border-[#efefef] text-xs font-semibold text-[#121722] flex items-center gap-1">
                                 <Building2 size={11} className="text-[#777c86]" />
                                 <span>{ev.result.company_name}</span>
                               </span>
@@ -953,7 +953,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                           <div className="flex items-center gap-1.5 justify-end">
                             <span className={`text-xl font-black ${styles.textColor}`}>{score}%</span>
                           </div>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${styles.badgeBg}`}>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-[4px] border ${styles.badgeBg}`}>
                             {ev.result?.matchCategory || styles.label}
                           </span>
                         </div>
@@ -961,7 +961,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                         <button
                           type="button"
                           onClick={(e) => handleDeleteEval(e, ev.id)}
-                          className="p-2 text-[#a5a5a5] hover:text-red-600 hover:bg-red-50 rounded-full transition-colors cursor-pointer"
+                          className="p-2 text-[#a5a5a5] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                           title="Delete Evaluation"
                         >
                           <Trash2 size={15} />
@@ -983,13 +983,13 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                         </div>
                       </div>
 
-                      {/* Matched Skill Pills (All unified with primary blue span) */}
+                      {/* Matched Skill Pills */}
                       <div className="flex flex-wrap gap-1.5">
                         {matchedKws.length > 0 ? (
                           matchedKws.slice(0, 6).map((kw: any, idx: number) => (
                             <span 
                               key={idx}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#e8f1ff] border border-[#0068f9]/20 text-[#0068f9] text-xs font-semibold rounded-lg shadow-2xs"
+                              className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-[#e8f1ff] border border-[#0068f9]/20 text-[#0068f9] text-xs font-semibold rounded-[4px] shadow-2xs"
                             >
                               <Check size={11} className="text-[#0068f9]" />
                               <span>{kw.keyword}</span>
@@ -999,7 +999,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                           ev.result.strengths.slice(0, 3).map((st: string, idx: number) => (
                             <span 
                               key={idx}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#e8f1ff] border border-[#0068f9]/20 text-[#0068f9] text-xs font-medium rounded-lg"
+                              className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-[#e8f1ff] border border-[#0068f9]/20 text-[#0068f9] text-xs font-medium rounded-[4px]"
                             >
                               <span className="w-1.5 h-1.5 rounded-full bg-[#0068f9]"></span>
                               <span className="truncate max-w-[200px]">{st}</span>
@@ -1010,14 +1010,14 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                         )}
 
                         {matchedKws.length > 6 && (
-                          <span className="px-2.5 py-1 bg-white border border-[#efefef] text-[#777c86] text-xs font-medium rounded-lg">
+                          <span className="px-2 py-0.5 bg-white border border-[#efefef] text-[#777c86] text-xs font-medium rounded-[4px]">
                             +{matchedKws.length - 6} more skills
                           </span>
                         )}
                       </div>
                     </div>
 
-                    {/* Interactive Quick Action Buttons in list card - vertically centered and balanced */}
+                    {/* Interactive Quick Action Buttons in list card */}
                     <div className="flex flex-wrap items-center justify-between gap-3 pt-5 border-t border-[#efefef]/80 mt-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <button
@@ -1027,7 +1027,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                             handleOpenCoverLetter(ev);
                           }}
                           disabled={loadingAction?.evalId === (ev.id || `${ev.role}-${ev.result?.company_name}`)}
-                          className="h-[34px] px-3.5 rounded-full bg-white hover:bg-[#f4f8ff] border border-[#efefef] hover:border-[#0068f9]/30 text-[#121722] text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
+                          className="h-[38px] px-3.5 rounded-lg bg-white hover:bg-[#f4f8ff] border border-[#efefef] hover:border-[#0068f9]/30 text-[#121722] text-[13px] font-semibold transition-all inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
                         >
                           {loadingAction?.evalId === (ev.id || `${ev.role}-${ev.result?.company_name}`) && loadingAction.type === 'cover' && (
                             <Loader2 size={12} className="animate-spin text-[#0068f9]" />
@@ -1042,7 +1042,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                             handleOpenInterviewGuide(ev);
                           }}
                           disabled={loadingAction?.evalId === (ev.id || `${ev.role}-${ev.result?.company_name}`)}
-                          className="h-[34px] px-3.5 rounded-full bg-white hover:bg-[#f4f8ff] border border-[#efefef] hover:border-[#0068f9]/30 text-[#121722] text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
+                          className="h-[38px] px-3.5 rounded-lg bg-white hover:bg-[#f4f8ff] border border-[#efefef] hover:border-[#0068f9]/30 text-[#121722] text-[13px] font-semibold transition-all inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
                         >
                           {loadingAction?.evalId === (ev.id || `${ev.role}-${ev.result?.company_name}`) && loadingAction.type === 'interview' && (
                             <Loader2 size={12} className="animate-spin text-[#0068f9]" />
@@ -1057,7 +1057,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                             handleOpenResumeStudio(ev);
                           }}
                           disabled={loadingAction?.evalId === (ev.id || `${ev.role}-${ev.result?.company_name}`)}
-                          className="h-[34px] px-3.5 rounded-full bg-white hover:bg-[#f4f8ff] border border-[#efefef] hover:border-[#0068f9]/30 text-[#121722] text-xs font-semibold transition-all inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
+                          className="h-[38px] px-3.5 rounded-lg bg-white hover:bg-[#f4f8ff] border border-[#efefef] hover:border-[#0068f9]/30 text-[#121722] text-[13px] font-semibold transition-all inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
                         >
                           {loadingAction?.evalId === (ev.id || `${ev.role}-${ev.result?.company_name}`) && loadingAction.type === 'resume' && (
                             <Loader2 size={12} className="animate-spin text-[#0068f9]" />
@@ -1077,7 +1077,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                                 notes: `Added from Evaluation History. ATS Match: ${score}%`,
                               });
                             }}
-                            className="h-[34px] px-3.5 rounded-full bg-[#f0f5ff] hover:bg-[#e0edff] text-[#0068f9] text-xs font-semibold transition-all inline-flex items-center justify-center cursor-pointer"
+                            className="h-[38px] px-3.5 rounded-lg bg-[#f0f5ff] hover:bg-[#e0edff] text-[#0068f9] text-[13px] font-semibold transition-all inline-flex items-center justify-center cursor-pointer"
                           >
                             <span>Add to Wishlist</span>
                           </button>
@@ -1087,7 +1087,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
                       <button
                         type="button"
                         onClick={() => setSelectedEval(ev)}
-                        className="h-[34px] px-4 rounded-full bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-bold transition-all inline-flex items-center justify-center shadow-2xs cursor-pointer ml-auto sm:ml-0"
+                        className="h-[38px] px-4 rounded-lg bg-[#0068f9] hover:bg-[#024bb1] text-white text-[13px] font-bold transition-all inline-flex items-center justify-center shadow-2xs cursor-pointer ml-auto sm:ml-0"
                       >
                         <span>Full Assessment</span>
                       </button>

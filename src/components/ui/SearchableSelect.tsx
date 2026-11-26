@@ -146,7 +146,7 @@ export function SearchableSelect({
         disabled={disabled}
         onClick={() => !disabled && setIsOpen(prev => !prev)}
         onKeyDown={handleTriggerKeyDown}
-        className={`w-full flex items-center justify-between pl-3.5 pr-3 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722] text-left ${
+        className={`w-full h-[38px] flex items-center justify-between pl-3.5 pr-3 border border-[#efefef] rounded-lg bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-[13px] text-[#121722] text-left ${
           disabled ? 'opacity-50 cursor-not-allowed bg-[#faf9f7]' : 'cursor-pointer hover:border-slate-300'
         } ${isOpen ? 'border-[#0068f9] ring-1 ring-[#0068f9]' : ''}`}
       >
@@ -173,7 +173,7 @@ export function SearchableSelect({
                   setSearchQuery('');
                 }
               }}
-              className="p-0.5 text-[#a5a5a5] hover:text-[#121722] hover:bg-[#eaeaea] rounded-full transition-colors cursor-pointer"
+              className="p-0.5 text-[#a5a5a5] hover:text-[#121722] hover:bg-[#eaeaea] rounded-[4px] transition-colors cursor-pointer"
               title="Clear selection"
             >
               <X size={12} />
@@ -185,12 +185,12 @@ export function SearchableSelect({
 
       {isOpen && (
         <div 
-          className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-[#efefef] rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150 flex flex-col"
+          className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-[#efefef] rounded-2xl shadow-xl p-1.5 z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150 flex flex-col"
           style={{ maxHeight: calculatedMaxHeight || menuMaxHeight || '33.33vh' }}
         >
           {/* Search Box Header */}
           {isSearchVisible && (
-            <div className="p-2 border-b border-[#f1f3f5] bg-white shrink-0">
+            <div className="pb-1.5 mb-1 border-b border-[#f1f3f5] bg-white shrink-0">
               <div className="relative flex items-center">
                 <Search size={13} className="absolute left-2.5 text-[#a5a5a5] pointer-events-none" />
                 <input
@@ -199,7 +199,7 @@ export function SearchableSelect({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={searchPlaceholder}
-                  className="w-full pl-7 pr-7 py-1.5 text-xs bg-[#faf9f7] border border-[#efefef] rounded-xl focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none text-[#121722] placeholder:text-[#a5a5a5]"
+                  className="w-full pl-7 pr-7 py-1.5 text-[13px] bg-[#faf9f7] border border-[#efefef] rounded-[10px] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none text-[#121722] placeholder:text-[#a5a5a5]"
                   onKeyDown={(e) => {
                     if (e.key === 'Escape') {
                       setIsOpen(false);
@@ -213,7 +213,7 @@ export function SearchableSelect({
                   <button
                     type="button"
                     onClick={() => setSearchQuery('')}
-                    className="absolute right-2 p-0.5 text-[#a5a5a5] hover:text-[#121722] rounded-full"
+                    className="absolute right-2 p-0.5 text-[#a5a5a5] hover:text-[#121722] rounded-[4px]"
                   >
                     <X size={12} />
                   </button>
@@ -225,10 +225,10 @@ export function SearchableSelect({
           {/* Options List with 1/3 viewport height guardrail */}
           <div 
             ref={listRef}
-            className="flex-1 overflow-y-auto p-1 divide-y divide-transparent custom-scrollbar space-y-0.5"
+            className="flex-1 overflow-y-auto divide-y divide-transparent custom-scrollbar space-y-0.5"
           >
             {filteredOptions.length === 0 ? (
-              <div className="py-4 text-center text-xs text-[#a5a5a5]">
+              <div className="py-4 text-center text-[13px] text-[#a5a5a5]">
                 No matching locations
               </div>
             ) : (
@@ -239,7 +239,7 @@ export function SearchableSelect({
                     key={opt.value}
                     type="button"
                     onClick={() => handleSelect(opt.value)}
-                    className={`w-full flex items-center justify-between px-3 py-1.5 text-xs rounded-xl text-left transition-colors cursor-pointer ${
+                    className={`w-full flex items-center justify-between px-3 py-1.5 text-[13px] rounded-[10px] text-left transition-colors cursor-pointer ${
                       isSelected
                         ? 'bg-[#e8f1ff] text-[#0068f9] font-semibold'
                         : 'text-[#121722] hover:bg-[#faf9f7]'
@@ -248,10 +248,10 @@ export function SearchableSelect({
                     <div className="truncate pr-2">
                       <span className="truncate block">{opt.label}</span>
                       {opt.sublabel && (
-                        <span className="text-[10px] text-[#777c86] block truncate">{opt.sublabel}</span>
+                        <span className="text-[11px] text-[#777c86] block truncate">{opt.sublabel}</span>
                       )}
                     </div>
-                    {isSelected && <Check size={13} className="text-[#0068f9] shrink-0" />}
+                    {isSelected && <Check size={14} className="text-[#0068f9] shrink-0" />}
                   </button>
                 );
               })

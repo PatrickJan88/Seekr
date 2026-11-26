@@ -902,7 +902,7 @@ export function CoverLetterStudio({
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h2 className="text-base sm:text-lg font-bold text-[#121722] truncate">Cover Letter Studio</h2>
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#eef5ff] text-[#0068f9] shrink-0">
+              <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-bold bg-[#eef5ff] text-[#0068f9] shrink-0">
                 Live Document
               </span>
             </div>
@@ -913,7 +913,7 @@ export function CoverLetterStudio({
               <span>•</span>
               <span>~{readTime} min read</span>
               <span>•</span>
-              <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded text-[11px] shrink-0">
+              <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-[4px] text-[11px] shrink-0">
                 {pages.length === 1 ? '1 A4 Page' : `${pages.length} A4 Pages`}
               </span>
               <span>•</span>
@@ -921,7 +921,7 @@ export function CoverLetterStudio({
                 type="button"
                 onClick={handleManualSave}
                 title={isDemo ? "Saving is prohibited in Demo Mode" : "Auto-saves automatically. Click to save immediately."}
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all select-none ${
+                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-[4px] text-[11px] font-medium transition-all select-none ${
                   isDemo
                     ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed'
                     : saveStatus === 'saving' 
@@ -952,7 +952,7 @@ export function CoverLetterStudio({
 
         <div className="flex items-center gap-2 ml-auto shrink-0">
           {/* Typography preset pill selector */}
-          <div className="hidden sm:flex items-center gap-1 bg-[#faf9f7] p-1 border border-[#efefef] rounded-full text-xs font-medium mr-1">
+          <div className="hidden sm:flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium mr-1">
             <button
               type="button"
               onClick={() => {
@@ -962,7 +962,7 @@ export function CoverLetterStudio({
                 setStyle('modern');
                 triggerAutoSave();
               }}
-              className={`px-2.5 py-1 rounded-full transition-all cursor-pointer ${style === 'modern' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86]'}`}
+              className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${style === 'modern' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
             >
               Modern
             </button>
@@ -975,7 +975,7 @@ export function CoverLetterStudio({
                 setStyle('classic');
                 triggerAutoSave();
               }}
-              className={`px-2.5 py-1 rounded-full transition-all cursor-pointer ${style === 'classic' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86]'}`}
+              className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${style === 'classic' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
             >
               Classic
             </button>
@@ -988,7 +988,7 @@ export function CoverLetterStudio({
                 setStyle('executive');
                 triggerAutoSave();
               }}
-              className={`px-2.5 py-1 rounded-full transition-all cursor-pointer ${style === 'executive' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86]'}`}
+              className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${style === 'executive' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
             >
               Executive
             </button>
@@ -997,7 +997,7 @@ export function CoverLetterStudio({
           <button 
             type="button"
             onClick={handleCopy}
-            className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-xs font-semibold rounded-full transition-all shadow-2xs cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 h-[38px] px-3 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-[13px] font-semibold rounded-lg transition-all shadow-2xs cursor-pointer"
           >
             {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
             <span>{copied ? 'Copied' : 'Copy'}</span>
@@ -1006,7 +1006,7 @@ export function CoverLetterStudio({
           <button 
             type="button"
             onClick={handlePrint}
-            className={`inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold rounded-full transition-all shadow-2xs ${
+            className={`inline-flex items-center justify-center gap-2 h-[38px] px-5 text-[13px] font-semibold rounded-lg transition-all shadow-2xs ${
               isDemo
                 ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 hover:bg-zinc-100 cursor-not-allowed'
                 : 'bg-[#0068f9] text-white hover:bg-[#024bb1] cursor-pointer'
@@ -1020,7 +1020,7 @@ export function CoverLetterStudio({
           {!embedded && onClose && (
             <button 
               onClick={onClose}
-              className="p-2 text-[#a5a5a5] hover:text-[#121722] hover:bg-[#efefef] rounded-full transition-colors cursor-pointer"
+              className="p-2 text-[#a5a5a5] hover:text-[#121722] hover:bg-[#efefef] rounded-lg transition-colors cursor-pointer"
             >
               <X size={20} />
             </button>
@@ -1064,7 +1064,7 @@ export function CoverLetterStudio({
                       handleRemovePage(idx);
                     }}
                     title={isDemo ? "Deleting pages is prohibited in Demo Mode" : `Delete Page ${idx + 1}`}
-                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] transition-colors ${
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] transition-colors ${
                       isDemo
                         ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed hover:bg-zinc-100'
                         : 'text-rose-600 hover:bg-rose-50 border border-rose-200 cursor-pointer'
@@ -1074,7 +1074,7 @@ export function CoverLetterStudio({
                     <span>Delete Page {idx + 1}</span>
                   </button>
                 )}
-                <span className="bg-[#f0f4ff] text-[#0068f9] font-bold px-2.5 py-0.5 rounded-full text-[10px]">
+                <span className="bg-[#f0f4ff] text-[#0068f9] font-bold px-2.5 py-0.5 rounded-[4px] text-[10px]">
                   Page {idx + 1}
                 </span>
               </div>
@@ -1142,7 +1142,7 @@ export function CoverLetterStudio({
         <button
           type="button"
           onClick={() => handleAddPage(pages.length - 1)}
-          className={`my-4 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+          className={`my-4 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
             isDemo
               ? 'text-zinc-400 border border-zinc-200 bg-zinc-100 cursor-not-allowed hover:bg-zinc-100'
               : 'text-[#121722] hover:text-[#0068f9] hover:bg-black/5 cursor-pointer'

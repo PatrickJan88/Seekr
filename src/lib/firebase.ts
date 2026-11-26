@@ -1,6 +1,22 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInAnonymously, signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, query, where, onSnapshot } from 'firebase/firestore';
+import {
+  getAuth,
+  initializeAuth,
+  browserLocalPersistence,
+  browserSessionPersistence,
+  inMemoryPersistence,
+  browserPopupRedirectResolver,
+  setPersistence,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInAnonymously,
+  signOut,
+  onAuthStateChanged,
+  Auth,
+  User,
+  Persistence
+} from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 import { getAnalytics } from 'firebase/analytics';
 
 const firebaseConfig = {
@@ -23,18 +39,92 @@ if (typeof window !== 'undefined') {
   }
 }
 
+function isStorageWritable(storageType: 'localStorage' | 'sessionStorage'): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const storage = window[storageType];
+    const testKey = '__seekr_auth_storage_test__';
+    storage.setItem(testKey, '1');
+    storage.removeItem(testKey);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function getSafeAuthPersistence(): Persistence[] {
+  // Avoid IndexedDBLocalPersistence because Safari/iPadOS/iframes can trigger
+  // "Error: Database is closing/hidden" during OAuth popup visibility changes.
+  const chain: Persistence[] = [];
+  if (isStorageWritable('localStorage')) {
+    chain.push(browserLocalPersistence);
+  }
+  if (isStorageWritable('sessionStorage')) {
+    chain.push(browserSessionPersistence);
+  }
+  chain.push(inMemoryPersistence);
+  return chain;
+}
+
+function createAuthInstance(): Auth {
+  const persistenceChain = getSafeAuthPersistence();
+  try {
+    return initializeAuth(app, {
+      persistence: persistenceChain,
+      popupRedirectResolver: browserPopupRedirectResolver,
+    });
+  } catch (err: any) {
+    // If Auth was already initialized (e.g., during HMR), reuse existing instance
+    // and ensure it uses a non-IndexedDB persistence backend.
+    const existingAuth = getAuth(app);
+    setPersistence(existingAuth, persistenceChain[0] || inMemoryPersistence).catch(() => {
+      setPersistence(existingAuth, inMemoryPersistence).catch(() => {});
+    });
+    return existingAuth;
+  }
+}
+
 export { analytics };
-export const auth = getAuth(app);
+export const auth = createAuthInstance();
 export const db = getFirestore(app);
 
 export const googleProvider = new GoogleAuthProvider();
 
+function isPersistenceError(err: any): boolean {
+  const msg = String(err?.message || '').toLowerCase();
+  return (
+    msg.includes('database is closing') ||
+    msg.includes('hidden') ||
+    msg.includes('indexeddb') ||
+    msg.includes('securityerror') ||
+    msg.includes('quotaexceeded')
+  );
+}
 
 export const googleSignIn = async () => {
-  return signInWithPopup(auth, googleProvider);
+  try {
+    return await signInWithPopup(auth, googleProvider);
+  } catch (err: any) {
+    if (isPersistenceError(err)) {
+      await setPersistence(auth, inMemoryPersistence);
+      return await signInWithPopup(auth, googleProvider);
+    }
+    throw err;
+  }
 };
 
-export const anonymousSignIn = () => signInAnonymously(auth);
+export const anonymousSignIn = async () => {
+  try {
+    return await signInAnonymously(auth);
+  } catch (err: any) {
+    if (isPersistenceError(err)) {
+      await setPersistence(auth, inMemoryPersistence);
+      return await signInAnonymously(auth);
+    }
+    throw err;
+  }
+};
+
 export const logout = () => signOut(auth);
 
 export const initAuth = (onLogin: (user: User) => void, onLogout: () => void) => {
@@ -48,5 +138,3 @@ export const initAuth = (onLogin: (user: User) => void, onLogout: () => void) =>
 };
 
 export type { User };
-
-

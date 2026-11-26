@@ -82,7 +82,7 @@ export function Analytics({ applications, isDemo = false, onLocationSelect, trac
         <ApplicationMap applications={applications} isDemo={isDemo} onLocationSelect={onLocationSelect} />
       </div>
 
-      <div className="col-span-12 md:col-span-8 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 shadow-none flex flex-col">
+      <div className="col-span-12 md:col-span-8 bg-[#faf9f7] border border-[#efefef] rounded-xl p-6 shadow-none flex flex-col">
         <h3 className="text-sm font-bold text-[#121722] mb-4">Active Progress Summary</h3>
         <div className="h-72 flex-grow">
           <ResponsiveContainer width="100%" height="100%">
@@ -97,7 +97,7 @@ export function Analytics({ applications, isDemo = false, onLocationSelect, trac
         </div>
       </div>
 
-      <div className="col-span-12 md:col-span-4 bg-[#121722] border border-[#121722] rounded-2xl p-6 shadow-2xs flex flex-col justify-between">
+      <div className="col-span-12 md:col-span-4 bg-[#121722] border border-[#121722] rounded-xl p-6 shadow-2xs flex flex-col justify-between">
         <div>
           <h3 className="text-sm font-bold text-white mb-4">Current Status</h3>
           <div className="h-48 mb-4">

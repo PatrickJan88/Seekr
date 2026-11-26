@@ -729,7 +729,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
           <div className="flex items-center gap-2">
             <button
               onClick={onCancel}
-              className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-all hover:bg-[#faf9f7] h-9 w-9 p-0 text-[#777c86] hover:text-[#121722] cursor-pointer"
+              className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all hover:bg-[#faf9f7] h-9 w-9 p-0 text-[#777c86] hover:text-[#121722] cursor-pointer"
             >
               <X size={20} />
             </button>
@@ -739,17 +739,17 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
         {isDemo && (
           <div className="bg-amber-50 border-b border-amber-200 text-amber-900 px-6 py-2.5 text-xs font-semibold flex items-center justify-between shrink-0">
             <span className="flex items-center gap-1.5">
-              <span className="font-semibold bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded-full text-[10px]">read-only</span>
+              <span className="font-semibold bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded-[4px] text-[10px]">read-only</span>
               Portfolio Demo Mode — Application details are in read-only preview
             </span>
           </div>
         )}
         
         <div className="p-6 overflow-y-auto flex-grow">
-          {saveError && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-2xl border border-red-100 text-sm">{saveError}</div>}
+          {saveError && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg border border-red-100 text-sm">{saveError}</div>}
           
           {!initialData && (
-          <div className="mb-6 p-4 bg-[#faf9f7] rounded-2xl border border-[#efefef]">
+          <div className="mb-6 p-4 bg-[#faf9f7] rounded-xl border border-[#efefef]">
             <label className="block text-xs font-semibold text-[#0068f9] mb-1">Smart Paste</label>
             <p className="text-xs text-[#777c86] mb-3">Paste a job description here to automatically fill out the {trackingSystem === 'academic' ? 'institution, title' : 'company, position'}, and notes.</p>
             <div className="flex flex-col gap-2">
@@ -758,14 +758,14 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
                 onChange={e => setPasteText(e.target.value)} 
                 rows={3} 
                 placeholder="Paste job description..."
-                className="w-full px-3.5 py-2.5 border border-[#efefef] rounded-2xl bg-white focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722] resize-y"
+                className="w-full px-3.5 py-2.5 border border-[#efefef] rounded-lg bg-white focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722] resize-y"
               />
               {extractError && <div className="text-red-500 text-xs font-medium">{extractError}</div>}
               <button 
                 type="button" 
                 onClick={handleExtract}
                 disabled={isExtracting || !pasteText.trim()}
-                className={`self-start gap-2 inline-flex items-center justify-center rounded-full text-xs font-medium transition-all border border-[#efefef] bg-white text-[#121722] shadow-2xs hover:bg-[#faf9f7] h-9 px-4 py-2 cursor-pointer ${(isExtracting || !pasteText.trim()) ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`self-start gap-2 inline-flex items-center justify-center rounded-lg text-[13px] font-medium transition-all border border-[#efefef] bg-white text-[#121722] shadow-2xs hover:bg-[#faf9f7] h-[38px] px-4 cursor-pointer ${(isExtracting || !pasteText.trim()) ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 {isExtracting ? <Loader2 size={16} className="animate-spin text-[#0068f9]" /> : <Wand2 size={16} className="text-[#0068f9]" />}
                 {isExtracting ? 'Extracting...' : 'Auto-fill fields'}
@@ -777,11 +777,11 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-[#121722] mb-1.5">{trackingSystem === 'academic' ? 'Institution / University' : 'Company'} *</label>
-              <input type="text" name="company" value={formData.company || ''} onChange={handleChange} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" />
+              <input type="text" name="company" value={formData.company || ''} onChange={handleChange} className="w-full h-[38px] px-3.5 border border-[#efefef] rounded-lg bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-[13px] text-[#121722]" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-[#121722] mb-1.5">{trackingSystem === 'academic' ? 'Academic Title / Position' : 'Position'} *</label>
-              <input type="text" name="position" value={formData.position || ''} onChange={handleChange} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" />
+              <input type="text" name="position" value={formData.position || ''} onChange={handleChange} className="w-full h-[38px] px-3.5 border border-[#efefef] rounded-lg bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-[13px] text-[#121722]" />
             </div>
             {/* 2-Level Location Selection */}
             <div className="col-span-2 space-y-1">
@@ -815,7 +815,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
                     value={customCityText}
                     onChange={e => handleCustomCityChange(e.target.value)}
                     placeholder="Enter custom city or province details"
-                    className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]"
+                    className="w-full h-[38px] px-3.5 border border-[#efefef] rounded-lg bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-[13px] text-[#121722]"
                   />
                 </div>
               )}
@@ -848,7 +848,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
             </div>
             <div>
               <label className="block text-xs font-semibold text-[#121722] mb-1.5">Applied Date</label>
-              <input type="date" name="appliedDate" value={formData.appliedDate?.split('T')[0] || ''} onChange={handleChange} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" />
+              <input type="date" name="appliedDate" value={formData.appliedDate?.split('T')[0] || ''} onChange={handleChange} className="w-full h-[38px] px-3.5 border border-[#efefef] rounded-lg bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-[13px] text-[#121722]" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-[#121722] mb-1.5">Next Interview</label>
@@ -858,7 +858,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
                   name="nextInterviewDate"
                   value={formData.nextInterviewDate?.slice(0, 16) || ''}
                   onChange={handleChange}
-                  className={`w-full px-3.5 py-2 border rounded-2xl bg-[#faf9f7] focus:ring-1 outline-none transition-all text-xs text-[#121722] [color-scheme:light] ${
+                  className={`w-full h-[38px] px-3.5 border rounded-lg bg-[#faf9f7] focus:ring-1 outline-none transition-all text-[13px] text-[#121722] [color-scheme:light] ${
                     isPastInterview
                       ? 'border-amber-400 focus:border-amber-500 focus:ring-amber-200'
                       : 'border-[#efefef] focus:border-[#0068f9] focus:ring-[#0068f9]'
@@ -876,7 +876,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
                         customReminderEndDate: ''
                       }));
                     }}
-                    className="absolute right-[30px] p-0.5 text-[#a5a5a5] hover:text-[#121722] hover:bg-[#eaeaea] rounded-full transition-colors cursor-pointer z-10"
+                    className="absolute right-[30px] p-0.5 text-[#a5a5a5] hover:text-[#121722] hover:bg-[#eaeaea] rounded-[4px] transition-colors cursor-pointer z-10"
                     title="Clear next interview time"
                   >
                     <X size={12} />
@@ -906,16 +906,16 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
               />
               {formData.reminder === 'custom' && (
                 <div className="mt-2 flex items-center gap-2">
-                  <input type="date" name="customReminderDate" value={formData.customReminderDate?.split('T')[0] || ''} onChange={handleChange} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" placeholder="Start Date" />
-                  <span className="text-[#777c86] text-xs">to</span>
-                  <input type="date" name="customReminderEndDate" value={formData.customReminderEndDate?.split('T')[0] || ''} onChange={handleChange} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" placeholder="End Date" />
+                  <input type="date" name="customReminderDate" value={formData.customReminderDate?.split('T')[0] || ''} onChange={handleChange} className="w-full h-[38px] px-3.5 border border-[#efefef] rounded-lg bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-[13px] text-[#121722]" placeholder="Start Date" />
+                  <span className="text-[#777c86] text-[13px]">to</span>
+                  <input type="date" name="customReminderEndDate" value={formData.customReminderEndDate?.split('T')[0] || ''} onChange={handleChange} className="w-full h-[38px] px-3.5 border border-[#efefef] rounded-lg bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-[13px] text-[#121722]" placeholder="End Date" />
                 </div>
               )}
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-[#121722] mb-1.5">Contact Email</label>
-              <input type="email" name="contactEmail" value={formData.contactEmail || ''} onChange={handleChange} className="w-full px-3.5 py-2 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722]" />
+              <input type="email" name="contactEmail" value={formData.contactEmail || ''} onChange={handleChange} className="w-full h-[38px] px-3.5 border border-[#efefef] rounded-lg bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-[13px] text-[#121722]" />
             </div>
           </div>
 
@@ -928,7 +928,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
               onChange={handleChange}
               rows={5}
               placeholder="Add key thoughts, interview preparation notes, or follow-up milestones..."
-              className="w-full px-3.5 py-2.5 border border-[#efefef] rounded-2xl bg-[#faf9f7] focus:bg-white focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722] leading-relaxed resize-y min-h-[110px]"
+              className="w-full px-3.5 py-2.5 border border-[#efefef] rounded-lg bg-[#faf9f7] focus:bg-white focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-xs text-[#121722] leading-relaxed resize-y min-h-[110px]"
             ></textarea>
           </div>
 
@@ -950,7 +950,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
                         placeholder="Link name (e.g. Next Step Portal)"
                         value={link.title}
                         onChange={(e) => handleLinkChange(index, 'title', e.target.value)}
-                        className="w-full px-3 py-1.5 text-xs font-medium border border-[#efefef] rounded-lg bg-[#faf9f7] focus:bg-white focus:border-[#0068f9] outline-none text-[#121722]"
+                        className="w-full h-[38px] px-3 text-[13px] font-medium border border-[#efefef] rounded-lg bg-[#faf9f7] focus:bg-white focus:border-[#0068f9] outline-none text-[#121722]"
                       />
                     </div>
                     <div className="w-full sm:flex-1 relative">
@@ -959,7 +959,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
                         placeholder="https://..."
                         value={link.url}
                         onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
-                        className="w-full px-3 py-1.5 text-xs border border-[#efefef] rounded-lg bg-[#faf9f7] focus:bg-white focus:border-[#0068f9] outline-none text-[#121722] font-mono"
+                        className="w-full h-[38px] px-3 text-[13px] border border-[#efefef] rounded-lg bg-[#faf9f7] focus:bg-white focus:border-[#0068f9] outline-none text-[#121722] font-mono"
                       />
                     </div>
                     <div className="flex items-center gap-1 shrink-0 justify-end">
@@ -989,7 +989,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
               <button
                 type="button"
                 onClick={() => handleAddLink()}
-                className="w-full flex items-center justify-center gap-1 text-xs font-medium text-[#777c86] hover:text-[#0068f9] bg-[#faf9f7] hover:bg-[#eef5ff] px-3 py-2.5 rounded-xl border border-dashed border-[#d5d7da] hover:border-[#0068f9]/30 transition-all cursor-pointer"
+                className="w-full h-[38px] flex items-center justify-center gap-1 text-[13px] font-medium text-[#777c86] hover:text-[#0068f9] bg-[#faf9f7] hover:bg-[#eef5ff] px-3 rounded-lg border border-dashed border-[#d5d7da] hover:border-[#0068f9]/30 transition-all cursor-pointer"
               >
                 <Plus size={14} />
                 Add Link
@@ -1033,14 +1033,14 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
           ) : <div></div>}
           
           <div className="flex gap-3">
-            <button type="button" onClick={onCancel} className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-all border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] h-9 px-5 py-2 shadow-2xs cursor-pointer">
+            <button type="button" onClick={onCancel} className="inline-flex items-center justify-center rounded-lg text-[13px] font-medium transition-all border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] h-[38px] px-5 shadow-2xs cursor-pointer">
               Cancel
             </button>
             <button 
               type="submit" 
               form="job-form" 
               disabled={isSaving} 
-              className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-all bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-9 px-5 py-2 cursor-pointer"
+              className="inline-flex items-center justify-center rounded-lg text-[13px] font-medium transition-all bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-[38px] px-5 cursor-pointer"
             >
               {isDemo ? 'Read-Only (Demo)' : isSaving ? 'Saving...' : 'Save Application'}
             </button>

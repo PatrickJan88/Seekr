@@ -54,7 +54,7 @@ const ToolbarButton = ({
         e.preventDefault();
         if (onMouseDown) onMouseDown(e);
       }}
-      className={`h-8 w-8 flex items-center justify-center rounded-md transition-colors duration-200 ${
+      className={`h-8 w-8 flex items-center justify-center rounded-lg transition-colors duration-200 ${
         isActive ? "bg-blue-50 text-[#0068f9] ring-1 ring-[#0068f9]/20" : "text-[#4b5563]"
       } hover:bg-slate-100 hover:text-[#121722] focus:outline-none cursor-pointer`}
       aria-label={label}
@@ -68,7 +68,7 @@ const ToolbarButton = ({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.2 }}
-        className="text-nowrap font-medium absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded-md px-2 py-1 shadow-lg pointer-events-none z-50"
+        className="text-nowrap font-medium absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded-lg px-2 py-1 shadow-lg pointer-events-none z-50"
       >
         {label}
       </motion.div>
@@ -241,7 +241,7 @@ const Toolbar = ({
           transition={{ type: "spring", damping: 20, stiffness: 300 }}
           className={`${
             isEmbedded ? "relative" : "absolute"
-          } z-30 bg-white rounded-lg shadow-sm border border-slate-200/80 flex items-center gap-1 p-1`}
+          } z-30 bg-white rounded-xl shadow-sm border border-slate-200/80 flex items-center gap-1 p-1`}
         >
           {/* Text Formatting Section */}
           <ToolbarButton
@@ -294,7 +294,7 @@ const Toolbar = ({
             {/* Link Popover for custom URL entry or edit */}
             {showLinkPopover && (
               <div
-                className="absolute top-10 left-1/2 -translate-x-1/2 bg-white border border-slate-200 shadow-xl rounded-xl p-2.5 z-50 flex flex-col gap-2 min-w-[280px]"
+                className="absolute top-10 left-1/2 -translate-x-1/2 bg-white border border-slate-200 shadow-xl rounded-2xl p-2 z-50 flex flex-col gap-2 min-w-[280px]"
                 onMouseDown={(e) => e.preventDefault()}
               >
                 <div className="flex items-center justify-between gap-1 text-xs font-semibold text-slate-700 pb-1 border-b border-slate-100">
@@ -302,7 +302,7 @@ const Toolbar = ({
                   <button
                     type="button"
                     onClick={() => setShowLinkPopover(false)}
-                    className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600"
+                    className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -322,7 +322,7 @@ const Toolbar = ({
                       <button
                         type="button"
                         onClick={handleUnlink}
-                        className="px-2 py-1 text-[11px] font-medium text-rose-600 hover:bg-rose-50 rounded flex items-center gap-1 cursor-pointer transition-colors"
+                        className="px-2 py-1 text-[11px] font-medium text-rose-600 hover:bg-rose-50 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
                       >
                         <Unlink className="w-3 h-3" />
                         Remove
@@ -332,7 +332,7 @@ const Toolbar = ({
                       <button
                         type="button"
                         onClick={() => setShowLinkPopover(false)}
-                        className="px-2.5 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-100 rounded cursor-pointer transition-colors"
+                        className="px-2.5 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
                       >
                         Cancel
                       </button>
@@ -405,7 +405,7 @@ const Toolbar = ({
             {/* Color Palette Popover */}
             {showColorPalette && (
               <div 
-                className="absolute top-10 left-1/2 -translate-x-1/2 bg-white border border-slate-200 shadow-xl rounded-xl p-2 z-50 flex items-center gap-1.5"
+                className="absolute top-10 left-1/2 -translate-x-1/2 bg-white border border-slate-200 shadow-xl rounded-2xl p-2 z-50 flex items-center gap-1.5"
                 onMouseDown={(e) => e.preventDefault()}
               >
                 {COLOR_OPTIONS.map((c) => (

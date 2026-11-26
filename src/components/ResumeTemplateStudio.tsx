@@ -973,7 +973,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-bold text-[#121722]">Resume Studio</h2>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#e8f1ff] text-[#0068f9] border border-[#0068f9]/20">
+              <span className="px-2.5 py-0.5 rounded-[4px] text-[11px] font-bold bg-[#e8f1ff] text-[#0068f9] border border-[#0068f9]/20">
                 4 ATS Templates
               </span>
             </div>
@@ -984,7 +984,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                 type="button"
                 onClick={handleManualSave}
                 title={isDemo ? "Saving is prohibited in Demo Mode" : "Auto-saves automatically. Click to save immediately."}
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all select-none ${
+                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-[4px] text-[11px] font-medium transition-all select-none ${
                   isDemo
                     ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed'
                     : saveStatus === 'saving' 
@@ -1015,18 +1015,18 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
 
         <div className="flex items-center gap-2">
           {/* View Switcher Tabs */}
-          <div className="flex items-center gap-1 bg-[#faf9f7] p-1 border border-[#efefef] rounded-full text-xs font-medium mr-2">
+          <div className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium mr-2">
             <button
               type="button"
               onClick={() => setActiveTab('preview')}
-              className={`px-3 py-1 rounded-full transition-all cursor-pointer ${activeTab === 'preview' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86]'}`}
+              className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${activeTab === 'preview' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
             >
               Live Preview
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('edit')}
-              className={`px-3 py-1 rounded-full transition-all cursor-pointer ${activeTab === 'edit' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86]'}`}
+              className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${activeTab === 'edit' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
             >
               Edit Content
             </button>
@@ -1035,7 +1035,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
           <button
             type="button"
             onClick={handleCopyText}
-            className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-xs font-semibold rounded-full transition-all shadow-2xs cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 h-[38px] px-3 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-[13px] font-semibold rounded-lg transition-all shadow-2xs cursor-pointer"
           >
             {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
             <span>{copied ? 'Copied' : 'Copy Text'}</span>
@@ -1044,7 +1044,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
           <button
             type="button"
             onClick={() => handlePrint()}
-            className={`inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold rounded-full transition-all shadow-2xs ${
+            className={`inline-flex items-center justify-center gap-2 h-[38px] px-5 text-[13px] font-semibold rounded-lg transition-all shadow-2xs ${
               isDemo
                 ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 hover:bg-zinc-100 cursor-not-allowed'
                 : 'bg-[#0068f9] text-white hover:bg-[#024bb1] cursor-pointer'
@@ -1058,7 +1058,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
           {!embedded && onClose && (
             <button
               onClick={onClose}
-              className="p-2 text-[#a5a5a5] hover:text-[#121722] hover:bg-[#efefef] rounded-full transition-colors cursor-pointer"
+              className="p-2 text-[#a5a5a5] hover:text-[#121722] hover:bg-[#efefef] rounded-lg transition-colors cursor-pointer"
             >
               <X size={20} />
             </button>
@@ -1087,7 +1087,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                         type="text"
                         value={resumeData.fullName}
                         onChange={e => handleUpdateBasic('fullName', e.target.value)}
-                        className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none"
+                        className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-lg focus:ring-2 focus:ring-[#0068f9] outline-none"
                       />
                     </div>
                     <div>
@@ -1096,7 +1096,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                         type="text"
                         value={resumeData.title}
                         onChange={e => handleUpdateBasic('title', e.target.value)}
-                        className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none"
+                        className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-lg focus:ring-2 focus:ring-[#0068f9] outline-none"
                       />
                     </div>
                     <div>
@@ -1105,7 +1105,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                         type="text"
                         value={resumeData.contact.email}
                         onChange={e => handleUpdateContact('email', e.target.value)}
-                        className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none"
+                        className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-lg focus:ring-2 focus:ring-[#0068f9] outline-none"
                       />
                     </div>
                     <div>
@@ -1114,7 +1114,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                         type="text"
                         value={resumeData.contact.phone}
                         onChange={e => handleUpdateContact('phone', e.target.value)}
-                        className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none"
+                        className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-lg focus:ring-2 focus:ring-[#0068f9] outline-none"
                       />
                     </div>
                     <div>
@@ -1123,7 +1123,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                         type="text"
                         value={resumeData.contact.location}
                         onChange={e => handleUpdateContact('location', e.target.value)}
-                        className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none"
+                        className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-lg focus:ring-2 focus:ring-[#0068f9] outline-none"
                       />
                     </div>
                     <div>
@@ -1132,7 +1132,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                         type="text"
                         value={resumeData.contact.linkedin || ''}
                         onChange={e => handleUpdateContact('linkedin', e.target.value)}
-                        className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none"
+                        className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-lg focus:ring-2 focus:ring-[#0068f9] outline-none"
                       />
                     </div>
                   </div>
@@ -1147,7 +1147,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                     rows={4}
                     value={resumeData.summary}
                     onChange={e => handleUpdateBasic('summary', e.target.value)}
-                    className="w-full p-3 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none resize-none leading-relaxed"
+                    className="w-full p-3 text-xs border border-[#efefef] rounded-lg focus:ring-2 focus:ring-[#0068f9] outline-none resize-none leading-relaxed"
                   />
                 </div>
 
@@ -1162,7 +1162,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                       type="text"
                       value={resumeData.skills.technical.join(', ')}
                       onChange={e => handleUpdateSkills('technical', e.target.value)}
-                      className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none"
+                      className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-lg focus:ring-2 focus:ring-[#0068f9] outline-none"
                     />
                   </div>
                   <div>
@@ -1171,7 +1171,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                       type="text"
                       value={resumeData.skills.tools.join(', ')}
                       onChange={e => handleUpdateSkills('tools', e.target.value)}
-                      className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none"
+                      className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-lg focus:ring-2 focus:ring-[#0068f9] outline-none"
                     />
                   </div>
                   <div>
@@ -1180,7 +1180,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                       type="text"
                       value={resumeData.skills.domain.join(', ')}
                       onChange={e => handleUpdateSkills('domain', e.target.value)}
-                      className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-xl focus:ring-2 focus:ring-[#0068f9] outline-none"
+                      className="w-full px-3 py-2 text-xs border border-[#efefef] rounded-lg focus:ring-2 focus:ring-[#0068f9] outline-none"
                     />
                   </div>
                 </div>
@@ -1195,7 +1195,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                       type="button"
                       onClick={handleAddExperience}
                       title={isDemo ? "Adding experience is prohibited in Demo Mode" : "Add Role"}
-                      className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 transition-colors ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors ${
                         isDemo
                           ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed hover:bg-zinc-100'
                           : 'bg-[#f0f5ff] text-[#0068f9] hover:bg-[#e0edff] cursor-pointer'
@@ -1313,7 +1313,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                       type="button"
                       onClick={handleAddEducation}
                       title={isDemo ? "Adding education is prohibited in Demo Mode" : "Add Degree"}
-                      className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 transition-colors ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors ${
                         isDemo
                           ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed hover:bg-zinc-100'
                           : 'bg-[#f0f5ff] text-[#0068f9] hover:bg-[#e0edff] cursor-pointer'
@@ -1392,7 +1392,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
                         <button
                           key={tmpl.id}
                           onClick={() => setSelectedTemplate(tmpl.id)}
-                          className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer flex flex-col ${
+                          className={`w-full text-left p-3 rounded-lg border transition-all cursor-pointer flex flex-col ${
                             isSelected
                               ? 'bg-[#f4f8ff] border-[#0068f9] shadow-2xs ring-1 ring-[#0068f9]'
                               : 'bg-white border-[#efefef] hover:bg-[#faf9f7]'

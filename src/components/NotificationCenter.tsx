@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import * as Tabs from '@radix-ui/react-tabs';
 import { Bell, Briefcase, Calendar, AlertCircle } from 'lucide-react';
 import { auth } from '../lib/firebase';
 import { getNotifications, markNotificationRead, markAllNotificationsRead } from '../lib/notifications';
 import { AppNotification } from '../types';
+import { computeDropdownAlign, DropdownAlign } from '../lib/utils';
 
 export function NotificationCenter({ onViewAll, onNavigateToGhosted }: { onViewAll: () => void; onNavigateToGhosted?: (n: AppNotification) => void }) {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [tab, setTab] = useState("all");
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [menuAlign, setMenuAlign] = useState<DropdownAlign>('start');
   
   useEffect(() => {
     if (!auth.currentUser) return;
@@ -46,11 +49,18 @@ export function NotificationCenter({ onViewAll, onNavigateToGhosted }: { onViewA
   };
 
   return (
-    <Popover.Root>
+    <Popover.Root
+      onOpenChange={(open) => {
+        if (open) {
+          setMenuAlign(computeDropdownAlign(triggerRef.current, 380));
+        }
+      }}
+    >
       <Popover.Trigger asChild>
         <button 
+          ref={triggerRef}
           title="Notifications" 
-          className="relative w-[38px] h-[38px] rounded-full bg-white border border-[#efefef] shadow-2xs flex items-center justify-center text-[#777c86] hover:text-[#121722] hover:bg-[#faf9f7] transition-all cursor-pointer focus:outline-none"
+          className="relative w-[38px] h-[38px] rounded-lg bg-white border border-[#efefef] shadow-2xs flex items-center justify-center text-[#777c86] hover:text-[#121722] hover:bg-[#faf9f7] transition-all cursor-pointer focus:outline-none"
         >
           <Bell size={16} />
           {unreadCount > 0 && (
@@ -62,17 +72,23 @@ export function NotificationCenter({ onViewAll, onNavigateToGhosted }: { onViewA
       </Popover.Trigger>
       
       <Popover.Portal>
-        <Popover.Content className="w-[380px] bg-white rounded-2xl shadow-lg border border-[#efefef] overflow-hidden z-50 mr-4" sideOffset={8}>
+        <Popover.Content align={menuAlign} collisionPadding={16} className="w-[380px] max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-lg border border-[#efefef] overflow-hidden z-50" sideOffset={8}>
           <Tabs.Root value={tab} onValueChange={setTab}>
-            <div className="flex items-center justify-between border-b border-[#efefef] px-4 py-3 bg-[#faf9f7]">
-              <Tabs.List className="flex gap-4">
-                <Tabs.Trigger value="all" className="text-xs font-semibold text-[#777c86] data-[state=active]:text-[#121722] data-[state=active]:border-b-2 data-[state=active]:border-[#0068f9] pb-1 -mb-3 transition-colors cursor-pointer">
+            <div className="flex items-center justify-between border-b border-[#efefef] px-4 py-3 bg-white">
+              <Tabs.List className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0">
+                <Tabs.Trigger
+                  value="all"
+                  className="h-full px-3.5 rounded-full flex items-center justify-center transition-all cursor-pointer border border-transparent text-[#777c86] hover:text-[#121722] data-[state=active]:bg-white data-[state=active]:text-[#121722] data-[state=active]:shadow-2xs data-[state=active]:font-bold data-[state=active]:border-[#efefef]"
+                >
                   All
                 </Tabs.Trigger>
-                <Tabs.Trigger value="unread" className="text-xs font-semibold text-[#777c86] data-[state=active]:text-[#121722] data-[state=active]:border-b-2 data-[state=active]:border-[#0068f9] pb-1 -mb-3 transition-colors flex items-center gap-1.5 cursor-pointer">
-                  Unread
+                <Tabs.Trigger
+                  value="unread"
+                  className="h-full px-3.5 rounded-full transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-transparent text-[#777c86] hover:text-[#121722] data-[state=active]:bg-white data-[state=active]:text-[#121722] data-[state=active]:shadow-2xs data-[state=active]:font-bold data-[state=active]:border-[#efefef]"
+                >
+                  <span>Unread</span>
                   {unreadCount > 0 && (
-                    <span className="bg-white text-[#121722] border border-[#efefef] text-[10px] px-1.5 rounded-full font-bold">
+                    <span className="w-4 h-4 rounded-full bg-blue-100 text-[10px] flex items-center justify-center font-bold text-blue-700 border border-blue-200">
                       {unreadCount}
                     </span>
                   )}

@@ -769,10 +769,10 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
       <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex flex-col relative">
         {/* Unified Global Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-1 bg-[#faf9f7] p-1 border border-[#efefef] rounded-full text-xs font-medium shrink-0">
+          <div className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0">
             <button
               onClick={() => setActiveTab('explorer')}
-              className={`px-4 py-1.5 rounded-full transition-all cursor-pointer ${
+              className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer ${
                 activeTab === 'explorer' 
                   ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' 
                   : 'text-[#777c86] hover:text-[#121722] border border-transparent'
@@ -782,7 +782,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
             </button>
             <button
               onClick={() => setActiveTab('history')}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full transition-all cursor-pointer ${
+              className={`h-full flex items-center justify-center gap-1.5 px-4 rounded-full transition-all cursor-pointer ${
                 activeTab === 'history' 
                   ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' 
                   : 'text-[#777c86] hover:text-[#121722] border border-transparent'
@@ -806,7 +806,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="e.g. Linear, Stripe"
-                  className="w-full pl-9 pr-3 h-10 text-xs bg-[#faf9f7] border border-[#efefef] rounded-xl text-[#121722] focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
+                  className="w-full pl-9 pr-3 h-[38px] text-[13px] bg-[#faf9f7] border border-[#efefef] rounded-lg text-[#121722] focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
                 />
               </div>
               <div className="relative w-full">
@@ -816,7 +816,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                   value={websiteUrl}
                   onChange={(e) => handleUrlChange(e.target.value)}
                   placeholder="Website URL"
-                  className="w-full pl-9 pr-8 h-10 text-xs bg-[#faf9f7] border border-[#efefef] rounded-xl text-[#121722] focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
+                  className="w-full pl-9 pr-8 h-[38px] text-[13px] bg-[#faf9f7] border border-[#efefef] rounded-lg text-[#121722] focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
                 />
                 {verification.verified && !verification.isAts && (
                   <ShieldCheck className="w-4 h-4 text-blue-600 absolute right-2 top-1/2 -translate-y-1/2" title="Verified" />
@@ -833,7 +833,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                   handleGenerate();
                 }}
                 disabled={!isDemo && (isLoading || (!companyName && !websiteUrl))}
-                className={`h-10 px-5 flex items-center justify-center gap-1.5 text-xs font-semibold rounded-full transition-all shadow-2xs shrink-0 w-full sm:w-auto ${
+                className={`h-[38px] px-5 flex items-center justify-center gap-1.5 text-[13px] font-semibold rounded-lg transition-all shadow-2xs shrink-0 w-full sm:w-auto ${
                   isDemo
                     ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 hover:bg-zinc-100 cursor-not-allowed'
                     : 'bg-[#0068f9] hover:bg-[#024bb1] text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
@@ -856,7 +856,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                 value={historySearch}
                 onChange={(e) => setHistorySearch(e.target.value)}
                 placeholder={'Search company...'}
-                className="w-full pl-8 pr-3 h-10 text-xs bg-[#faf9f7] border border-[#efefef] rounded-xl text-[#121722] focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
+                className="w-full pl-8 pr-3 h-[38px] text-[13px] bg-[#faf9f7] border border-[#efefef] rounded-lg text-[#121722] focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
               />
             </div>
           )}
@@ -991,11 +991,11 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                     <img 
                       src={currentTeardown.logoUrl} 
                       alt={currentTeardown.companyName} 
-                      className="w-14 h-14 rounded-2xl border border-[#efefef] p-1.5 bg-white shadow-2xs object-contain shrink-0" 
+                      className="w-14 h-14 rounded-xl border border-[#efefef] p-1.5 bg-white shadow-2xs object-contain shrink-0" 
                       onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
                     />
                   ) : (
-                    <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center font-bold text-xl shrink-0">
+                    <div className="w-14 h-14 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center font-bold text-xl shrink-0">
                       {currentTeardown.companyName.charAt(0)}
                     </div>
                   )}
@@ -1009,7 +1009,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                         href={currentTeardown.websiteUrl} 
                         target="_blank" 
                         rel="noreferrer" 
-                        className="inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-800 font-semibold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60"
+                        className="inline-flex items-center gap-1 text-xs text-blue-700 hover:text-blue-800 font-semibold bg-blue-50 px-2 py-0.5 rounded-[4px] border border-blue-200/60"
                       >
                         <span>{currentTeardown.websiteUrl.replace(/^https?:\/\//, '')}</span>
                         <ArrowUpRight size={12} />
@@ -1044,7 +1044,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                           <button
                             type="button"
                             onClick={handleToggleSave}
-                            className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all shadow-2xs ${
+                            className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all shadow-2xs ${
                               isDemo
                                 ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 hover:bg-zinc-100 cursor-not-allowed'
                                 : isSaved
@@ -1062,7 +1062,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                       <button
                         type="button"
                         onClick={handleExportPdf}
-                        className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all shadow-2xs ${
+                        className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all shadow-2xs ${
                           isDemo
                             ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 hover:bg-zinc-100 cursor-not-allowed'
                             : 'text-[#525866] hover:text-[#121722] bg-[#faf9f7] hover:bg-[#f4f4f5] border border-[#efefef] cursor-pointer'
@@ -1083,7 +1083,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                               toast.info(`Viewing ${currentTeardown.companyName} in Wishlist tracker`);
                             }
                           }}
-                          className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-full transition-all shadow-2xs cursor-pointer text-white bg-[#0068f9] hover:bg-[#024bb1]"
+                          className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all shadow-2xs cursor-pointer text-white bg-[#0068f9] hover:bg-[#024bb1]"
                           title={`View ${currentTeardown.companyName} in Wishlist`}
                         >
                           <ArrowUpRight size={14} />
@@ -1106,7 +1106,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                             });
                             toast.success(`Added ${currentTeardown.companyName} to your Wishlist!`);
                           }}
-                          className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-full transition-all shadow-2xs ${
+                          className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all shadow-2xs ${
                             isDemo
                               ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 hover:bg-zinc-100 cursor-not-allowed'
                               : 'text-white bg-[#0068f9] hover:bg-[#024bb1] cursor-pointer'
@@ -1136,13 +1136,13 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                           <button type="button" className="text-[#a5a5a5] hover:text-blue-600 transition-colors cursor-help">
                             <Info size={14} />
                           </button>
-                          <div className="absolute left-0 bottom-full mb-2 w-72 p-2.5 bg-[#121722] text-white text-xs rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 shadow-xl pointer-events-none font-normal">
+                          <div className="absolute left-0 bottom-full mb-2 w-72 p-2.5 bg-[#121722] text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 shadow-xl pointer-events-none font-normal">
                             {currentTeardown.headcount.growthAnalysis}
                             <div className="absolute left-2 -bottom-1 border-4 border-transparent border-t-[#121722]"></div>
                           </div>
                         </div>
                       </div>
-                      <span className={`px-2.5 py-0.5 text-[11px] font-bold rounded-full border ${
+                      <span className={`px-2.5 py-0.5 text-[11px] font-bold rounded-[4px] border ${
                         currentTeardown.headcount.hiringSignal.includes('Expansion') 
                           ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                           : currentTeardown.headcount.hiringSignal.includes('Selective')
@@ -1266,7 +1266,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                       </span>
                       <div className="flex flex-wrap gap-1.5">
                         {currentTeardown.fiscal.leadInvestors.map((inv, idx) => (
-                          <span key={idx} className="px-2 py-0.5 bg-white border border-[#efefef] rounded-md text-[11px] font-medium text-[#121722]">
+                          <span key={idx} className="px-2 py-0.5 bg-white border border-[#efefef] rounded-[4px] text-[11px] font-medium text-[#121722]">
                             {inv}
                           </span>
                         ))}
@@ -1287,14 +1287,14 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                       <button type="button" className="text-[#a5a5a5] hover:text-blue-600 transition-colors cursor-help">
                         <Info size={14} />
                       </button>
-                      <div className="absolute left-0 bottom-full mb-2 w-72 p-2.5 bg-[#121722] text-white text-xs rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 shadow-xl pointer-events-none font-normal">
+                      <div className="absolute left-0 bottom-full mb-2 w-72 p-2.5 bg-[#121722] text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 shadow-xl pointer-events-none font-normal">
                         {'Principle 2: Loops, not features. The Core Loop is the central spine.'}
                         <div className="absolute left-2 -bottom-1 border-4 border-transparent border-t-[#121722]"></div>
                       </div>
                     </div>
                   </div>
                   <div className="flex">
-                    <span className="inline-block text-xs font-semibold text-blue-700 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                    <span className="inline-block text-xs font-semibold text-blue-700 bg-blue-50 px-3 py-1 rounded-[4px] border border-blue-200">
                       {currentTeardown.coreLoop.spineSummary}
                     </span>
                   </div>
@@ -1348,7 +1348,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                       <button type="button" className="text-[#a5a5a5] hover:text-blue-600 transition-colors cursor-help">
                         <Info size={14} />
                       </button>
-                      <div className="absolute left-0 bottom-full mb-2 w-72 p-2.5 bg-[#121722] text-white text-xs rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 shadow-xl pointer-events-none font-normal">
+                      <div className="absolute left-0 bottom-full mb-2 w-72 p-2.5 bg-[#121722] text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 shadow-xl pointer-events-none font-normal">
                         {'Principle 3: Assistive vs. Embedded vs. Autonomous. Defended with evidence.'}
                         <div className="absolute left-2 -bottom-1 border-4 border-transparent border-t-[#121722]"></div>
                       </div>
@@ -1357,7 +1357,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
 
                   {/* Spectrum Badge */}
                   <div className="flex items-center gap-1.5">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                    <span className={`px-3 py-1 rounded-[4px] text-xs font-bold border ${
                       currentTeardown.aiSpectrum.tier === 'Autonomous'
                         ? 'bg-purple-50 text-purple-700 border-purple-200'
                         : currentTeardown.aiSpectrum.tier === 'Embedded'
@@ -1406,7 +1406,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                     <button type="button" className="text-[#a5a5a5] hover:text-blue-600 transition-colors cursor-help">
                       <Info size={14} />
                     </button>
-                    <div className="absolute left-0 bottom-full mb-2 w-72 p-2.5 bg-[#121722] text-white text-xs rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 shadow-xl pointer-events-none font-normal">
+                    <div className="absolute left-0 bottom-full mb-2 w-72 p-2.5 bg-[#121722] text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 shadow-xl pointer-events-none font-normal">
                       {'Actionable deep analysis across internal capabilities and external market dynamics.'}
                       <div className="absolute left-2 -bottom-1 border-4 border-transparent border-t-[#121722]"></div>
                     </div>
@@ -1507,7 +1507,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                       <button type="button" className="text-[#a5a5a5] hover:text-blue-600 transition-colors cursor-help">
                         <Info size={14} />
                       </button>
-                      <div className="absolute left-0 bottom-full mb-2 w-72 p-2.5 bg-[#121722] text-white text-xs rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 shadow-xl pointer-events-none font-normal">
+                      <div className="absolute left-0 bottom-full mb-2 w-72 p-2.5 bg-[#121722] text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 shadow-xl pointer-events-none font-normal">
                         {'Propose high-impact product bets and ask sharp reverse-interview questions.'}
                         <div className="absolute left-2 -bottom-1 border-4 border-transparent border-t-[#121722]"></div>
                       </div>
@@ -1530,7 +1530,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                           </span>
                           <button
                             onClick={() => copyToClipboard(`${p.title}\n${p.proposal}`, `pitch_${idx}`)}
-                            className="text-[#a5a5a5] hover:text-[#121722] p-1 cursor-pointer"
+                            className="text-[#a5a5a5] hover:text-[#121722] p-1 rounded-[4px] cursor-pointer"
                             title="Copy Pitch"
                           >
                             {copiedKey === `pitch_${idx}` ? <Check size={14} className="text-blue-600" /> : <Copy size={14} />}
@@ -1556,12 +1556,12 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                     {currentTeardown.interviewKit.reverseQuestions.map((q, idx) => (
                       <div key={idx} className="bg-[#faf9f7] border border-[#efefef] rounded-xl p-4 flex flex-col gap-2">
                         <div className="flex items-center justify-between">
-                          <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-[#121722] text-white">
+                          <span className="px-2 py-0.5 text-[10px] font-bold rounded-[4px] bg-[#121722] text-white">
                             To: {q.targetPersona}
                           </span>
                           <button
                             onClick={() => copyToClipboard(q.question, `q_${idx}`)}
-                            className="text-[#a5a5a5] hover:text-[#121722] p-1 cursor-pointer"
+                            className="text-[#a5a5a5] hover:text-[#121722] p-1 rounded-[4px] cursor-pointer"
                             title="Copy Question"
                           >
                             {copiedKey === `q_${idx}` ? <Check size={14} className="text-blue-600" /> : <Copy size={14} />}
@@ -1587,7 +1587,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                         </span>
                         <div className="flex flex-wrap gap-1.5">
                           {currentTeardown.interviewKit.criticalKpisToMention.map((kpi, kIdx) => (
-                            <span key={kIdx} className="px-2 py-0.5 bg-white border border-blue-200 rounded-md text-[11px] font-semibold text-blue-700">
+                            <span key={kIdx} className="px-2 py-0.5 bg-white border border-blue-200 rounded-[4px] text-[11px] font-semibold text-blue-700">
                               {kpi}
                             </span>
                           ))}
@@ -1674,7 +1674,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
 
                     <div className="pt-3 border-t border-[#efefef] mt-3 flex items-center justify-between text-[11px] text-[#777c86]">
                       <div className="flex items-center gap-1.5">
-                        <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-semibold border border-blue-200">
+                        <span className="px-1.5 py-0.5 rounded-[4px] bg-blue-50 text-blue-700 font-semibold border border-blue-200">
                           {record.teardown.aiSpectrum.tier}
                         </span>
                         <span>HC: {record.teardown.headcount.currentHeadcount}</span>

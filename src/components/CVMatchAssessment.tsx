@@ -897,7 +897,7 @@ ${app.notes || 'No extra description provided.'}`;
           <div className="space-y-6 animate-in fade-in duration-300">
           
           {/* Top Bar Navigation in Results */}
-          <div className="bg-[#faf9f7] border border-[#efefef] rounded-2xl p-4 shadow-none flex flex-wrap items-center justify-between gap-4">
+          <div className="bg-[#faf9f7] border border-[#efefef] rounded-xl p-4 shadow-none flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <AgentAvatar seed={targetRole} size={38} animated={true} />
               <div>
@@ -920,7 +920,7 @@ ${app.notes || 'No extra description provided.'}`;
                   setCurrentStep(1);
                   setActiveEvaluationId(null);
                 }}
-                className="h-[38px] px-4 rounded-full border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] text-sm font-medium transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                className="h-[38px] px-4 rounded-lg border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] text-[13px] font-medium transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
               >
                 <ArrowRight size={14} className="rotate-180" />
                 <span>Re-Evaluate</span>
@@ -936,7 +936,7 @@ ${app.notes || 'No extra description provided.'}`;
                       notes: `Added from CV Evaluation. Score: ${result.score}%`,
                     });
                   }}
-                  className="h-[38px] px-4 rounded-full border border-[#0068f9]/20 bg-[#e8f1ff] text-[#0068f9] hover:bg-[#d1e4ff] text-sm font-semibold transition-all flex items-center justify-center cursor-pointer shadow-2xs"
+                  className="h-[38px] px-4 rounded-lg border border-[#0068f9]/20 bg-[#e8f1ff] text-[#0068f9] hover:bg-[#d1e4ff] text-[13px] font-semibold transition-all flex items-center justify-center cursor-pointer shadow-2xs"
                 >
                   <span>Add to Wishlist</span>
                 </button>
@@ -947,7 +947,7 @@ ${app.notes || 'No extra description provided.'}`;
           {/* Quick Action Tools Hub (Cover Letter, Interview Prep, Resume Templates & PDF Export) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* One-Click Cover Letter Generator */}
-            <div className="bg-[#faf9f7] border border-[#efefef] hover:border-[#0068f9]/50 rounded-2xl p-4.5 transition-all flex flex-col justify-between space-y-3">
+            <div className="bg-[#faf9f7] border border-[#efefef] hover:border-[#0068f9]/50 rounded-xl p-4.5 transition-all flex flex-col justify-between space-y-3">
               <div>
                 <h4 className="text-xs font-bold text-[#121722]">Cover Letter Generator</h4>
                 <p className="text-xs text-[#777c86]">One-click tailored to JD & CV</p>
@@ -955,7 +955,7 @@ ${app.notes || 'No extra description provided.'}`;
               <button
                 onClick={handleGenerateCoverLetter}
                 disabled={isGeneratingCoverLetter}
-                className="w-full py-2 px-3 bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-semibold rounded-full transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
+                className="w-full h-[38px] px-3 bg-[#0068f9] hover:bg-[#024bb1] text-white text-[13px] font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
               >
                 {isGeneratingCoverLetter && <Loader2 size={13} className="animate-spin" />}
                 <span>{coverLetterText ? 'Open Cover Letter Studio' : 'Generate Cover Letter'}</span>
@@ -963,7 +963,7 @@ ${app.notes || 'No extra description provided.'}`;
             </div>
 
             {/* Interview Preparation Guide */}
-            <div className="bg-[#faf9f7] border border-[#efefef] hover:border-[#0068f9]/50 rounded-2xl p-4.5 transition-all flex flex-col justify-between space-y-3">
+            <div className="bg-[#faf9f7] border border-[#efefef] hover:border-[#0068f9]/50 rounded-xl p-4.5 transition-all flex flex-col justify-between space-y-3">
               <div>
                 <h4 className="text-xs font-bold text-[#121722]">Interview Preparation</h4>
                 <p className="text-xs text-[#777c86]">Resume-grounded STAR strategies</p>
@@ -971,7 +971,7 @@ ${app.notes || 'No extra description provided.'}`;
               <button
                 onClick={() => handleGenerateInterviewGuide(true)}
                 disabled={isGeneratingInterviewGuide}
-                className="w-full py-2 px-3 bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-semibold rounded-full transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
+                className="w-full h-[38px] px-3 bg-[#0068f9] hover:bg-[#024bb1] text-white text-[13px] font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
               >
                 {isGeneratingInterviewGuide && <Loader2 size={13} className="animate-spin" />}
                 <span>{interviewGuideText ? 'Open Prep Studio' : 'Generate Prep Guide'}</span>
@@ -979,7 +979,7 @@ ${app.notes || 'No extra description provided.'}`;
             </div>
 
             {/* Tailored Resume & 4 Templates with PDF Export */}
-            <div className="bg-[#faf9f7] border border-[#efefef] hover:border-[#0068f9]/50 rounded-2xl p-4.5 transition-all flex flex-col justify-between space-y-3">
+            <div className="bg-[#faf9f7] border border-[#efefef] hover:border-[#0068f9]/50 rounded-xl p-4.5 transition-all flex flex-col justify-between space-y-3">
               <div>
                 <h4 className="text-xs font-bold text-[#121722]">4 Resume Templates</h4>
                 <p className="text-xs text-[#777c86]">Single / Two Column & PDF Export</p>
@@ -987,7 +987,7 @@ ${app.notes || 'No extra description provided.'}`;
               <button
                 onClick={handleTailorResume}
                 disabled={isTailoringResume}
-                className="w-full py-2 px-3 bg-[#0068f9] hover:bg-[#024bb1] text-white text-xs font-semibold rounded-full transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
+                className="w-full h-[38px] px-3 bg-[#0068f9] hover:bg-[#024bb1] text-white text-[13px] font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-70"
               >
                 {isTailoringResume && <Loader2 size={13} className="animate-spin" />}
                 <span>{tailoredResume ? 'Open Resume Studio' : 'Tailor & Export Resume'}</span>
@@ -1007,7 +1007,7 @@ ${app.notes || 'No extra description provided.'}`;
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
             
             {/* Bento Card 1: Score & Persona Overview (Col 4) */}
-            <div className="md:col-span-4 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 shadow-none flex flex-col items-center justify-between text-center relative overflow-hidden">
+            <div className="md:col-span-4 bg-[#faf9f7] border border-[#efefef] rounded-xl p-6 shadow-none flex flex-col items-center justify-between text-center relative overflow-hidden">
               <div className="w-full flex items-center justify-between border-b border-[#efefef] pb-3 mb-4">
                 <h4 className="text-xs font-bold text-[#121722]">
                   Score overview
@@ -1015,7 +1015,7 @@ ${app.notes || 'No extra description provided.'}`;
                 {(() => {
                   const styles = getCategoryStyles(result.score);
                   return (
-                    <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${styles.badgeBg}`}>
+                    <span className={`text-xs font-bold px-2.5 py-0.5 rounded-[4px] border ${styles.badgeBg}`}>
                       {result.matchCategory || styles.label}
                     </span>
                   );
@@ -1072,7 +1072,7 @@ ${app.notes || 'No extra description provided.'}`;
             </div>
 
             {/* Bento Card 2: Strategic Bullet Point Polish (Col 8) */}
-            <div className="md:col-span-8 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 shadow-none flex flex-col justify-between relative overflow-hidden isolate space-y-4">
+            <div className="md:col-span-8 bg-[#faf9f7] border border-[#efefef] rounded-xl p-6 shadow-none flex flex-col justify-between relative overflow-hidden isolate space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-full bg-[#e8f1ff] text-[#0068f9] flex items-center justify-center">
@@ -1086,14 +1086,14 @@ ${app.notes || 'No extra description provided.'}`;
                 <button
                   type="button"
                   onClick={copyPolishToClipboard}
-                  className="text-xs font-medium text-[#121722] bg-white hover:bg-[#faf9f7] border border-[#efefef] shadow-2xs px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="h-[38px] text-[13px] font-medium text-[#121722] bg-white hover:bg-[#faf9f7] border border-[#efefef] shadow-2xs px-3.5 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   {copiedPolish ? <Check size={14} className="text-[#0068f9]" /> : <Copy size={14} />}
                   <span>{copiedPolish ? 'Copied' : 'Copy guidelines'}</span>
                 </button>
               </div>
 
-              <div className="bg-[#f4f8ff] border border-[#0068f9]/20 rounded-2xl p-4.5 text-[#121722] text-xs sm:text-sm leading-relaxed font-normal">
+              <div className="bg-[#f4f8ff] border border-[#0068f9]/20 rounded-lg p-4.5 text-[#121722] text-xs sm:text-sm leading-relaxed font-normal">
                 {result.actionable_polish}
               </div>
 
@@ -1104,7 +1104,7 @@ ${app.notes || 'No extra description provided.'}`;
             </div>
 
             {/* Bento Card 3: Strongest Alignments (Col 6) */}
-            <div className="md:col-span-6 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 shadow-none space-y-4">
+            <div className="md:col-span-6 bg-[#faf9f7] border border-[#efefef] rounded-xl p-6 shadow-none space-y-4">
               <div className="flex items-center gap-2 border-b border-[#efefef] pb-3">
                 <div className="w-7 h-7 rounded-full bg-[#e8f1ff] text-[#0068f9] flex items-center justify-center">
                   <CheckCircle2 size={18} />
@@ -1116,7 +1116,7 @@ ${app.notes || 'No extra description provided.'}`;
 
               <ul className="space-y-2.5">
                 {result.strengths.map((item, idx) => (
-                  <li key={idx} className="text-xs text-[#121722] bg-[#faf9f7] border border-[#efefef] rounded-xl p-3 flex items-start gap-2.5">
+                  <li key={idx} className="text-xs text-[#121722] bg-[#faf9f7] border border-[#efefef] rounded-lg p-3 flex items-start gap-2.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#0068f9] shrink-0 mt-1.5"></span>
                     <span className="leading-relaxed font-medium text-xs">{item}</span>
                   </li>
@@ -1125,7 +1125,7 @@ ${app.notes || 'No extra description provided.'}`;
             </div>
 
             {/* Bento Card 4: Competency & Evidence Gaps (Col 6) - Minimal Red Reminder Box */}
-            <div className="md:col-span-6 bg-[#faf9f7] border border-red-200/60 rounded-2xl p-6 shadow-none space-y-4">
+            <div className="md:col-span-6 bg-[#faf9f7] border border-red-200/60 rounded-xl p-6 shadow-none space-y-4">
               <div className="flex items-center gap-2 border-b border-red-100 pb-3">
                 <div className="w-7 h-7 rounded-full bg-red-50 text-red-600 flex items-center justify-center">
                   <AlertTriangle size={18} />
@@ -1137,7 +1137,7 @@ ${app.notes || 'No extra description provided.'}`;
 
               <ul className="space-y-2.5">
                 {result.gaps.map((item, idx) => (
-                  <li key={idx} className="text-xs text-[#121722] bg-[#faf9f7] border border-red-100 rounded-xl p-3 flex items-start gap-2.5">
+                  <li key={idx} className="text-xs text-[#121722] bg-[#faf9f7] border border-red-100 rounded-lg p-3 flex items-start gap-2.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0 mt-1.5"></span>
                     <span className="leading-relaxed font-medium text-xs">{item}</span>
                   </li>
@@ -1146,7 +1146,7 @@ ${app.notes || 'No extra description provided.'}`;
             </div>
 
             {/* Bento Card 5: Forecasted Role Interview Questions (Col 12) */}
-            <div className="md:col-span-12 bg-[#faf9f7] border border-[#efefef] rounded-2xl p-6 shadow-none space-y-4">
+            <div className="md:col-span-12 bg-[#faf9f7] border border-[#efefef] rounded-xl p-6 shadow-none space-y-4">
               <div className="flex items-center justify-between border-b border-[#efefef] pb-3">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-full bg-[#e8f1ff] text-[#0068f9] flex items-center justify-center">
@@ -1160,7 +1160,7 @@ ${app.notes || 'No extra description provided.'}`;
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {result.interview_questions.map((q, idx) => (
-                  <div key={idx} className="bg-[#faf9f7] border border-[#efefef] rounded-2xl p-4 space-y-2 hover:border-[#0068f9]/40 transition-all">
+                  <div key={idx} className="bg-[#faf9f7] border border-[#efefef] rounded-lg p-4 space-y-2 hover:border-[#0068f9]/40 transition-all">
                     <span className="w-6 h-6 rounded-full bg-[#0068f9]/10 text-[#0068f9] font-bold flex items-center justify-center text-xs">
                       {idx + 1}
                     </span>
@@ -1197,7 +1197,7 @@ ${app.notes || 'No extra description provided.'}`;
               {steps.map((step, index) => (
                 <React.Fragment key={index}>
                   <StepperItem step={index + 1} className="relative flex items-center w-full z-10">
-                    <StepperTrigger className="flex items-center gap-3 text-left w-full p-2.5 rounded-xl hover:bg-[#faf9f7] transition-all cursor-pointer group border border-transparent data-[state=active]:bg-[#faf9f7] data-[state=active]:border-[#efefef]">
+                    <StepperTrigger className="flex items-center gap-3 text-left w-full p-2.5 rounded-lg hover:bg-[#faf9f7] transition-all cursor-pointer group border border-transparent data-[state=active]:bg-[#faf9f7] data-[state=active]:border-[#efefef]">
                       <StepperIndicator className="size-7 text-xs font-bold border border-[#e5e7eb] bg-[#f3f4f6] text-[#6b7280] data-[state=active]:bg-[#121722] data-[state=active]:text-white data-[state=active]:border-[#121722] data-[state=completed]:bg-[#121722] data-[state=completed]:text-white data-[state=completed]:border-[#121722] transition-colors shrink-0 rounded-full shadow-2xs">
                         {index + 1}
                       </StepperIndicator>
@@ -1266,18 +1266,18 @@ ${app.notes || 'No extra description provided.'}`;
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1 bg-[#faf9f7] p-1 border border-[#efefef] rounded-full text-xs font-medium">
+                      <div className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0">
                         <button
                           type="button"
                           onClick={() => setCvInputMode('upload')}
-                          className={`px-3 py-1 rounded-full transition-all cursor-pointer ${cvInputMode === 'upload' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] border border-transparent'}`}
+                          className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${cvInputMode === 'upload' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
                         >
                           PDF upload
                         </button>
                         <button
                           type="button"
                           onClick={() => setCvInputMode('text')}
-                          className={`px-3 py-1 rounded-full transition-all cursor-pointer ${cvInputMode === 'text' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] border border-transparent'}`}
+                          className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${cvInputMode === 'text' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
                         >
                           Paste text
                         </button>
@@ -1290,7 +1290,7 @@ ${app.notes || 'No extra description provided.'}`;
                       <div
                         onDragOver={handleDragOver}
                         onDrop={handleDrop}
-                        className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer flex-1 flex flex-col items-center justify-center min-h-[220px] ${
+                        className={`border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer flex-1 flex flex-col items-center justify-center min-h-[220px] ${
                           cvFile || storedResume ? 'border-[#0068f9] bg-[#e8f1ff]/20' : 'border-[#efefef] hover:border-[#0068f9] bg-[#faf9f7]'
                         }`}
                       >
@@ -1322,19 +1322,19 @@ ${app.notes || 'No extra description provided.'}`;
                                 {(((cvFile ? cvFile.size : storedResume?.fileSize) || 0) / 1024).toFixed(1)} KB • {cvText ? `${cvText.length.toLocaleString()} characters indexed` : 'Ready for AI Evaluator'}
                               </p>
 
-                              {/* ACTION BUTTONS: REMOVE OR REPLACE PDF */}
+                                {/* ACTION BUTTONS: REMOVE OR REPLACE PDF */}
                               <div className="flex items-center justify-center gap-2 pt-2" onClick={(e) => e.stopPropagation()}>
                                 <button
                                   type="button"
                                   onClick={handleRemoveCvFile}
-                                  className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 transition-colors inline-flex items-center justify-center shadow-2xs cursor-pointer"
+                                  className="h-[38px] px-3.5 rounded-lg text-[13px] font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 transition-colors inline-flex items-center justify-center shadow-2xs cursor-pointer"
                                   title="Delete stored CV"
                                 >
                                   <span>Delete</span>
                                 </button>
                                 <label
                                   htmlFor="cv-file-upload"
-                                  className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-[#0068f9] bg-white hover:bg-blue-50 border border-[#efefef] transition-colors inline-flex items-center justify-center shadow-2xs cursor-pointer"
+                                  className="h-[38px] px-3.5 rounded-lg text-[13px] font-semibold text-[#0068f9] bg-white hover:bg-blue-50 border border-[#efefef] transition-colors inline-flex items-center justify-center shadow-2xs cursor-pointer"
                                   title="Upload a different PDF file"
                                 >
                                   <span>Replace</span>
@@ -1343,7 +1343,7 @@ ${app.notes || 'No extra description provided.'}`;
                             </div>
                           ) : isDemo ? (
                             <div className="space-y-1">
-                              <div className="mb-2 px-3 py-1 bg-amber-50 border border-amber-200/80 rounded-full text-[11px] font-semibold text-amber-800 inline-flex items-center gap-1.5 mx-auto">
+                              <div className="mb-2 px-3 py-1 bg-amber-50 border border-amber-200/80 rounded-[4px] text-[11px] font-semibold text-amber-800 inline-flex items-center gap-1.5 mx-auto">
                                 <Info size={13} className="text-amber-600 shrink-0" />
                                 <span>PDF Upload Banned in Demo Mode</span>
                               </div>
@@ -1380,7 +1380,7 @@ ${app.notes || 'No extra description provided.'}`;
                               readOnly
                               value={cvText}
                               rows={4}
-                              className="w-full mt-2 p-3 text-xs bg-[#faf9f7] border border-[#efefef] rounded-2xl text-[#121722] font-mono"
+                              className="w-full mt-2 p-3 text-xs bg-[#faf9f7] border border-[#efefef] rounded-lg text-[#121722] font-mono"
                             />
                           )}
                         </div>
@@ -1392,7 +1392,7 @@ ${app.notes || 'No extra description provided.'}`;
                         value={cvText}
                         onChange={(e) => setCvText(e.target.value)}
                         placeholder="Paste your resume or CV experience bullet points here..."
-                        className="w-full flex-1 min-h-[220px] p-3.5 text-xs bg-white border border-[#efefef] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0068f9] text-[#121722] placeholder:text-[#a5a5a5] resize-none"
+                        className="w-full flex-1 min-h-[220px] p-3.5 text-xs bg-white border border-[#efefef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0068f9] text-[#121722] placeholder:text-[#a5a5a5] resize-none"
                       />
                     </div>
                   )}
@@ -1401,7 +1401,7 @@ ${app.notes || 'No extra description provided.'}`;
                   <button
                     type="button"
                     onClick={() => setCurrentStep(1)}
-                    className="h-11 w-[100px] rounded-full border border-[#efefef] bg-white hover:bg-[#faf9f7] text-[#121722] font-medium text-xs transition-all flex items-center justify-center cursor-pointer"
+                    className="h-[38px] w-[100px] rounded-lg border border-[#efefef] bg-white hover:bg-[#faf9f7] text-[#121722] font-medium text-[13px] transition-all flex items-center justify-center cursor-pointer"
                   >
                     Back
                   </button>
@@ -1410,7 +1410,7 @@ ${app.notes || 'No extra description provided.'}`;
                     type="button"
                     onClick={() => setCurrentStep(3)}
                     disabled={!validateStep(2)}
-                    className="h-11 w-[260px] px-6 rounded-full bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium text-xs shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    className="h-[38px] w-[260px] px-6 rounded-lg bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium text-[13px] shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
                     <span>Continue to Job Description</span>
                   </button>
@@ -1430,18 +1430,18 @@ ${app.notes || 'No extra description provided.'}`;
                         Paste a target job posting or pick from your tracked Seekr applications.
                       </p>
                     </div>
-                    <div className="flex items-center gap-1 bg-[#faf9f7] p-1 border border-[#efefef] rounded-full text-xs font-medium">
+                    <div className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0">
                       <button
                         type="button"
                         onClick={() => setJdSource('custom')}
-                        className={`px-3 py-1 rounded-full transition-all cursor-pointer ${jdSource === 'custom' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] border border-transparent'}`}
+                        className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${jdSource === 'custom' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
                       >
                         Custom paste
                       </button>
                       <button
                         type="button"
                         onClick={() => setJdSource('application')}
-                        className={`px-3 py-1 rounded-full transition-all cursor-pointer ${jdSource === 'application' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] border border-transparent'}`}
+                        className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${jdSource === 'application' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
                       >
                         Tracked app
                       </button>
@@ -1464,7 +1464,7 @@ ${app.notes || 'No extra description provided.'}`;
                       value={jobDescription}
                       onChange={(e) => setJobDescription(e.target.value)}
                       placeholder="Paste the full job description, required skills, and key responsibilities here..."
-                      className="w-full flex-1 min-h-[220px] p-3.5 text-xs bg-white border border-[#efefef] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0068f9] text-[#121722] placeholder:text-[#a5a5a5] resize-none"
+                      className="w-full flex-1 min-h-[220px] p-3.5 text-xs bg-white border border-[#efefef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0068f9] text-[#121722] placeholder:text-[#a5a5a5] resize-none"
                     />
                   </div>
 
@@ -1472,7 +1472,7 @@ ${app.notes || 'No extra description provided.'}`;
                   <button
                     type="button"
                     onClick={() => setCurrentStep(2)}
-                    className="h-11 w-[100px] rounded-full border border-[#efefef] bg-white hover:bg-[#faf9f7] text-[#121722] font-medium text-xs transition-all flex items-center justify-center cursor-pointer"
+                    className="h-[38px] w-[100px] rounded-lg border border-[#efefef] bg-white hover:bg-[#faf9f7] text-[#121722] font-medium text-[13px] transition-all flex items-center justify-center cursor-pointer"
                   >
                     Back
                   </button>
@@ -1481,7 +1481,7 @@ ${app.notes || 'No extra description provided.'}`;
                     type="button"
                     onClick={handleAnalyzeMatch}
                     disabled={isLoading || isExtractingPdf || !validateStep(3)}
-                    className="h-11 w-[260px] px-6 rounded-full bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium text-xs shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    className="h-[38px] w-[260px] px-6 rounded-lg bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium text-[13px] shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
                     {isLoading ? (
                       <>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Search, ChevronDown, X, Check } from "lucide-react";
+import { computeDropdownAlign, DropdownAlign } from "../../lib/utils";
 
 const __TRANSITION_STYLES = `
 :root {
@@ -92,6 +93,7 @@ export function Dropdown({
 }: DropdownProps) {
   const [state, setState] = useState<"closed" | "open" | "closing">("closed");
   const [searchQuery, setSearchQuery] = useState("");
+  const [menuAlign, setMenuAlign] = useState<DropdownAlign>("start");
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -117,13 +119,26 @@ export function Dropdown({
   useEffect(() => {
     if (state === "open") {
       setSearchQuery("");
+      const updateAlign = () => {
+        setMenuAlign(computeDropdownAlign(containerRef.current, 220, { checkScrollParent: true }));
+      };
+      updateAlign();
+      window.addEventListener("resize", updateAlign);
       if (isSearchEnabled) {
         setTimeout(() => searchInputRef.current?.focus(), 60);
       }
+      return () => window.removeEventListener("resize", updateAlign);
     }
   }, [state, isSearchEnabled]);
 
-  const toggle = () => setState((s) => (s === "open" ? "closing" : "open"));
+  const toggle = () => {
+    if (state !== "open") {
+      setMenuAlign(computeDropdownAlign(containerRef.current, 220, { checkScrollParent: true }));
+      setState("open");
+    } else {
+      setState("closing");
+    }
+  };
 
   const selectedOption = options.find(o => o.value === value) || options[0];
 
@@ -151,17 +166,17 @@ export function Dropdown({
       <button 
         type="button" 
         onClick={toggle}
-        className={`flex items-center gap-2 rounded-full px-4 shadow-2xs transition-colors h-[38px] cursor-pointer ${isActive && activeClassName ? activeClassName : 'bg-white border border-[#efefef] hover:bg-[#faf9f7]'}`}
+        className={`flex items-center gap-2 rounded-lg px-4 shadow-2xs transition-colors h-[38px] cursor-pointer ${isActive && activeClassName ? activeClassName : 'bg-white border border-[#efefef] hover:bg-[#faf9f7]'}`}
       >
         {icon && <span className={isActive ? "" : "text-[#777c86]"}>{icon}</span>}
-        <span className={`text-sm font-medium whitespace-nowrap ${isActive ? "" : "text-[#121722]"}`}>
+        <span className={`text-[13px] font-medium whitespace-nowrap ${isActive ? "" : "text-[#121722]"}`}>
           {labelPrefix && <span className={isActive ? "" : "text-[#777c86] font-normal mr-1"}>{labelPrefix}</span>}
           {selectedOption?.label}
         </span>
         {isActive && onClear ? (
           <div 
             onClick={(e) => { e.stopPropagation(); onClear(e); }}
-            className="hover:bg-black/10 rounded-full p-0.5 -mr-1 transition-colors"
+            className="hover:bg-black/10 rounded-[4px] p-0.5 -mr-1 transition-colors"
           >
             <X size={14} />
           </div>
@@ -173,25 +188,25 @@ export function Dropdown({
       {(state === "open" || state === "closing") && (
         <div
           role="menu"
-          data-origin="top-center"
+          data-origin={menuAlign === "end" ? "top-right" : "top-left"}
           className={
-            "t-dropdown absolute top-full mt-2 left-1/2 -translate-x-1/2 min-w-[170px] max-w-[260px] bg-white border border-[#efefef] rounded-2xl shadow-xl p-1 z-50 flex flex-col overflow-hidden" +
+            `t-dropdown absolute top-full mt-2 ${menuAlign === "end" ? "right-0" : "left-0"} min-w-[180px] max-w-[260px] bg-white border border-[#efefef] rounded-2xl shadow-xl p-1.5 z-50 flex flex-col overflow-hidden` +
             (state === "open" ? " is-open" : "") +
             (state === "closing" ? " is-closing" : "")
           }
           style={{ maxHeight: '33.33vh' }}
         >
           {isSearchEnabled && (
-            <div className="p-1.5 border-b border-[#f1f3f5] bg-white shrink-0">
+            <div className="pb-1.5 mb-1 border-b border-[#f1f3f5] bg-white shrink-0">
               <div className="relative flex items-center">
-                <Search size={12} className="absolute left-2 text-[#a5a5a5] pointer-events-none" />
+                <Search size={13} className="absolute left-2.5 text-[#a5a5a5] pointer-events-none" />
                 <input
                   ref={searchInputRef}
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={searchPlaceholder}
-                  className="w-full pl-6 pr-6 py-1 text-xs bg-[#faf9f7] border border-[#efefef] rounded-xl focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none text-[#121722] placeholder:text-[#a5a5a5]"
+                  className="w-full pl-7 pr-6 py-1.5 text-[13px] bg-[#faf9f7] border border-[#efefef] rounded-[10px] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none text-[#121722] placeholder:text-[#a5a5a5]"
                   onKeyDown={(e) => {
                     if (e.key === 'Escape') {
                       setState("closing");
@@ -206,7 +221,7 @@ export function Dropdown({
                   <button
                     type="button"
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-1.5 p-0.5 text-[#a5a5a5] hover:text-[#121722] rounded-full"
+                    className="absolute right-2 p-0.5 text-[#a5a5a5] hover:text-[#121722] rounded-[4px]"
                   >
                     <X size={11} />
                   </button>
@@ -215,9 +230,9 @@ export function Dropdown({
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto p-0.5 space-y-0.5 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto space-y-0.5 custom-scrollbar">
             {filteredOptions.length === 0 ? (
-              <div className="py-3 text-center text-xs text-[#a5a5a5]">
+              <div className="py-3 text-center text-[13px] text-[#a5a5a5]">
                 No matching options
               </div>
             ) : (
@@ -230,14 +245,14 @@ export function Dropdown({
                     onChange(opt.value);
                     setState("closing");
                   }}
-                  className={`w-full flex items-center justify-between text-left px-3 py-1.5 rounded-xl text-xs font-medium transition-colors cursor-pointer ${
+                  className={`w-full flex items-center justify-between text-left px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors cursor-pointer ${
                     value === opt.value
                       ? 'bg-[#e8f1ff] text-[#0068f9] font-semibold'
                       : 'text-[#121722] hover:bg-[#faf9f7]'
                   }`}
                 >
                   <span className="truncate pr-2">{opt.label}</span>
-                  {value === opt.value && <Check size={13} className="text-[#0068f9] shrink-0" />}
+                  {value === opt.value && <Check size={14} className="text-[#0068f9] shrink-0" />}
                 </button>
               ))
             )}

@@ -69,9 +69,9 @@ export function KeywordHighlightPanel({
           </div>
         </div>
 
-        {/* Score Pill Breakdown */}
+        {/* Score Summary */}
         <div className="flex items-center gap-3">
-          <div className="px-3.5 py-1.5 rounded-xl bg-[#faf9f7] border border-[#efefef] flex items-center gap-2">
+          <div className="px-3.5 py-1.5 rounded-lg bg-[#faf9f7] border border-[#efefef] flex items-center gap-2">
             <span className="text-xs font-semibold text-[#777c86]">Keywords Matched:</span>
             <span className="text-xs font-bold text-[#0068f9]">{totalMatched}</span>
             <span className="text-xs text-[#777c86]">/ {totalKeywords}</span>
@@ -81,13 +81,13 @@ export function KeywordHighlightPanel({
 
       {/* Filter and Tab Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* Category Filter Pills */}
+        {/* Category Filter Buttons */}
         <div className="flex flex-wrap items-center gap-1.5">
           {CATEGORIES.map(cat => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1 text-xs rounded-full font-medium transition-all cursor-pointer ${
+              className={`px-3 py-1 text-xs rounded-lg font-medium transition-all cursor-pointer ${
                 selectedCategory === cat
                   ? 'bg-[#121722] text-white shadow-2xs font-semibold'
                   : 'bg-[#faf9f7] text-[#777c86] hover:bg-[#efefef] border border-[#efefef]'
@@ -98,35 +98,38 @@ export function KeywordHighlightPanel({
           ))}
         </div>
 
-        {/* Search input & Tab Toggles */}
-        <div className="flex items-center gap-2">
+        {/* Search input & Company 360 Style Tab Toggles */}
+        <div className="flex flex-wrap items-center gap-2">
           <div className="relative w-44 sm:w-52">
-            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#777c86]" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#777c86]" />
             <input
               type="text"
               placeholder="Filter keywords..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#faf9f7] border border-[#efefef] rounded-full focus:outline-none focus:ring-2 focus:ring-[#0068f9]"
+              className="w-full h-[38px] pl-8 pr-3 text-[13px] bg-[#faf9f7] border border-[#efefef] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0068f9]"
             />
           </div>
 
-          <div className="flex items-center gap-1 bg-[#faf9f7] p-0.5 border border-[#efefef] rounded-full text-xs">
+          <div className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0">
             <button
+              type="button"
               onClick={() => setActiveTab('all')}
-              className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${activeTab === 'all' ? 'bg-white text-[#121722] shadow-2xs' : 'text-[#777c86]'}`}
+              className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${activeTab === 'all' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
             >
               All
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('matched')}
-              className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${activeTab === 'matched' ? 'bg-white text-[#0068f9] shadow-2xs' : 'text-[#777c86]'}`}
+              className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${activeTab === 'matched' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
             >
               Matched ({totalMatched})
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('missing')}
-              className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${activeTab === 'missing' ? 'bg-white text-red-600 shadow-2xs' : 'text-[#777c86]'}`}
+              className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${activeTab === 'missing' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
             >
               Missing ({totalMissing})
             </button>
@@ -139,7 +142,7 @@ export function KeywordHighlightPanel({
         
         {/* Matched Keywords Box */}
         {(activeTab === 'all' || activeTab === 'matched') && (
-          <div className="bg-[#faf9f7] border border-[#0068f9]/20 rounded-2xl p-4.5 space-y-3">
+          <div className="bg-[#faf9f7] border border-[#0068f9]/20 rounded-xl p-4.5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-[#0068f9]" />
@@ -147,7 +150,7 @@ export function KeywordHighlightPanel({
                   Matched in Resume ({filteredMatched.length})
                 </h5>
               </div>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#e8f1ff] text-[#0068f9]">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-[4px] bg-[#e8f1ff] text-[#0068f9]">
                 Verified
               </span>
             </div>
@@ -161,11 +164,11 @@ export function KeywordHighlightPanel({
                     key={idx}
                     onClick={() => copyKeyword(kw.keyword)}
                     title={kw.context || 'Matched keyword in CV'}
-                    className="group px-2.5 py-1.5 bg-white border border-[#0068f9]/20 text-[#121722] rounded-xl text-xs flex items-center gap-1.5 hover:border-[#0068f9] hover:shadow-2xs transition-all cursor-pointer"
+                    className="group px-2.5 py-1.5 bg-white border border-[#0068f9]/20 text-[#121722] rounded-lg text-xs flex items-center gap-1.5 hover:border-[#0068f9] hover:shadow-2xs transition-all cursor-pointer"
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-[#0068f9] shrink-0"></span>
                     <span className="font-semibold text-xs">{kw.keyword}</span>
-                    <span className="text-[10px] text-[#777c86] bg-[#f4f4f4] px-1.5 py-0.2 rounded font-medium">
+                    <span className="text-[10px] text-[#777c86] bg-[#f4f4f4] px-1.5 py-0.2 rounded-[4px] font-medium">
                       {kw.category}
                     </span>
                     <Copy size={11} className="text-[#a5a5a5] opacity-0 group-hover:opacity-100 transition-opacity ml-0.5" />
@@ -178,7 +181,7 @@ export function KeywordHighlightPanel({
 
         {/* Missing Keywords Box */}
         {(activeTab === 'all' || activeTab === 'missing') && (
-          <div className="bg-[#faf9f7] border border-red-200/70 rounded-2xl p-4.5 space-y-3">
+          <div className="bg-[#faf9f7] border border-red-200/70 rounded-xl p-4.5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <AlertTriangle size={16} className="text-red-500" />
@@ -186,7 +189,7 @@ export function KeywordHighlightPanel({
                   Missing / Recommended Keywords ({filteredMissing.length})
                 </h5>
               </div>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-[4px] bg-red-50 text-red-600 border border-red-100">
                 Add to Resume
               </span>
             </div>
@@ -198,17 +201,17 @@ export function KeywordHighlightPanel({
                 {filteredMissing.map((kw, idx) => (
                   <div
                     key={idx}
-                    className="p-2.5 bg-white border border-red-100 rounded-xl text-xs flex flex-col gap-1 hover:border-red-300 transition-all"
+                    className="p-2.5 bg-white border border-red-100 rounded-lg text-xs flex flex-col gap-1 hover:border-red-300 transition-all"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0"></span>
                         <span className="font-bold text-xs text-[#121722]">{kw.keyword}</span>
-                        <span className="text-[10px] text-[#777c86] bg-[#f4f4f4] px-1.5 py-0.2 rounded font-medium">
+                        <span className="text-[10px] text-[#777c86] bg-[#f4f4f4] px-1.5 py-0.2 rounded-[4px] font-medium">
                           {kw.category}
                         </span>
                       </div>
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-[4px] ${
                         kw.importance === 'Critical'
                           ? 'bg-red-50 text-red-700 border border-red-200/60'
                           : 'bg-[#f4f4f4] text-[#555] border border-[#e5e5e5]'

@@ -54,7 +54,7 @@ export function Footer({
                 href={link.href}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center justify-center rounded-full text-xs font-semibold border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] shadow-2xs h-8 px-3 transition-all cursor-pointer"
+                className="inline-flex items-center justify-center rounded-lg text-xs font-semibold border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] shadow-2xs h-8 px-3 transition-all cursor-pointer"
               >
                 {link.label}
               </a>

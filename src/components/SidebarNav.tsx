@@ -248,7 +248,7 @@ export function SidebarNav({
               onClick={() => setIsDropdownOpen(prev => !prev)}
               aria-haspopup="listbox"
               aria-expanded={isDropdownOpen}
-              className={`w-full flex items-center justify-between px-2.5 py-[7px] text-[#525866] font-normal hover:bg-[#faf9f7] hover:text-[#121722] rounded-lg cursor-pointer transition-all border ${
+              className={`w-full h-[38px] flex items-center justify-between px-2.5 text-[#525866] font-normal hover:bg-[#faf9f7] hover:text-[#121722] rounded-lg cursor-pointer transition-all border ${
                 isDropdownOpen ? 'bg-[#faf9f7] text-[#121722] border-[#efefef]' : 'border-transparent'
               }`}
             >
@@ -276,7 +276,7 @@ export function SidebarNav({
                     setTrackingSystem?.('industry'); 
                     setIsDropdownOpen(false); 
                   }} 
-                  className={`w-full flex items-center justify-between px-3 py-2 text-[13px] rounded-xl font-medium transition-colors cursor-pointer text-left ${
+                  className={`w-full flex items-center justify-between px-3 py-2 text-[13px] rounded-[10px] font-medium transition-colors cursor-pointer text-left ${
                     trackingSystem === 'industry'
                       ? 'text-[#121722] bg-[#faf9f7]'
                       : 'text-[#525866] hover:bg-[#faf9f7] hover:text-[#121722]'
@@ -296,7 +296,7 @@ export function SidebarNav({
                     setTrackingSystem?.('academic'); 
                     setIsDropdownOpen(false); 
                   }} 
-                  className={`w-full flex items-center justify-between px-3 py-2 text-[13px] rounded-xl font-medium transition-colors cursor-pointer text-left ${
+                  className={`w-full flex items-center justify-between px-3 py-2 text-[13px] rounded-[10px] font-medium transition-colors cursor-pointer text-left ${
                     trackingSystem === 'academic'
                       ? 'text-[#121722] bg-[#faf9f7]'
                       : 'text-[#525866] hover:bg-[#faf9f7] hover:text-[#121722]'

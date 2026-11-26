@@ -164,7 +164,7 @@ export function OnboardingModal({
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-[#777c86] hover:text-[#121722] hover:bg-[#faf9f7] transition-colors cursor-pointer border border-transparent hover:border-[#efefef]"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#777c86] hover:text-[#121722] hover:bg-[#faf9f7] transition-colors cursor-pointer border border-transparent hover:border-[#efefef]"
               title="Close and skip"
             >
               <X size={18} />
@@ -253,7 +253,7 @@ export function OnboardingModal({
                   {/* Card 1: Industry Seekr */}
                   <div
                     onClick={() => setTrackingSystem('industry')}
-                    className={`p-5 rounded-2xl border transition-all cursor-pointer relative bg-white shadow-2xs hover:shadow-sm ${
+                    className={`p-5 rounded-xl border transition-all cursor-pointer relative bg-white shadow-2xs hover:shadow-sm ${
                       trackingSystem === 'industry'
                         ? 'border-[#0068f9] ring-2 ring-[#0068f9]/15'
                         : 'border-[#efefef] hover:border-[#121722]/20'
@@ -269,7 +269,7 @@ export function OnboardingModal({
                         {trackingSystem === 'industry' && <Check size={12} strokeWidth={3} />}
                       </div>
                     </div>
-                    <span className="inline-block text-[11px] font-semibold text-[#0068f9] bg-blue-50/70 px-2 py-0.5 rounded-md">
+                    <span className="inline-block text-[11px] font-semibold text-[#0068f9] bg-blue-50/70 px-2 py-0.5 rounded-[4px]">
                       Tech, Startups & Corporate
                     </span>
                     <p className="text-xs text-[#777c86] mt-2.5 leading-relaxed">
@@ -280,7 +280,7 @@ export function OnboardingModal({
                   {/* Card 2: Academic Seekr */}
                   <div
                     onClick={() => setTrackingSystem('academic')}
-                    className={`p-5 rounded-2xl border transition-all cursor-pointer relative bg-white shadow-2xs hover:shadow-sm ${
+                    className={`p-5 rounded-xl border transition-all cursor-pointer relative bg-white shadow-2xs hover:shadow-sm ${
                       trackingSystem === 'academic'
                         ? 'border-[#0068f9] ring-2 ring-[#0068f9]/15'
                         : 'border-[#efefef] hover:border-[#121722]/20'
@@ -296,7 +296,7 @@ export function OnboardingModal({
                         {trackingSystem === 'academic' && <Check size={12} strokeWidth={3} />}
                       </div>
                     </div>
-                    <span className="inline-block text-[11px] font-semibold text-[#0068f9] bg-blue-50/70 px-2 py-0.5 rounded-md">
+                    <span className="inline-block text-[11px] font-semibold text-[#0068f9] bg-blue-50/70 px-2 py-0.5 rounded-[4px]">
                       Universities & Research Labs
                     </span>
                     <p className="text-xs text-[#777c86] mt-2.5 leading-relaxed">
@@ -319,7 +319,7 @@ export function OnboardingModal({
                 {/* Option for All Roles (Default) */}
                 <label 
                   onClick={() => setSelectedRole('')}
-                  className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between bg-white shadow-2xs ${
+                  className={`p-3 rounded-lg border transition-all cursor-pointer flex items-center justify-between bg-white shadow-2xs ${
                     !selectedRole
                       ? 'border-[#0068f9] ring-2 ring-[#0068f9]/15'
                       : 'border-[#efefef] hover:border-[#121722]/20'
@@ -361,7 +361,7 @@ export function OnboardingModal({
                             <label
                               key={role.value}
                               onClick={() => setSelectedRole(role.value)}
-                              className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center gap-2.5 bg-white shadow-2xs ${
+                              className={`p-2.5 rounded-lg border transition-all cursor-pointer flex items-center gap-2.5 bg-white shadow-2xs ${
                                 isSelected
                                   ? 'border-[#0068f9] ring-2 ring-[#0068f9]/15 bg-blue-50/20'
                                   : 'border-[#efefef] hover:border-[#121722]/20'
@@ -406,7 +406,7 @@ export function OnboardingModal({
                 className="space-y-4 pt-1"
               >
                 {uploadedCvInModal ? (
-                  <div className="p-5 rounded-2xl border border-emerald-200 bg-emerald-50/40 text-center space-y-3">
+                  <div className="p-5 rounded-xl border border-emerald-200 bg-emerald-50/40 text-center space-y-3">
                     <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
                       <CheckCircle2 size={24} />
                     </div>
@@ -420,7 +420,7 @@ export function OnboardingModal({
                     </div>
                     <label 
                       htmlFor="onboarding-cv-replace"
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white border border-[#efefef] hover:border-[#121722]/30 text-xs font-semibold text-[#121722] shadow-2xs hover:bg-[#faf9f7] transition-all cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white border border-[#efefef] hover:border-[#121722]/30 text-xs font-semibold text-[#121722] shadow-2xs hover:bg-[#faf9f7] transition-all cursor-pointer"
                     >
                       <Upload size={14} />
                       Replace CV
@@ -437,7 +437,7 @@ export function OnboardingModal({
                 ) : (
                   <label
                     htmlFor="onboarding-cv-upload-input"
-                    className={`border-2 border-dashed border-[#d0e1fd] hover:border-[#0068f9] bg-white hover:bg-blue-50/30 rounded-2xl p-6 sm:p-8 text-center transition-all cursor-pointer flex flex-col items-center justify-center shadow-2xs block ${
+                    className={`border-2 border-dashed border-[#d0e1fd] hover:border-[#0068f9] bg-white hover:bg-blue-50/30 rounded-xl p-6 sm:p-8 text-center transition-all cursor-pointer flex flex-col items-center justify-center shadow-2xs block ${
                       isUploadingCv ? 'opacity-70 pointer-events-none' : ''
                     }`}
                   >
@@ -475,7 +475,7 @@ export function OnboardingModal({
             type="button"
             onClick={handleBack}
             disabled={activeStep === 0}
-            className="px-4 py-2 rounded-full text-xs font-semibold text-[#121722] border border-[#efefef] hover:bg-[#faf9f7] transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none shadow-2xs"
+            className="px-4 py-2 rounded-lg text-xs font-semibold text-[#121722] border border-[#efefef] hover:bg-[#faf9f7] transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none shadow-2xs"
           >
             Back
           </button>
@@ -484,7 +484,7 @@ export function OnboardingModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-full text-xs font-medium text-[#777c86] hover:text-[#121722] transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-lg text-xs font-medium text-[#777c86] hover:text-[#121722] transition-colors cursor-pointer"
             >
               Skip
             </button>
@@ -493,7 +493,7 @@ export function OnboardingModal({
               <button
                 type="button"
                 onClick={handleDone}
-                className="px-6 py-2 rounded-full text-xs font-semibold bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs transition-all cursor-pointer"
+                className="px-6 py-2 rounded-lg text-xs font-semibold bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs transition-all cursor-pointer"
               >
                 Done
               </button>
@@ -501,7 +501,7 @@ export function OnboardingModal({
               <button
                 type="button"
                 onClick={handleNext}
-                className="px-6 py-2 rounded-full text-xs font-semibold bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs transition-all cursor-pointer"
+                className="px-6 py-2 rounded-lg text-xs font-semibold bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs transition-all cursor-pointer"
               >
                 Next
               </button>

@@ -383,7 +383,7 @@ const CommandMenuItem = React.forwardRef<
         ref={ref}
         data-command-item
         className={cn(
-          "relative flex cursor-pointer select-none items-center rounded-xl px-3 py-2.5 text-sm outline-none transition-colors gap-3",
+          "relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-sm outline-none transition-colors gap-3",
           "hover:bg-[#faf9f7] text-[#121722]",
           isSelected &&
             "bg-[#faf9f7] text-[#0068f9] font-medium",

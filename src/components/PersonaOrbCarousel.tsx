@@ -205,7 +205,7 @@ export function PersonaOrbCarousel({
       
       {/* 1. CATEGORY TABS (STABLE, NO ICON, NO BOUNCE SHAKE) */}
       <div className="flex items-center justify-between border-b border-[#efefef] pb-2.5 gap-2 overflow-x-auto no-scrollbar">
-        <div className="flex items-center gap-1.5 p-1 bg-[#f4f3f0] rounded-full border border-[#e8e7e3] shrink-0">
+        <div className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0">
           {CATEGORIES.map((cat) => {
             const isActive = activeTab === cat.id;
             return (
@@ -213,9 +213,9 @@ export function PersonaOrbCarousel({
                 key={cat.id}
                 type="button"
                 onClick={() => setActiveTab(cat.id)}
-                className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer select-none ${
+                className={`h-full px-3.5 rounded-full flex items-center justify-center whitespace-nowrap transition-all cursor-pointer select-none ${
                   isActive
-                    ? 'bg-white text-[#121722] shadow-2xs border border-[#e4e3df]'
+                    ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]'
                     : 'text-[#777c86] hover:text-[#121722] border border-transparent'
                 }`}
               >
@@ -232,7 +232,7 @@ export function PersonaOrbCarousel({
 
       {/* 2. MAIN CONTAINER */}
       <div 
-        className="relative bg-[#faf9f7] border border-[#efefef] rounded-2xl p-4 sm:p-5 select-none overflow-hidden flex-1 min-h-[280px] flex flex-col justify-center items-center my-auto"
+        className="relative bg-[#faf9f7] border border-[#efefef] rounded-xl p-4 sm:p-5 select-none overflow-hidden flex-1 min-h-[280px] flex flex-col justify-center items-center my-auto"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -309,7 +309,7 @@ export function PersonaOrbCarousel({
                 type="button"
                 onClick={handlePrev}
                 aria-label="Previous Evaluator"
-                className="p-1.5 rounded-full hover:bg-black/5 text-[#777c86] hover:text-[#121722] transition-colors cursor-pointer shrink-0"
+                className="p-1.5 rounded-lg hover:bg-black/5 text-[#777c86] hover:text-[#121722] transition-colors cursor-pointer shrink-0"
               >
                 <ChevronLeft size={18} />
               </button>
@@ -328,7 +328,7 @@ export function PersonaOrbCarousel({
                 type="button"
                 onClick={handleNext}
                 aria-label="Next Evaluator"
-                className="p-1.5 rounded-full hover:bg-black/5 text-[#777c86] hover:text-[#121722] transition-colors cursor-pointer shrink-0"
+                className="p-1.5 rounded-lg hover:bg-black/5 text-[#777c86] hover:text-[#121722] transition-colors cursor-pointer shrink-0"
               >
                 <ChevronRight size={18} />
               </button>
@@ -384,7 +384,7 @@ export function PersonaOrbCarousel({
         <button
           type="button"
           onClick={onContinue}
-          className="h-11 w-[260px] px-6 rounded-full bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium text-xs shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+          className="h-[38px] w-[260px] px-6 rounded-lg bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium text-[13px] shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
           <span>Continue to Upload CV</span>
         </button>

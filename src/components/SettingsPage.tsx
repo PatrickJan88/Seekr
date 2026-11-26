@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Footer } from './Footer';
 import { 
@@ -27,6 +27,7 @@ import {
 } from '../db/resumes';
 import { UserResume } from '../types';
 import { getRoleCategories, getRoleLabel, isRoleInTrackingSystem } from '../data/roles';
+import { computeDropdownAlign, DropdownAlign } from '../lib/utils';
 
 interface SettingsPageProps {
   trackingSystem?: 'industry' | 'academic';
@@ -53,6 +54,10 @@ export function SettingsPage({
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState(false);
   const [showDeleteResumeConfirm, setShowDeleteResumeConfirm] = useState(false);
+  const trackingTriggerRef = useRef<HTMLButtonElement>(null);
+  const roleTriggerRef = useRef<HTMLButtonElement>(null);
+  const [trackingAlign, setTrackingAlign] = useState<DropdownAlign>('start');
+  const [roleAlign, setRoleAlign] = useState<DropdownAlign>('start');
 
   // My Resume state
   const [storedResume, setStoredResume] = useState<UserResume | null>(() => getStoredLocalResume(auth.currentUser?.uid));
@@ -259,7 +264,7 @@ export function SettingsPage({
                       </p>
                       <div className="relative group/guest-settings-info inline-flex items-center">
                         <Info size={14} className="text-[#9ca3af] hover:text-[#121722] cursor-help transition-colors shrink-0" />
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 bg-[#121722] text-white text-xs font-normal leading-relaxed rounded-xl opacity-0 invisible group-hover/guest-settings-info:opacity-100 group-hover/guest-settings-info:visible transition-all duration-150 z-50 pointer-events-none shadow-xl text-center border border-zinc-700/50">
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 bg-[#121722] text-white text-xs font-normal leading-relaxed rounded-lg opacity-0 invisible group-hover/guest-settings-info:opacity-100 group-hover/guest-settings-info:visible transition-all duration-150 z-50 pointer-events-none shadow-xl text-center border border-zinc-700/50">
                           Your account will be automatically deleted if you remain inactive for more than 30 days.
                           <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-[#121722]" />
                         </div>
@@ -273,7 +278,7 @@ export function SettingsPage({
               </div>
               <button
                 onClick={() => setShowLogoutConfirm(true)}
-                className="inline-flex items-center justify-center rounded-full text-xs font-semibold transition-all bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-9 px-6 py-2 cursor-pointer self-start sm:self-center"
+                className="inline-flex items-center justify-center rounded-lg text-[13px] font-semibold transition-all bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-[38px] px-6 cursor-pointer self-start sm:self-center"
               >
                 Log Out
               </button>
@@ -287,9 +292,16 @@ export function SettingsPage({
               Switch between Industry and Academic job markets. This changes the default database and job suggestions.
             </p>
             <div className="flex items-center gap-4">
-              <DropdownMenu.Root>
+              <DropdownMenu.Root
+                onOpenChange={(open) => {
+                  if (open) setTrackingAlign(computeDropdownAlign(trackingTriggerRef.current, 240));
+                }}
+              >
                 <DropdownMenu.Trigger asChild>
-                  <button className="flex items-center justify-between w-full sm:w-64 h-11 bg-[#faf9f7] border border-[#efefef] rounded-full text-xs sm:text-sm px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#f3f2ef] transition-all cursor-pointer">
+                  <button
+                    ref={trackingTriggerRef}
+                    className="flex items-center justify-between w-full sm:w-64 h-[38px] bg-[#faf9f7] border border-[#efefef] rounded-lg text-[13px] px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#f3f2ef] transition-all cursor-pointer"
+                  >
                     <div className="flex items-center gap-2.5 min-w-0">
                       {trackingSystem === 'academic' ? (
                         <GraduationCap className="text-[#0068f9] shrink-0" size={16} />
@@ -306,12 +318,13 @@ export function SettingsPage({
                 
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content 
-                    className="z-[100] min-w-[240px] bg-white rounded-2xl border border-[#efefef] shadow-xl p-1.5 animate-in fade-in-80 zoom-in-95"
+                    className="z-[100] min-w-[240px] max-w-[calc(100vw-32px)] bg-white rounded-2xl border border-[#efefef] shadow-xl p-1.5 animate-in fade-in-80 zoom-in-95"
                     sideOffset={6}
-                    align="start"
+                    align={trackingAlign}
+                    collisionPadding={16}
                   >
                     <DropdownMenu.Item 
-                      className="flex items-center gap-3 px-3.5 py-2.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none transition-colors"
+                      className="flex items-center gap-3 px-3.5 py-2.5 text-[13px] text-[#121722] rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none transition-colors"
                       onClick={() => {
                         setTrackingSystem?.('industry');
                       }}
@@ -325,7 +338,7 @@ export function SettingsPage({
                     </DropdownMenu.Item>
                     
                     <DropdownMenu.Item 
-                      className="flex items-center gap-3 px-3.5 py-2.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none transition-colors mt-0.5"
+                      className="flex items-center gap-3 px-3.5 py-2.5 text-[13px] text-[#121722] rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none transition-colors mt-0.5"
                       onClick={() => {
                         setTrackingSystem?.('academic');
                       }}
@@ -350,9 +363,16 @@ export function SettingsPage({
               Select your primary role. This customizes the default job posts and suggestions in the Job Market.
             </p>
             <div className="flex items-center gap-4">
-              <DropdownMenu.Root>
+              <DropdownMenu.Root
+                onOpenChange={(open) => {
+                  if (open) setRoleAlign(computeDropdownAlign(roleTriggerRef.current, 260));
+                }}
+              >
                 <DropdownMenu.Trigger asChild>
-                  <button className="flex items-center justify-between w-full sm:w-64 h-11 bg-[#faf9f7] border border-[#efefef] rounded-full text-xs sm:text-sm px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#f3f2ef] transition-all cursor-pointer">
+                  <button
+                    ref={roleTriggerRef}
+                    className="flex items-center justify-between w-full sm:w-64 h-[38px] bg-[#faf9f7] border border-[#efefef] rounded-lg text-[13px] px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#f3f2ef] transition-all cursor-pointer"
+                  >
                     <div className="flex items-center gap-2.5 min-w-0">
                       {trackingSystem === 'academic' ? (
                         <GraduationCap className="text-[#0068f9] shrink-0" size={16} />
@@ -369,12 +389,13 @@ export function SettingsPage({
                 
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content 
-                    className="z-[100] min-w-[260px] max-h-[60vh] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-xl p-1.5 animate-in fade-in-80 zoom-in-95"
+                    className="z-[100] min-w-[260px] max-w-[calc(100vw-32px)] max-h-[60vh] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-xl p-1.5 animate-in fade-in-80 zoom-in-95"
                     sideOffset={6}
-                    align="start"
+                    align={roleAlign}
+                    collisionPadding={16}
                   >
                     <DropdownMenu.Item 
-                      className="flex items-center justify-between px-3.5 py-2.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none transition-colors"
+                      className="flex items-center justify-between px-3.5 py-2.5 text-[13px] text-[#121722] rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none transition-colors"
                       onClick={() => {
                         setSelectedRole?.('');
                         toast.success('Role reset to All Roles (Default)');
@@ -394,7 +415,7 @@ export function SettingsPage({
 
                       return (
                         <DropdownMenu.Sub key={category}>
-                          <DropdownMenu.SubTrigger className="flex items-center justify-between px-3.5 py-2.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none data-[state=open]:bg-[#faf9f7] transition-colors">
+                          <DropdownMenu.SubTrigger className="flex items-center justify-between px-3.5 py-2.5 text-[13px] text-[#121722] rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none data-[state=open]:bg-[#faf9f7] transition-colors">
                             <span className="font-medium truncate">{category}</span>
                             <div className="flex items-center gap-1.5 shrink-0 ml-2">
                               {hasActiveRole && <Check size={14} className="text-[#0068f9]" />}
@@ -404,13 +425,14 @@ export function SettingsPage({
                           
                           <DropdownMenu.Portal>
                             <DropdownMenu.SubContent 
-                              className="z-[100] min-w-[260px] max-h-[50vh] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-lg p-1.5 animate-in fade-in-80 zoom-in-95"
+                              className="z-[100] min-w-[260px] max-w-[calc(100vw-32px)] max-h-[50vh] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-lg p-1.5 animate-in fade-in-80 zoom-in-95"
                               sideOffset={4}
+                              collisionPadding={16}
                             >
                               {roles.map(role => (
                                 <DropdownMenu.Item 
                                   key={role.value}
-                                  className="flex items-center justify-between px-3 py-2 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none transition-colors"
+                                  className="flex items-center justify-between px-3 py-2 text-[13px] text-[#121722] rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none transition-colors"
                                   onClick={() => {
                                     setSelectedRole?.(role.value);
                                     toast.success(`Role set to ${role.label}`);
@@ -438,7 +460,7 @@ export function SettingsPage({
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-semibold text-[#121722]">My Resume</h3>
                   {storedResume && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-[4px] text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                       Active Default CV
                     </span>
@@ -453,7 +475,7 @@ export function SettingsPage({
                 <div className="flex items-center gap-2 shrink-0">
                   <label
                     htmlFor="settings-cv-replace"
-                    className="inline-flex items-center justify-center rounded-full text-xs font-semibold bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-9 px-4 py-2 cursor-pointer transition-colors"
+                    className="inline-flex items-center justify-center rounded-lg text-[13px] font-semibold bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-[38px] px-4 cursor-pointer transition-colors"
                   >
                     <span>Replace</span>
                     <input
@@ -471,10 +493,10 @@ export function SettingsPage({
 
             {/* Resume Display Card or Upload Zone */}
             {storedResume ? (
-              <div className="bg-[#faf9f7] border border-[#efefef] rounded-2xl p-4 sm:p-5">
+              <div className="bg-[#faf9f7] border border-[#efefef] rounded-xl p-4 sm:p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-start gap-3.5 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-white border border-[#efefef] text-[#0068f9] flex items-center justify-center shrink-0 shadow-2xs">
+                    <div className="w-10 h-10 rounded-lg bg-white border border-[#efefef] text-[#0068f9] flex items-center justify-center shrink-0 shadow-2xs">
                       <FileText size={20} />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -482,7 +504,7 @@ export function SettingsPage({
                         <h4 className="text-sm font-bold text-[#121722] truncate max-w-md">
                           {storedResume.fileName}
                         </h4>
-                        <span className="text-[11px] font-medium text-[#777c86] bg-white border border-[#efefef] px-2 py-0.5 rounded-md shadow-2xs">
+                        <span className="text-[11px] font-medium text-[#777c86] bg-white border border-[#efefef] px-2 py-0.5 rounded-[4px] shadow-2xs">
                           {(storedResume.fileSize / 1024).toFixed(1)} KB
                         </span>
                       </div>
@@ -498,7 +520,7 @@ export function SettingsPage({
                       <button
                         type="button"
                         onClick={downloadStoredPdf}
-                        className="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium text-[#121722] bg-white hover:bg-[#f3f4f6] border border-[#efefef] transition-colors shadow-2xs cursor-pointer"
+                        className="inline-flex items-center justify-center h-[38px] px-3.5 rounded-lg text-[13px] font-medium text-[#121722] bg-white hover:bg-[#f3f4f6] border border-[#efefef] transition-colors shadow-2xs cursor-pointer"
                         title="Download stored PDF"
                       >
                         <span>Download</span>
@@ -507,14 +529,14 @@ export function SettingsPage({
                     <button
                       type="button"
                       onClick={() => setShowScannedText(!showScannedText)}
-                      className="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium text-[#0068f9] bg-white hover:bg-[#e8f1ff] border border-[#efefef] transition-colors shadow-2xs cursor-pointer"
+                      className="inline-flex items-center justify-center h-[38px] px-3.5 rounded-lg text-[13px] font-medium text-[#0068f9] bg-white hover:bg-[#e8f1ff] border border-[#efefef] transition-colors shadow-2xs cursor-pointer"
                     >
                       <span>{showScannedText ? 'Hide' : 'View'}</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowDeleteResumeConfirm(true)}
-                      className="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium text-rose-600 bg-white hover:bg-rose-50 border border-rose-200 transition-colors shadow-2xs cursor-pointer"
+                      className="inline-flex items-center justify-center h-[38px] px-3.5 rounded-lg text-[13px] font-medium text-rose-600 bg-white hover:bg-rose-50 border border-rose-200 transition-colors shadow-2xs cursor-pointer"
                       title="Delete stored CV"
                     >
                       <span>Delete</span>
@@ -533,7 +555,7 @@ export function SettingsPage({
                         {storedResume.cvText.split(/\s+/).filter(Boolean).length} words • {storedResume.cvText.length} characters
                       </span>
                     </div>
-                    <div className="bg-white border border-[#efefef] rounded-xl p-3 max-h-60 overflow-y-auto font-mono text-[11px] text-[#121722] leading-relaxed whitespace-pre-wrap select-text custom-scrollbar">
+                    <div className="bg-white border border-[#efefef] rounded-lg p-3 max-h-60 overflow-y-auto font-mono text-[11px] text-[#121722] leading-relaxed whitespace-pre-wrap select-text custom-scrollbar">
                       {storedResume.cvText || '(No text extracted from this document)'}
                     </div>
                   </div>
@@ -543,7 +565,7 @@ export function SettingsPage({
               <div
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
-                className="border-2 border-dashed border-[#efefef] hover:border-[#0068f9] bg-[#faf9f7] rounded-2xl p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center min-h-[160px]"
+                className="border-2 border-dashed border-[#efefef] hover:border-[#0068f9] bg-[#faf9f7] rounded-xl p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center min-h-[160px]"
               >
                 <input
                   id="settings-cv-empty-upload"
@@ -601,7 +623,7 @@ export function SettingsPage({
           
           <div className="p-6 flex flex-col gap-8">
             {/* Delete Data */}
-            <div className="border border-red-200 rounded-lg overflow-hidden shadow-2xs">
+            <div className="border border-red-200 rounded-xl overflow-hidden shadow-2xs">
               <div className="p-5 bg-white">
                 <h4 className="text-[15px] font-bold text-[#121722] mb-1">Delete Data</h4>
                 <p className="text-[13px] text-[#777c86]">
@@ -612,7 +634,7 @@ export function SettingsPage({
                 <button
                   onClick={() => { onBack(); onClearData(); }}
                   disabled={isSyncing}
-                  className="bg-[#dc2626] hover:bg-[#b91c1c] text-white font-medium px-4 py-2 rounded-full transition-colors text-[13px] shadow-sm cursor-pointer"
+                  className="inline-flex items-center justify-center h-[38px] bg-[#dc2626] hover:bg-[#b91c1c] text-white font-medium px-4 rounded-lg transition-colors text-[13px] shadow-sm cursor-pointer"
                 >
                   Clear All Data
                 </button>
@@ -620,7 +642,7 @@ export function SettingsPage({
             </div>
 
             {/* Delete Account */}
-            <div className="border border-red-200 rounded-lg overflow-hidden shadow-2xs">
+            <div className="border border-red-200 rounded-xl overflow-hidden shadow-2xs">
               <div className="p-5 bg-white">
                 <h4 className="text-[15px] font-bold text-[#121722] mb-1">Delete Account</h4>
                 <p className="text-[13px] text-[#777c86]">
@@ -630,7 +652,7 @@ export function SettingsPage({
               <div className="px-5 py-3.5 bg-red-50 flex items-center justify-end border-t border-red-100">
                 <button
                   onClick={() => setShowDeleteAccountConfirm(true)}
-                  className="bg-[#dc2626] hover:bg-[#b91c1c] text-white font-medium px-4 py-2 rounded-full transition-colors text-[13px] shadow-sm cursor-pointer"
+                  className="inline-flex items-center justify-center h-[38px] bg-[#dc2626] hover:bg-[#b91c1c] text-white font-medium px-4 rounded-lg transition-colors text-[13px] shadow-sm cursor-pointer"
                 >
                   Delete Personal Account
                 </button>
@@ -665,8 +687,8 @@ export function SettingsPage({
             <h3 className="text-lg font-bold text-[#121722] mb-2">Log Out</h3>
             <p className="text-[13px] text-[#777c86] mb-6">Are you sure you want to log out of your account?</p>
             <div className="flex justify-end gap-3">
-              <button onClick={() => setShowLogoutConfirm(false)} className="px-4 py-2 rounded-full font-medium text-[13px] text-[#777c86] hover:bg-[#faf9f7] transition-colors cursor-pointer">Cancel</button>
-              <button onClick={() => { setShowLogoutConfirm(false); logout(); }} className="px-5 py-2 rounded-full font-semibold text-xs bg-[#0068f9] text-white hover:bg-[#024bb1] transition-all shadow-2xs cursor-pointer">Log Out</button>
+              <button onClick={() => setShowLogoutConfirm(false)} className="h-[38px] px-4 rounded-lg font-medium text-[13px] text-[#777c86] hover:bg-[#faf9f7] transition-colors cursor-pointer">Cancel</button>
+              <button onClick={() => { setShowLogoutConfirm(false); logout(); }} className="h-[38px] px-5 rounded-lg font-semibold text-[13px] bg-[#0068f9] text-white hover:bg-[#024bb1] transition-all shadow-2xs cursor-pointer">Log Out</button>
             </div>
           </div>
         </div>
@@ -678,8 +700,8 @@ export function SettingsPage({
              <h3 className="text-lg font-bold text-[#121722] mb-2">Delete Account</h3>
              <p className="text-[13px] text-[#777c86] mb-6">This action cannot be undone. This will permanently delete your account and remove your data from our servers.</p>
              <div className="flex justify-end gap-3">
-               <button onClick={() => setShowDeleteAccountConfirm(false)} className="px-4 py-2 rounded-full font-medium text-[13px] text-[#777c86] hover:bg-[#faf9f7] transition-colors cursor-pointer border border-transparent hover:border-[#efefef]">Cancel</button>
-               <button onClick={handleDeleteAccount} className="px-4 py-2 rounded-full font-medium text-[13px] bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-colors cursor-pointer shadow-sm">Delete Account</button>
+               <button onClick={() => setShowDeleteAccountConfirm(false)} className="h-[38px] px-4 rounded-lg font-medium text-[13px] text-[#777c86] hover:bg-[#faf9f7] transition-colors cursor-pointer border border-transparent hover:border-[#efefef]">Cancel</button>
+               <button onClick={handleDeleteAccount} className="h-[38px] px-4 rounded-lg font-medium text-[13px] bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-colors cursor-pointer shadow-sm">Delete Account</button>
              </div>
           </div>
         </div>
@@ -695,13 +717,13 @@ export function SettingsPage({
             <div className="flex justify-end gap-3">
               <button 
                 onClick={() => setShowDeleteResumeConfirm(false)} 
-                className="px-4 py-2 rounded-full font-medium text-[13px] text-[#777c86] hover:bg-[#faf9f7] transition-colors cursor-pointer border border-transparent hover:border-[#efefef]"
+                className="h-[38px] px-4 rounded-lg font-medium text-[13px] text-[#777c86] hover:bg-[#faf9f7] transition-colors cursor-pointer border border-transparent hover:border-[#efefef]"
               >
                 Cancel
               </button>
               <button 
                 onClick={handleDeleteStoredResume} 
-                className="px-4 py-2 rounded-full font-semibold text-xs bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-colors cursor-pointer shadow-sm"
+                className="h-[38px] px-4 rounded-lg font-semibold text-[13px] bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-colors cursor-pointer shadow-sm"
               >
                 Delete CV
               </button>

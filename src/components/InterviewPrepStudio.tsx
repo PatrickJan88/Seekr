@@ -1241,7 +1241,7 @@ export function InterviewPrepStudio({
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-bold text-[#121722] truncate">Interview Prep Studio</h2>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#e8f1ff] text-[#0068f9] border border-[#0068f9]/20 shrink-0">
+              <span className="px-2.5 py-0.5 rounded-[4px] text-[11px] font-bold bg-[#e8f1ff] text-[#0068f9] border border-[#0068f9]/20 shrink-0">
                 {documents.length} {documents.length === 1 ? 'Document' : 'Documents'}
               </span>
             </div>
@@ -1254,7 +1254,7 @@ export function InterviewPrepStudio({
               <span>•</span>
               <span>{wordCount} words</span>
               <span>•</span>
-              <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded text-[11px] shrink-0">
+              <span className="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-[4px] text-[11px] shrink-0">
                 {pages.length === 1 ? '1 A4 Page' : `${pages.length} A4 Pages`}
               </span>
               <span>•</span>
@@ -1262,7 +1262,7 @@ export function InterviewPrepStudio({
                 type="button"
                 onClick={handleManualSave}
                 title={isDemo ? "Saving is prohibited in Demo Mode" : "Auto-saves automatically. Click to save immediately."}
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all select-none ${
+                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-[4px] text-[11px] font-medium transition-all select-none ${
                   isDemo
                     ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed'
                     : saveStatus === 'saving' 
@@ -1296,7 +1296,7 @@ export function InterviewPrepStudio({
           <button
             type="button"
             onClick={handleCreateNewDoc}
-            className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#f4f4f5] hover:bg-[#e4e4e7] text-[#121722] text-xs font-semibold rounded-full transition-all shadow-2xs cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 h-[38px] px-3 bg-[#f4f4f5] hover:bg-[#e4e4e7] text-[#121722] text-[13px] font-semibold rounded-lg transition-all shadow-2xs cursor-pointer"
           >
             <Plus size={14} />
             <span>New</span>
@@ -1305,7 +1305,7 @@ export function InterviewPrepStudio({
           <button
             type="button"
             onClick={handleCopy}
-            className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-xs font-semibold rounded-full transition-all shadow-2xs cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 h-[38px] px-3 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-[13px] font-semibold rounded-lg transition-all shadow-2xs cursor-pointer"
           >
             {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
             <span>{copied ? 'Copied' : 'Copy'}</span>
@@ -1314,7 +1314,7 @@ export function InterviewPrepStudio({
           <button
             type="button"
             onClick={handleExportPDF}
-            className={`inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold rounded-full transition-all shadow-2xs ${
+            className={`inline-flex items-center justify-center gap-2 h-[38px] px-5 text-[13px] font-semibold rounded-lg transition-all shadow-2xs ${
               isDemo
                 ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 hover:bg-zinc-100 cursor-not-allowed'
                 : 'bg-[#0068f9] text-white hover:bg-[#024bb1] cursor-pointer'
@@ -1329,7 +1329,7 @@ export function InterviewPrepStudio({
             <button
               type="button"
               onClick={onClose}
-              className="p-2 text-[#a5a5a5] hover:text-[#121722] hover:bg-[#efefef] rounded-full transition-colors cursor-pointer"
+              className="p-2 text-[#a5a5a5] hover:text-[#121722] hover:bg-[#efefef] rounded-lg transition-colors cursor-pointer"
               title="Close Studio"
             >
               <X size={20} />
@@ -1345,13 +1345,13 @@ export function InterviewPrepStudio({
           {/* Search Box */}
           <div className="p-3 border-b border-[#efefef] bg-[#fafafa]">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={13} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
               <input
                 type="text"
                 placeholder="Search strategies, stories, or tags..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-[#e2e8f0] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0068f9]"
+                className="w-full h-[38px] pl-8 pr-3 text-[13px] bg-white border border-[#e2e8f0] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0068f9]"
               />
             </div>
           </div>
@@ -1375,7 +1375,7 @@ export function InterviewPrepStudio({
                         setActiveStoryId(doc.id);
                       }
                     }}
-                    className={`group p-3 rounded-xl border text-left cursor-pointer transition-all ${
+                    className={`group p-3 rounded-lg border text-left cursor-pointer transition-all ${
                       isSelected
                         ? 'bg-blue-50/70 border-blue-200 ring-1 ring-blue-500/20 shadow-2xs'
                         : 'bg-white border-[#eef2f6] hover:bg-[#fafafa] hover:border-slate-300'
@@ -1393,7 +1393,7 @@ export function InterviewPrepStudio({
                             handleDuplicateDoc(doc);
                           }}
                           title="Duplicate document"
-                          className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors"
+                          className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-[4px] transition-colors"
                         >
                           <CopyCheck size={13} />
                         </button>
@@ -1404,7 +1404,7 @@ export function InterviewPrepStudio({
                             handleDeleteDoc(doc.id);
                           }}
                           title="Delete document"
-                          className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                          className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-[4px] transition-colors"
                         >
                           <Trash2 size={13} />
                         </button>
@@ -1444,7 +1444,7 @@ export function InterviewPrepStudio({
               {activeStory.tags.map((tag, tIdx) => (
                 <span
                   key={tIdx}
-                  className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200"
+                  className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 border border-slate-200"
                 >
                   <span>{tag}</span>
                   <button
@@ -1466,7 +1466,7 @@ export function InterviewPrepStudio({
                     (e.target as HTMLInputElement).value = '';
                   }
                 }}
-                className="text-[11px] px-2 py-0.5 rounded border border-dashed border-slate-300 bg-transparent text-slate-600 focus:outline-none focus:border-[#0068f9] w-48"
+                className="text-[11px] px-2 py-0.5 rounded-[4px] border border-dashed border-slate-300 bg-transparent text-slate-600 focus:outline-none focus:border-[#0068f9] w-48"
               />
             </div>
           </div>
@@ -1507,7 +1507,7 @@ export function InterviewPrepStudio({
                           handleRemovePage(idx);
                         }}
                         title={`Delete Page ${idx + 1}`}
-                        className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors cursor-pointer"
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors cursor-pointer"
                       >
                         <Trash2 size={11} />
                         <span>Delete Page</span>
@@ -1519,7 +1519,7 @@ export function InterviewPrepStudio({
                         e.stopPropagation();
                         handleAddPage(idx);
                       }}
-                      className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] text-[#0068f9] bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer"
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] text-[#0068f9] bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer"
                     >
                       <Plus size={11} />
                       <span>Add New Page</span>
@@ -1572,7 +1572,7 @@ export function InterviewPrepStudio({
             <button
               type="button"
               onClick={() => handleAddPage(pages.length - 1)}
-              className={`my-4 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-full border border-slate-200 bg-white text-slate-700 shadow-2xs hover:bg-slate-50 hover:border-slate-300 transition-all ${
+              className={`my-4 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-700 shadow-2xs hover:bg-slate-50 hover:border-slate-300 transition-all ${
                 isDemo ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
               }`}
               title={isDemo ? "Adding pages is prohibited in Demo Mode" : "Add new page"}

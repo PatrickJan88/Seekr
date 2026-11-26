@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { MapPin, ChevronRight, Check, Search, X } from "lucide-react";
-import { cn } from "../lib/utils";
+import { cn, computeDropdownAlign, DropdownAlign } from "../lib/utils";
 
 interface NestedLocationMenuProps {
   locationTree: Map<string, Map<string, Set<string>>>;
@@ -25,6 +25,8 @@ export function NestedLocationMenu({
   className,
 }: NestedLocationMenuProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [menuAlign, setMenuAlign] = useState<DropdownAlign>("start");
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const isExcluded = (val?: string) => {
@@ -86,12 +88,13 @@ export function NestedLocationMenu({
   return (
     <DropdownMenu.Root onOpenChange={(open) => {
       if (open) {
+        setMenuAlign(computeDropdownAlign(triggerRef.current, 260));
         setSearchQuery("");
         setTimeout(() => searchInputRef.current?.focus(), 50);
       }
     }}>
       <DropdownMenu.Trigger asChild>
-        <button className={cn("flex items-center w-full sm:w-auto min-w-0 sm:min-w-[120px] sm:max-w-[180px] xl:max-w-[210px] h-[38px] bg-[#faf9f7] border border-[#efefef] rounded-full text-sm font-medium px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#f3f2ef] transition-all cursor-pointer", className)}>
+        <button ref={triggerRef} className={cn("flex items-center w-full sm:w-auto min-w-0 sm:min-w-[120px] sm:max-w-[180px] xl:max-w-[210px] h-[38px] bg-[#faf9f7] border border-[#efefef] rounded-lg text-[13px] font-medium px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#f3f2ef] transition-all cursor-pointer", className)}>
           <MapPin className="text-[#a5a5a5] mr-2 shrink-0" size={15} />
           <span className="text-[#121722] truncate flex-1 text-left">{getDisplayText()}</span>
           <div className="text-[#a5a5a5] shrink-0 ml-1.5">
@@ -102,21 +105,23 @@ export function NestedLocationMenu({
       
       <DropdownMenu.Portal>
         <DropdownMenu.Content 
-          className="z-[100] min-w-[230px] max-w-[290px] overflow-hidden bg-white rounded-2xl border border-[#efefef] shadow-xl p-1 animate-in fade-in-80 zoom-in-95 flex flex-col"
+          align={menuAlign}
+          collisionPadding={16}
+          className="z-[100] min-w-[230px] max-w-[290px] overflow-hidden bg-white rounded-2xl border border-[#efefef] shadow-xl p-1.5 animate-in fade-in-80 zoom-in-95 flex flex-col"
           style={{ maxHeight: '33.33vh' }}
           sideOffset={8}
         >
           {/* Quick Search Header */}
-          <div className="p-1.5 border-b border-[#f1f3f5] bg-white shrink-0">
+          <div className="pb-1.5 mb-1 border-b border-[#f1f3f5] bg-white shrink-0">
             <div className="relative flex items-center">
-              <Search size={12} className="absolute left-2 text-[#a5a5a5] pointer-events-none" />
+              <Search size={13} className="absolute left-2.5 text-[#a5a5a5] pointer-events-none" />
               <input
                 ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search country or city..."
-                className="w-full pl-6 pr-6 py-1 text-xs bg-[#faf9f7] border border-[#efefef] rounded-xl focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none text-[#121722] placeholder:text-[#a5a5a5]"
+                className="w-full pl-7 pr-6 py-1.5 text-[13px] bg-[#faf9f7] border border-[#efefef] rounded-[10px] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none text-[#121722] placeholder:text-[#a5a5a5]"
                 onKeyDown={(e) => {
                   if (e.key === 'Escape') {
                     setSearchQuery("");
@@ -127,7 +132,7 @@ export function NestedLocationMenu({
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-1.5 p-0.5 text-[#a5a5a5] hover:text-[#121722] rounded-full cursor-pointer"
+                  className="absolute right-2 p-0.5 text-[#a5a5a5] hover:text-[#121722] rounded-[4px] cursor-pointer"
                 >
                   <X size={11} />
                 </button>
@@ -136,17 +141,17 @@ export function NestedLocationMenu({
           </div>
 
           {/* Scrollable list with 1/3 viewport height guardrail */}
-          <div className="flex-1 overflow-y-auto p-0.5 space-y-0.5 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto space-y-0.5 custom-scrollbar">
             {searchQuery.trim() ? (
               searchResults.length === 0 ? (
-                <div className="py-3 text-center text-xs text-[#a5a5a5]">
+                <div className="py-3 text-center text-[13px] text-[#a5a5a5]">
                   No matching locations
                 </div>
               ) : (
                 searchResults.map((item, idx) => (
                   <DropdownMenu.Item
                     key={`${item.country}-${item.city}-${idx}`}
-                    className="flex items-center justify-between px-3 py-1.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none transition-colors"
+                    className="flex items-center justify-between px-3 py-1.5 text-[13px] text-[#121722] rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none transition-colors"
                     onClick={() => {
                       onSelectContinent(item.continent);
                       onSelectCountry(item.country);
@@ -157,7 +162,7 @@ export function NestedLocationMenu({
                     <span className="truncate pr-2 font-medium">{item.label}</span>
                     {((item.city && countryFilter === item.country && cityFilter === item.city) ||
                       (!item.city && countryFilter === item.country && !cityFilter)) && (
-                      <Check size={13} className="text-[#0068f9] shrink-0" />
+                      <Check size={14} className="text-[#0068f9] shrink-0" />
                     )}
                   </DropdownMenu.Item>
                 ))
@@ -165,7 +170,7 @@ export function NestedLocationMenu({
             ) : (
               <>
                 <DropdownMenu.Item 
-                  className="flex items-center px-3 py-1.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none font-medium"
+                  className="flex items-center px-3 py-1.5 text-[13px] text-[#121722] rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none font-medium"
                   onClick={() => {
                     onSelectContinent("");
                     onSelectCountry("");
@@ -177,7 +182,7 @@ export function NestedLocationMenu({
                 </DropdownMenu.Item>
 
                 <DropdownMenu.Item 
-                  className="flex items-center px-3 py-1.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none font-medium"
+                  className="flex items-center px-3 py-1.5 text-[13px] text-[#121722] rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none font-medium"
                   onClick={() => {
                     onSelectContinent("Remote");
                     onSelectCountry("");
@@ -200,7 +205,7 @@ export function NestedLocationMenu({
                     return (
                       <DropdownMenu.Item 
                         key={continent}
-                        className="flex items-center px-3 py-1.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none"
+                        className="flex items-center px-3 py-1.5 text-[13px] text-[#121722] rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none"
                         onClick={() => {
                           onSelectContinent(continent);
                           onSelectCountry("");
@@ -215,7 +220,7 @@ export function NestedLocationMenu({
 
                   return (
                     <DropdownMenu.Sub key={continent}>
-                      <DropdownMenu.SubTrigger className="flex items-center px-3 py-1.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none data-[state=open]:bg-[#faf9f7]">
+                      <DropdownMenu.SubTrigger className="flex items-center px-3 py-1.5 text-[13px] text-[#121722] rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none data-[state=open]:bg-[#faf9f7]">
                         <span>{continent}</span>
                         {continentFilter === continent && !countryFilter && <Check size={14} className="ml-auto text-[#0068f9] mr-1.5" />}
                         <ChevronRight size={13} className="ml-auto text-[#a5a5a5]" />
@@ -223,12 +228,12 @@ export function NestedLocationMenu({
                       
                       <DropdownMenu.Portal>
                         <DropdownMenu.SubContent 
-                          className="z-[100] min-w-[200px] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-xl p-1 animate-in fade-in-80 zoom-in-95 custom-scrollbar"
+                          className="z-[100] min-w-[200px] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-xl p-1.5 animate-in fade-in-80 zoom-in-95 custom-scrollbar space-y-0.5"
                           style={{ maxHeight: '33.33vh' }}
                           sideOffset={4}
                         >
                           <DropdownMenu.Item 
-                            className="flex items-center px-3 py-1.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none font-medium"
+                            className="flex items-center px-3 py-1.5 text-[13px] text-[#121722] rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none font-medium"
                             onClick={() => {
                               onSelectContinent(continent);
                               onSelectCountry("");
@@ -250,7 +255,7 @@ export function NestedLocationMenu({
                               return (
                                 <DropdownMenu.Item 
                                   key={country}
-                                  className="flex items-center px-3 py-1.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none"
+                                  className="flex items-center px-3 py-1.5 text-[13px] text-[#121722] rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none"
                                   onClick={() => {
                                     onSelectContinent(continent);
                                     onSelectCountry(country);
@@ -265,19 +270,19 @@ export function NestedLocationMenu({
 
                             return (
                               <DropdownMenu.Sub key={country}>
-                                <DropdownMenu.SubTrigger className="flex items-center px-3 py-1.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none data-[state=open]:bg-[#faf9f7]">
+                                <DropdownMenu.SubTrigger className="flex items-center px-3 py-1.5 text-[13px] text-[#121722] rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none data-[state=open]:bg-[#faf9f7]">
                                   <span>{country}</span>
                                   {countryFilter === country && !cityFilter && <Check size={14} className="ml-auto text-[#0068f9] mr-1.5" />}
                                   <ChevronRight size={13} className="ml-auto text-[#a5a5a5]" />
                                 </DropdownMenu.SubTrigger>
                                 <DropdownMenu.Portal>
                                   <DropdownMenu.SubContent 
-                                    className="z-[100] min-w-[200px] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-xl p-1 animate-in fade-in-80 zoom-in-95 custom-scrollbar"
+                                    className="z-[100] min-w-[200px] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-xl p-1.5 animate-in fade-in-80 zoom-in-95 custom-scrollbar space-y-0.5"
                                     style={{ maxHeight: '33.33vh' }}
                                     sideOffset={4}
                                   >
                                     <DropdownMenu.Item 
-                                      className="flex items-center px-3 py-1.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none font-medium"
+                                      className="flex items-center px-3 py-1.5 text-[13px] text-[#121722] rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none font-medium"
                                       onClick={() => {
                                         onSelectContinent(continent);
                                         onSelectCountry(country);
@@ -291,7 +296,7 @@ export function NestedLocationMenu({
                                     {cities.map(city => (
                                       <DropdownMenu.Item 
                                         key={city}
-                                        className="flex items-center px-3 py-1.5 text-xs text-[#121722] rounded-xl cursor-pointer hover:bg-[#faf9f7] outline-none select-none"
+                                        className="flex items-center px-3 py-1.5 text-[13px] text-[#121722] rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none"
                                         onClick={() => {
                                           onSelectContinent(continent);
                                           onSelectCountry(country);

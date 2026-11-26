@@ -204,36 +204,39 @@ export function Kanban({
       <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col relative overflow-hidden gap-4">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex gap-2">
+          <div className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0">
             <button 
+              type="button"
               onClick={() => handleTabChange('active')}
-              className={`h-[38px] flex items-center justify-center px-4 rounded-full font-medium text-sm transition-all cursor-pointer ${activeTab === 'active' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
+              className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer whitespace-nowrap shrink-0 ${activeTab === 'active' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
             >
               Active Progress
             </button>
             <button 
+              type="button"
               onClick={() => handleTabChange('inactive')}
-              className={`h-[38px] flex items-center justify-center px-4 rounded-full font-medium text-sm transition-all cursor-pointer ${activeTab === 'inactive' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
+              className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer whitespace-nowrap shrink-0 ${activeTab === 'inactive' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
             >
               Closed
             </button>
             <button 
+              type="button"
               onClick={() => handleTabChange('wishlist')}
-              className={`h-[38px] flex items-center justify-center px-4 rounded-full font-medium text-sm transition-all cursor-pointer ${activeTab === 'wishlist' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'}`}
+              className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer whitespace-nowrap shrink-0 ${activeTab === 'wishlist' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
             >
               Wishlist
             </button>
           </div>
 
           {currentStatusFilter && !internalFocusedId && currentStatusFilter !== 'Ghosted' && (
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-[#e8f1ff] text-[#0068f9] rounded-full text-xs font-semibold border border-[#0068f9]/20 shadow-2xs animate-in fade-in">
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-[#e8f1ff] text-[#0068f9] rounded-lg text-xs font-semibold border border-[#0068f9]/20 shadow-2xs animate-in fade-in">
               <span>Status: {getStatusLabel(currentStatusFilter, trackingSystem)}</span>
               <button 
                 onClick={() => {
                   setCurrentStatusFilter(null);
                   onStatusFilterChange?.(null);
                 }}
-                className="hover:text-blue-900 cursor-pointer p-0.5 rounded-full hover:bg-blue-200/50 transition-colors"
+                className="hover:text-blue-900 cursor-pointer p-0.5 rounded-[4px] hover:bg-blue-200/50 transition-colors"
                 title="Clear status filter"
               >
                 <X size={12} />
@@ -242,11 +245,11 @@ export function Kanban({
           )}
 
           {overviewFilter && (
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-[#e8f1ff] text-[#0068f9] rounded-full text-xs font-semibold border border-[#0068f9]/20 shadow-2xs animate-in fade-in">
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-[#e8f1ff] text-[#0068f9] rounded-lg text-xs font-semibold border border-[#0068f9]/20 shadow-2xs animate-in fade-in">
               <span>{overviewFilter.label}</span>
               <button
                 onClick={() => onClearOverviewFilter?.()}
-                className="hover:text-blue-900 cursor-pointer p-0.5 rounded-full hover:bg-blue-200/50 transition-colors"
+                className="hover:text-blue-900 cursor-pointer p-0.5 rounded-[4px] hover:bg-blue-200/50 transition-colors"
                 title="Clear industry/role filter"
               >
                 <X size={12} />
@@ -289,38 +292,40 @@ export function Kanban({
           />
           
           {timeFilter === 'custom' && (
-            <div className="flex items-center gap-2 bg-white border border-[#efefef] rounded-2xl p-1.5 px-3 shadow-2xs h-[34px]">
+            <div className="flex items-center gap-2 bg-white border border-[#efefef] rounded-lg px-3 shadow-2xs h-[38px]">
               <input
                 type="date"
                 value={customStartDate}
                 onChange={(e) => setCustomStartDate(e.target.value)}
-                className="text-xs font-medium bg-transparent border-none focus:outline-none text-[#121722]"
+                className="text-[13px] font-medium bg-transparent border-none focus:outline-none text-[#121722]"
               />
-              <span className="text-[#777c86] text-xs">to</span>
+              <span className="text-[#777c86] text-[13px]">to</span>
               <input
                 type="date"
                 value={customEndDate}
                 onChange={(e) => setCustomEndDate(e.target.value)}
-                className="text-xs font-medium bg-transparent border-none focus:outline-none text-[#121722]"
+                className="text-[13px] font-medium bg-transparent border-none focus:outline-none text-[#121722]"
               />
             </div>
           )}
 
-          <div className="flex items-center gap-1 bg-white border border-[#efefef] rounded-full p-1 shadow-2xs h-[34px]">
+          <div className="flex items-center gap-1 bg-[#faf9f7] border border-[#efefef] rounded-full p-1 h-[38px]">
             <button
+              type="button"
               onClick={() => {
                 setLayoutMode('kanban');
                 setCurrentStatusFilter(null);
                 onStatusFilterChange?.(null);
               }}
-              className={`p-1 px-2.5 rounded-full transition-all cursor-pointer flex items-center justify-center h-full ${layoutMode === 'kanban' ? 'bg-[#faf9f7] text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
+              className={`px-2.5 rounded-full transition-all cursor-pointer flex items-center justify-center h-full ${layoutMode === 'kanban' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
               title="Kanban View"
             >
               <LayoutDashboard size={14} />
             </button>
             <button
+              type="button"
               onClick={() => setLayoutMode('list')}
-              className={`p-1 px-2.5 rounded-full transition-all cursor-pointer flex items-center justify-center h-full ${layoutMode === 'list' ? 'bg-[#faf9f7] text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
+              className={`px-2.5 rounded-full transition-all cursor-pointer flex items-center justify-center h-full ${layoutMode === 'list' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
               title="List View"
             >
               <List size={14} />
@@ -331,7 +336,7 @@ export function Kanban({
       {layoutMode === 'kanban' ? (
       <div className="flex gap-4 overflow-x-auto pb-4 flex-1 min-h-0 snap-x">
         {displayStatuses.map(status => (
-        <div key={status} className={`flex-shrink-0 w-[280px] lg:w-[calc(20%-13px)] xl:w-[calc(20%-13px)] lg:min-w-[150px] flex flex-col border rounded-2xl p-4 shadow-2xs snap-start ${status === 'Offer' ? 'bg-[#faf9f7] border-[#0068f9]/30' : 'bg-white border-[#efefef]'}`}
+        <div key={status} className={`flex-shrink-0 w-[280px] lg:w-[calc(20%-13px)] xl:w-[calc(20%-13px)] lg:min-w-[150px] flex flex-col border rounded-xl p-4 shadow-2xs snap-start ${status === 'Offer' ? 'bg-[#faf9f7] border-[#0068f9]/30' : 'bg-white border-[#efefef]'}`}
           onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
           onDrop={(e) => {
             e.preventDefault();
@@ -345,14 +350,14 @@ export function Kanban({
               {status === 'Ghosted' && (
                 <div className="group relative flex items-center">
                   <Info size={14} className="text-[#777c86] cursor-pointer hover:text-[#121722] transition-colors" />
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 p-2.5 bg-[#121722] text-white text-xs font-medium leading-relaxed rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[100] text-center shadow-xl">
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 p-2.5 bg-[#121722] text-white text-xs font-medium leading-relaxed rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[100] text-center shadow-xl">
                     Applications without manual updates for 30 days are automatically marked as Ghosted.
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-b-[#121722]"></div>
                   </div>
                 </div>
               )}
             </h3>
-            <span className="bg-[#faf9f7] text-[#121722] text-xs px-2.5 py-0.5 font-semibold rounded-full border border-[#efefef]">
+            <span className="bg-[#faf9f7] text-[#121722] text-xs px-2 py-0.5 font-semibold rounded-[4px] border border-[#efefef]">
               {(grouped[status] || []).length}
             </span>
           </div>
@@ -375,7 +380,7 @@ export function Kanban({
                   e.dataTransfer.setData('text/plain', app.id);
                   e.dataTransfer.effectAllowed = 'move';
                 }}
-                className={`p-4 rounded-2xl transition-all cursor-pointer group shadow-2xs cursor-grab active:cursor-grabbing ${
+                className={`p-4 rounded-lg transition-all cursor-pointer group shadow-2xs cursor-grab active:cursor-grabbing ${
                   isFocused
                     ? 'border-2 border-[#0068f9] bg-white'
                     : 'border border-[#efefef] bg-[#faf9f7] hover:bg-white hover:border-[#0068f9]/40'
@@ -395,14 +400,14 @@ export function Kanban({
                     </span>
                   )}
                   {app.workType && (
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border whitespace-nowrap ${getWorkTypeBadgeStyle(app.workType)}`}>
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px] border whitespace-nowrap ${getWorkTypeBadgeStyle(app.workType)}`}>
                       {app.workType}
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-2 flex-wrap mt-2">
                   {app.nextInterviewDate && (
-                    <div className="flex items-center gap-2 text-[10px] font-medium text-[#0068f9] bg-[#faf9f7] border border-[#efefef] w-fit px-2.5 py-1 rounded-full">
+                    <div className="flex items-center gap-2 text-[10px] font-medium text-[#0068f9] bg-[#faf9f7] border border-[#efefef] w-fit px-2 py-0.5 rounded-[4px]">
                       <Calendar size={12} />
                       <span>{new Date(app.nextInterviewDate).toLocaleDateString()}</span>
                     </div>
@@ -428,7 +433,7 @@ export function Kanban({
                               target="_blank"
                               rel="noopener noreferrer"
                               title={`${lnk.title || 'Link'}: ${lnk.url}`}
-                              className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold text-[#0068f9] hover:text-[#024bb1] bg-white hover:bg-[#eef5ff] border border-[#0068f9]/20 rounded-md transition-colors shadow-2xs truncate max-w-[130px]"
+                              className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold text-[#0068f9] hover:text-[#024bb1] bg-white hover:bg-[#eef5ff] border border-[#0068f9]/20 rounded-[4px] transition-colors shadow-2xs truncate max-w-[130px]"
                             >
                               <Link2 size={10} className="shrink-0" />
                               <span className="truncate">{lnk.title || 'Link'}</span>
@@ -437,7 +442,7 @@ export function Kanban({
                           );
                         })}
                         {allLinks.length > 2 && (
-                          <span className="text-[10px] font-medium text-[#777c86] bg-white px-1.5 py-0.5 rounded border border-[#efefef]">
+                          <span className="text-[10px] font-medium text-[#777c86] bg-white px-1.5 py-0.5 rounded-[4px] border border-[#efefef]">
                             +{allLinks.length - 2}
                           </span>
                         )}

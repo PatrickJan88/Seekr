@@ -40,7 +40,7 @@ export const NoDataState: React.FC<NoDataStateProps> = ({
         <button
           type="button"
           onClick={onAction}
-          className="mt-2 px-5 py-2.5 bg-[#0068f9] text-white text-xs font-semibold rounded-full hover:bg-[#024bb1] transition-all cursor-pointer shadow-2xs"
+          className="mt-2 px-5 py-2.5 bg-[#0068f9] text-white text-xs font-semibold rounded-lg hover:bg-[#024bb1] transition-all cursor-pointer shadow-2xs"
         >
           {actionText}
         </button>

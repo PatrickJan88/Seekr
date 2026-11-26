@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Briefcase, ChevronRight, Check, Search, ChevronDown } from "lucide-react";
-import { JobApplication, JobStatus, getStatusLabel } from "../types";
+import { JobApplication, getStatusLabel } from "../types";
+import { computeDropdownAlign, DropdownAlign } from "../lib/utils";
 
 interface NestedApplicationMenuProps {
   applications: JobApplication[];
@@ -17,6 +18,8 @@ export function NestedApplicationMenu({
   trackingSystem = 'industry',
 }: NestedApplicationMenuProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [menuAlign, setMenuAlign] = useState<DropdownAlign>("start");
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const selectedApp = useMemo(() => {
     return applications.find((a) => a.id === selectedAppId);
@@ -43,9 +46,13 @@ export function NestedApplicationMenu({
   }, [applications, searchTerm]);
 
   return (
-    <DropdownMenu.Root>
+    <DropdownMenu.Root onOpenChange={(open) => {
+      if (open) {
+        setMenuAlign(computeDropdownAlign(triggerRef.current, 280));
+      }
+    }}>
       <DropdownMenu.Trigger asChild>
-        <button className="flex items-center w-full h-10 bg-[#faf9f7] border border-[#efefef] rounded-2xl text-xs px-3.5 focus:outline-none focus:ring-1 focus:ring-[#0068f9] shadow-2xs hover:bg-[#f3f2ef] transition-all cursor-pointer font-medium">
+        <button ref={triggerRef} className="flex items-center w-full h-[38px] bg-[#faf9f7] border border-[#efefef] rounded-lg text-[13px] px-3.5 focus:outline-none focus:ring-1 focus:ring-[#0068f9] shadow-2xs hover:bg-[#f3f2ef] transition-all cursor-pointer font-medium">
           <Briefcase className="text-[#a5a5a5] mr-2 shrink-0" size={14} />
           <span className="text-[#121722] truncate flex-1 text-left">
             {selectedApp
@@ -60,10 +67,12 @@ export function NestedApplicationMenu({
 
       <DropdownMenu.Portal>
         <DropdownMenu.Content
-          className="z-[100] min-w-[280px] w-[var(--radix-dropdown-menu-trigger-width)] max-h-[50vh] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-xl p-1 animate-in fade-in-80 zoom-in-95 custom-scrollbar"
+          align={menuAlign}
+          collisionPadding={16}
+          className="z-[100] min-w-[280px] w-[var(--radix-dropdown-menu-trigger-width)] max-h-[50vh] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-xl p-1.5 space-y-0.5 animate-in fade-in-80 zoom-in-95 custom-scrollbar"
           sideOffset={8}
         >
-          <div className="p-2 sticky top-0 bg-white z-10 pb-1">
+          <div className="pb-1.5 mb-1 border-b border-[#f1f3f5] sticky top-0 bg-white z-10">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#a5a5a5]" size={14} />
               <input
@@ -72,7 +81,7 @@ export function NestedApplicationMenu({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()} // Prevent spacebar from closing menu
-                className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#faf9f7] border border-[#efefef] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0068f9] transition-all text-[#121722]"
+                className="w-full pl-8 pr-3 py-1.5 text-[13px] bg-[#faf9f7] border border-[#efefef] rounded-[10px] focus:outline-none focus:ring-1 focus:ring-[#0068f9] transition-all text-[#121722] placeholder:text-[#a5a5a5]"
               />
             </div>
           </div>
@@ -83,22 +92,22 @@ export function NestedApplicationMenu({
               searchResults.map((app) => (
                 <DropdownMenu.Item
                   key={app.id}
-                  className="flex flex-col px-3 py-2 rounded-lg cursor-pointer hover:bg-[#faf9f7] outline-none select-none"
+                  className="flex flex-col px-3 py-2 rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none"
                   onClick={() => onSelectApplication(app.id)}
                 >
                   <div className="flex items-center justify-between w-full">
-                    <span className="text-xs font-semibold text-[#121722] truncate">
+                    <span className="text-[13px] font-semibold text-[#121722] truncate">
                       {app.position}
                     </span>
                     {selectedAppId === app.id && <Check size={14} className="text-[#0068f9] shrink-0 ml-2" />}
                   </div>
-                  <span className="text-[10px] text-[#777c86] truncate">
+                  <span className="text-[11px] text-[#777c86] truncate">
                     {app.company} • {getStatusLabel(app.status, trackingSystem)}
                   </span>
                 </DropdownMenu.Item>
               ))
             ) : (
-              <div className="px-3 py-4 text-center text-xs text-[#777c86]">
+              <div className="px-3 py-4 text-center text-[13px] text-[#777c86]">
                 No applications found
               </div>
             )
@@ -108,9 +117,9 @@ export function NestedApplicationMenu({
               const hasActiveApp = apps.some((a) => a.id === selectedAppId);
               return (
                 <DropdownMenu.Sub key={status}>
-                  <DropdownMenu.SubTrigger className="flex items-center px-3 py-2 text-xs text-[#121722] rounded-lg cursor-pointer hover:bg-[#faf9f7] outline-none select-none data-[state=open]:bg-[#faf9f7]">
+                  <DropdownMenu.SubTrigger className="flex items-center px-3 py-2 text-[13px] text-[#121722] rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none data-[state=open]:bg-[#faf9f7]">
                     {getStatusLabel(status, trackingSystem)}
-                    <span className="ml-2 text-[10px] text-[#a5a5a5] px-1.5 py-0.5 bg-[#efefef] rounded-full">
+                    <span className="ml-2 text-[10px] text-[#a5a5a5] px-1.5 py-0.5 bg-[#efefef] rounded-[4px]">
                       {apps.length}
                     </span>
                     {hasActiveApp && <Check size={14} className="ml-auto text-[#0068f9] mr-2" />}
@@ -119,22 +128,22 @@ export function NestedApplicationMenu({
 
                   <DropdownMenu.Portal>
                     <DropdownMenu.SubContent
-                      className="z-[100] min-w-[260px] max-w-[320px] max-h-[50vh] overflow-y-auto bg-white rounded-xl border border-[#efefef] shadow-lg p-1 animate-in fade-in-80 zoom-in-95 custom-scrollbar"
+                      className="z-[100] min-w-[260px] max-w-[320px] max-h-[50vh] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-lg p-1.5 space-y-0.5 animate-in fade-in-80 zoom-in-95 custom-scrollbar"
                       sideOffset={4}
                     >
                       {apps.map((app) => (
                         <DropdownMenu.Item
                           key={app.id}
-                          className="flex flex-col px-3 py-2 rounded-lg cursor-pointer hover:bg-[#faf9f7] outline-none select-none"
+                          className="flex flex-col px-3 py-2 rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none"
                           onClick={() => onSelectApplication(app.id)}
                         >
                           <div className="flex items-center justify-between w-full">
-                            <span className="text-xs font-semibold text-[#121722] truncate pr-2">
+                            <span className="text-[13px] font-semibold text-[#121722] truncate pr-2">
                               {app.position}
                             </span>
                             {selectedAppId === app.id && <Check size={14} className="text-[#0068f9] shrink-0" />}
                           </div>
-                          <span className="text-[10px] text-[#777c86] truncate">
+                          <span className="text-[11px] text-[#777c86] truncate">
                             {app.company}
                           </span>
                         </DropdownMenu.Item>

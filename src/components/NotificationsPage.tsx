@@ -133,7 +133,7 @@ export function NotificationsPage({ onBack, onNavigateToGhosted }: Notifications
                       {n.unread && (
                         <button
                           onClick={() => handleMarkAsRead(n.id)}
-                          className="p-1.5 text-[#0068f9] hover:bg-white rounded-full transition-colors border border-transparent hover:border-[#efefef] cursor-pointer"
+                          className="p-1.5 text-[#0068f9] hover:bg-white rounded-lg transition-colors border border-transparent hover:border-[#efefef] cursor-pointer"
                           title="Mark as read"
                         >
                           <CheckCircle2 size={16} />
@@ -141,7 +141,7 @@ export function NotificationsPage({ onBack, onNavigateToGhosted }: Notifications
                       )}
                       <button
                         onClick={() => handleDelete(n.id)}
-                        className="p-1.5 text-[#777c86] hover:text-red-600 hover:bg-red-50 rounded-full transition-colors cursor-pointer"
+                        className="p-1.5 text-[#777c86] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                         title="Delete notification"
                       >
                         <Trash2 size={16} />

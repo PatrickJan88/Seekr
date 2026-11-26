@@ -7,6 +7,7 @@ import { getUserResume, getStoredLocalResume, saveUserResume, RESUME_UPDATED_EVE
 import { auth } from '../lib/firebase';
 import { extractTextFromPDF, fileToBase64 } from '../lib/pdf';
 import { extractCVProfile, scoreJobMatch, CVProfile, JobMatchScore } from '../lib/cvJobMatcher';
+import { computeDropdownAlign, DropdownAlign } from '../lib/utils';
 
 const getContinent = (countryName: string) => {
     if (!countryName) return 'Other';
@@ -88,7 +89,10 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
   const [dateFilter, setDateFilter] = useState('');
   const [newGradFilter, setNewGradFilter] = useState(false);
   const [showUniSuggestions, setShowUniSuggestions] = useState(false);
+  const [uniAlign, setUniAlign] = useState<DropdownAlign>('start');
+  const [noticeAlign, setNoticeAlign] = useState<DropdownAlign>('start');
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const matchedUpRef = useRef<HTMLDivElement>(null);
 
   // Close university suggestions when clicking outside search container
   useEffect(() => {
@@ -515,13 +519,16 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
         
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 xl:gap-3 w-full min-w-0">
           {/* Matched Up Button - arranged before all locations */}
-          <div className="relative shrink-0 w-full sm:w-auto z-50">
+          <div ref={matchedUpRef} className="relative shrink-0 w-full sm:w-auto z-50">
             <button
               type="button"
               id="matched-up-sort-btn"
-              onClick={handleToggleMatchedUp}
+              onClick={() => {
+                setNoticeAlign(computeDropdownAlign(matchedUpRef.current, 380, { checkScrollParent: true }));
+                handleToggleMatchedUp();
+              }}
               disabled={isCalculatingMatches}
-              className={`flex items-center justify-center gap-2 h-[38px] px-4 rounded-full text-sm font-medium transition-all shadow-2xs cursor-pointer select-none w-full sm:w-auto shrink-0 ${
+              className={`flex items-center justify-center gap-2 h-[38px] px-4 rounded-lg text-[13px] font-medium transition-all shadow-2xs cursor-pointer select-none w-full sm:w-auto shrink-0 ${
                 isMatchedUpActive
                   ? 'bg-[#0068f9] text-white hover:bg-[#024bb1] border border-[#0068f9] shadow-sm'
                   : 'bg-white text-[#121722] border border-[#efefef] hover:bg-[#faf9f7] hover:border-[#0068f9]/40'
@@ -541,7 +548,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
               )}
               <span className="font-semibold whitespace-nowrap">Matched Up</span>
               {isMatchedUpActive && (
-                <span className="ml-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white/25 text-white leading-none">
+                <span className="ml-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-[4px] bg-white/25 text-white leading-none">
                   ON
                 </span>
               )}
@@ -551,7 +558,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
             {showNoCvNotice && !storedResume?.cvText?.trim() && (
               <div 
                 id="matched-up-upload-notice"
-                className="absolute left-0 top-full mt-2.5 w-[320px] sm:w-[380px] bg-white border border-[#efefef] rounded-2xl shadow-xl p-5 z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+                className={`absolute ${noticeAlign === 'end' ? 'right-0' : 'left-0'} top-full mt-2.5 w-[320px] sm:w-[380px] max-w-[calc(100vw-32px)] bg-white border border-[#efefef] rounded-2xl shadow-xl p-5 z-50 animate-in fade-in slide-in-from-top-2 duration-200`}
               >
                 <div className="flex items-start justify-between gap-3 mb-2.5">
                   <div className="flex items-center gap-2.5">
@@ -565,7 +572,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
                   <button
                     type="button"
                     onClick={() => setShowNoCvNotice(false)}
-                    className="text-[#a5a5a5] hover:text-[#121722] p-1 rounded-md transition-colors cursor-pointer"
+                    className="text-[#a5a5a5] hover:text-[#121722] p-1 rounded-lg transition-colors cursor-pointer"
                   >
                     <X size={15} />
                   </button>
@@ -645,12 +652,12 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
                 role="switch"
                 aria-checked={newGradFilter}
                 onClick={() => setNewGradFilter(prev => !prev)}
-                className="flex items-center justify-between gap-2.5 h-[38px] px-3.5 bg-white border border-[#efefef] hover:border-[#121722]/30 rounded-full text-sm font-medium transition-all shadow-2xs hover:bg-[#faf9f7] cursor-pointer select-none shrink-0 group"
+                className="flex items-center justify-between gap-2.5 h-[38px] px-3.5 bg-white border border-[#efefef] hover:border-[#121722]/30 rounded-lg text-[13px] font-medium transition-all shadow-2xs hover:bg-[#faf9f7] cursor-pointer select-none shrink-0 group"
                 title={newGradFilter ? 'New Grad filter is ON. Click to show all experience levels' : 'New Grad filter is OFF. Click to show New Grad & Early Career roles only'}
               >
                 <div className="flex items-center gap-1.5">
                   <GraduationCap size={15} className={newGradFilter ? 'text-[#0068f9]' : 'text-[#777c86] group-hover:text-[#121722] transition-colors'} />
-                  <span className="text-xs sm:text-sm font-semibold text-[#121722] whitespace-nowrap">New Grad</span>
+                  <span className="text-[13px] font-semibold text-[#121722] whitespace-nowrap">New Grad</span>
                 </div>
                 
                 {/* Switch Track & Thumb */}
@@ -679,12 +686,18 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
-                  if (trackingSystem === 'academic') setShowUniSuggestions(true);
+                  if (trackingSystem === 'academic') {
+                    setUniAlign(computeDropdownAlign(searchContainerRef.current, 280, { checkScrollParent: true }));
+                    setShowUniSuggestions(true);
+                  }
                 }}
                 onFocus={() => {
-                  if (trackingSystem === 'academic') setShowUniSuggestions(true);
+                  if (trackingSystem === 'academic') {
+                    setUniAlign(computeDropdownAlign(searchContainerRef.current, 280, { checkScrollParent: true }));
+                    setShowUniSuggestions(true);
+                  }
                 }}
-                className="w-full pl-9 pr-8 h-[38px] bg-white border border-[#efefef] rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#0068f9] transition-all shadow-2xs hover:bg-[#faf9f7] truncate placeholder:font-normal placeholder:text-[#a5a5a5]"
+                className="w-full pl-9 pr-8 h-[38px] bg-white border border-[#efefef] rounded-lg text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#0068f9] transition-all shadow-2xs hover:bg-[#faf9f7] truncate placeholder:font-normal placeholder:text-[#a5a5a5]"
               />
               {searchTerm && (
                 <button
@@ -693,7 +706,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
                     setSearchTerm('');
                     setShowUniSuggestions(false);
                   }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a5a5a5] hover:text-[#121722] cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-[4px] text-[#a5a5a5] hover:text-[#121722] cursor-pointer"
                   aria-label="Clear search"
                 >
                   <X size={14} />
@@ -702,7 +715,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
 
               {/* Integrated University Suggestions Dropdown (matching Screenshot 2026-09-28 at 17.26.56.png) */}
               {showUniSuggestions && trackingSystem === 'academic' && (
-                <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-[#efefef] rounded-2xl shadow-xl z-[100] overflow-hidden animate-in fade-in-80 zoom-in-95 min-w-[280px]">
+                <div className={`absolute ${uniAlign === 'end' ? 'right-0' : 'left-0'} top-full mt-1.5 w-[max(100%,280px)] max-w-[calc(100vw-32px)] bg-white border border-[#efefef] rounded-2xl shadow-xl z-[100] overflow-hidden animate-in fade-in-80 zoom-in-95`}>
                   <div className="flex items-center justify-between px-3 py-2 border-b border-[#f0f0f0] bg-slate-50/70">
                     <span className="text-xs font-semibold text-[#777c86]">
                       {searchTerm ? 'University Name:' : 'Top QS Universities:'}
@@ -737,10 +750,10 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
                             setSearchTerm(uni.institution);
                             setShowUniSuggestions(false);
                           }}
-                          className="w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-left text-xs transition-colors hover:bg-[#faf9f7] cursor-pointer group"
+                          className="w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-[10px] text-left text-[13px] transition-colors hover:bg-[#faf9f7] cursor-pointer group"
                         >
                           <div className="flex items-center gap-2 min-w-0 flex-1">
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 group-hover:bg-[#0068f9]/10 group-hover:text-[#0068f9] text-[#777c86] shrink-0 transition-colors">
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-[4px] bg-slate-100 group-hover:bg-[#0068f9]/10 group-hover:text-[#0068f9] text-[#777c86] shrink-0 transition-colors">
                               #{uni.rank.replace('=', '')}
                             </span>
                             <span className="text-[#121722] font-medium truncate group-hover:text-[#0068f9] transition-colors">
@@ -778,7 +791,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
                 Ranked by <strong className="font-semibold text-[#121722]">{effectiveProfile.detectedRole}</strong> ({effectiveProfile.seniority}) background, skills & experience
               </span>
               {storedResume?.fileName && (
-                <span className="text-[#777c86] bg-white px-2 py-0.5 rounded-md border border-[#efefef]">
+                <span className="text-[#777c86] bg-white px-2 py-0.5 rounded-[4px] border border-[#efefef]">
                   CV: {storedResume.fileName}
                 </span>
               )}
@@ -809,12 +822,12 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
               <div className="w-full pt-2 border-t border-[#0068f9]/10 mt-1 flex flex-wrap gap-1.5 items-center">
                 <span className="text-[#777c86] text-[11px]">Match Signals:</span>
                 {effectiveProfile.skills.slice(0, 10).map((skill) => (
-                  <span key={skill} className="px-2 py-0.5 rounded-md bg-white border border-[#0068f9]/20 text-[11px] font-medium text-[#0068f9]">
+                  <span key={skill} className="px-2 py-0.5 rounded-[4px] bg-white border border-[#0068f9]/20 text-[11px] font-medium text-[#0068f9]">
                     {skill}
                   </span>
                 ))}
                 {effectiveProfile.softSkills.slice(0, 4).map((soft) => (
-                  <span key={soft} className="px-2 py-0.5 rounded-md bg-white border border-[#efefef] text-[11px] text-[#777c86]">
+                  <span key={soft} className="px-2 py-0.5 rounded-[4px] bg-white border border-[#efefef] text-[11px] text-[#777c86]">
                     {soft}
                   </span>
                 ))}
@@ -832,7 +845,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
           </div>
         ) : error ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-red-500">
-            <p className="text-sm font-medium bg-red-50 border border-red-100 p-4 rounded-xl">{error}</p>
+            <p className="text-sm font-medium bg-red-50 border border-red-100 p-4 rounded-lg">{error}</p>
           </div>
         ) : processedJobs.length === 0 ? (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -844,16 +857,16 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
             {processedJobs.map((job) => {
               const matchScore = isMatchedUpActive ? jobScoresMap.get(job.id) : null;
               return (
-              <div key={job.id} className="bg-[#faf9f7] border border-[#efefef] rounded-2xl p-5 hover:border-[#0068f9]/30 hover:shadow-md transition-all flex flex-col h-full group relative w-full">
-                <a href={job.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-10 rounded-2xl" aria-label={`View ${job.title} job at ${job.company_name}`} />
+              <div key={job.id} className="bg-[#faf9f7] border border-[#efefef] rounded-xl p-5 hover:border-[#0068f9]/30 hover:shadow-md transition-all flex flex-col h-full group relative w-full">
+                <a href={job.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 z-10 rounded-xl" aria-label={`View ${job.title} job at ${job.company_name}`} />
                 <div className="flex items-start justify-between w-full mb-3 gap-3">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     {job.company_logo ? (
-                      <div className="w-11 h-11 rounded-xl overflow-hidden border border-[#efefef] shrink-0 bg-white flex items-center justify-center shadow-xs">
+                      <div className="w-11 h-11 rounded-lg overflow-hidden border border-[#efefef] shrink-0 bg-white flex items-center justify-center shadow-xs">
                         <img src={job.company_logo} alt={`${job.company_name} logo`} className="w-full h-full object-contain" />
                       </div>
                     ) : (
-                      <div className="w-11 h-11 rounded-xl border border-[#efefef] bg-[#faf9f7] shrink-0 flex items-center justify-center text-[#a5a5a5] shadow-xs">
+                      <div className="w-11 h-11 rounded-lg border border-[#efefef] bg-[#faf9f7] shrink-0 flex items-center justify-center text-[#a5a5a5] shadow-xs">
                         <Building2 size={20} />
                       </div>
                     )}
@@ -864,7 +877,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
                   </div>
                   <div className="shrink-0 z-20 flex items-center gap-2">
                     {isMatchedUpActive && matchScore && (
-                      <div className={`px-2.5 py-1 rounded-full text-xs font-bold border flex items-center gap-1 shadow-2xs shrink-0 ${
+                      <div className={`px-2.5 py-1 rounded-[4px] text-xs font-bold border flex items-center gap-1 shadow-2xs shrink-0 ${
                         matchScore.totalScore >= 85
                           ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                           : matchScore.totalScore >= 70
@@ -908,7 +921,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
                     {matchScore.matchedKeywords.map((kw) => (
                       <span
                         key={kw}
-                        className="text-[10px] font-semibold bg-[#e8f1ff] text-[#0068f9] px-2 py-0.5 rounded-md border border-[#0068f9]/15"
+                        className="text-[10px] font-semibold bg-[#e8f1ff] text-[#0068f9] px-2 py-0.5 rounded-[4px] border border-[#0068f9]/15"
                       >
                         {kw}
                       </span>
@@ -920,23 +933,23 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
                 {job.tags && (job.tags.includes('new-grad') || job.tags.some(t => t.includes('sponsorship') || t.includes('citizen'))) && (
                   <div className="mb-3 flex flex-wrap items-center gap-1.5 z-10 relative">
                     {job.tags.includes('new-grad') && (
-                      <span className="text-[10px] font-semibold bg-[#f4f5f6] text-[#525866] px-2 py-0.5 rounded-md border border-[#efefef] inline-flex items-center gap-1">
+                      <span className="text-[10px] font-semibold bg-[#f4f5f6] text-[#525866] px-2 py-0.5 rounded-[4px] border border-[#efefef] inline-flex items-center gap-1">
                         <GraduationCap size={11} className="text-[#777c86]" />
                         <span>New Grad</span>
                       </span>
                     )}
                     {job.tags.some(t => t.includes('offers sponsorship')) && (
-                      <span className="text-[10px] font-semibold bg-[#e3fcef] text-[#006644] px-2 py-0.5 rounded-md border border-[#abf5d1]">
+                      <span className="text-[10px] font-semibold bg-[#e3fcef] text-[#006644] px-2 py-0.5 rounded-[4px] border border-[#abf5d1]">
                         Sponsorship Available
                       </span>
                     )}
                     {job.tags.some(t => t.includes('does not offer sponsorship')) && (
-                      <span className="text-[10px] font-medium bg-[#f4f5f6] text-[#777c86] px-2 py-0.5 rounded-md border border-[#efefef]">
+                      <span className="text-[10px] font-medium bg-[#f4f5f6] text-[#777c86] px-2 py-0.5 rounded-[4px] border border-[#efefef]">
                         No Sponsorship
                       </span>
                     )}
                     {job.tags.some(t => t.includes('citizen')) && (
-                      <span className="text-[10px] font-medium bg-[#fffae6] text-[#172b4d] px-2 py-0.5 rounded-md border border-[#ffe380]">
+                      <span className="text-[10px] font-medium bg-[#fffae6] text-[#172b4d] px-2 py-0.5 rounded-[4px] border border-[#ffe380]">
                         US Citizen Only
                       </span>
                     )}
@@ -957,7 +970,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
                       })()}</span>
                     </div>
                     {job.salary && (
-                      <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full truncate max-w-[120px]">
+                      <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-[4px] truncate max-w-[120px]">
                         {job.salary}
                       </span>
                     )}

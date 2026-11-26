@@ -111,7 +111,7 @@ const FileItemCard: React.FC<FileItemCardProps> = ({
   return (
     <div className="relative group">
       <Card 
-        className="relative bg-[#faf9f7] p-3.5 border-[#efefef] rounded-2xl hover:border-[#0068f9]/30 hover:bg-white transition-all shadow-2xs"
+        className="relative bg-[#faf9f7] p-3.5 border-[#efefef] rounded-xl hover:border-[#0068f9]/30 hover:bg-white transition-all shadow-2xs"
       >
         <div className="flex items-center justify-between gap-3">
           <div 
@@ -119,16 +119,16 @@ const FileItemCard: React.FC<FileItemCardProps> = ({
             onClick={onPreview}
           >
             {isImage && previewUrl ? (
-              <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-2xs border border-[#efefef] group-hover:border-[#0068f9]/40 overflow-hidden transition-colors">
+              <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white shadow-2xs border border-[#efefef] group-hover:border-[#0068f9]/40 overflow-hidden transition-colors">
                 <img
                   src={previewUrl}
                   alt={fileObj.fileName}
-                  className="h-full w-full object-cover rounded-xl"
+                  className="h-full w-full object-cover rounded-lg"
                   referrerPolicy="no-referrer"
                 />
               </span>
             ) : (
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-2xs border border-[#efefef] group-hover:border-[#0068f9]/30 group-hover:text-[#0068f9] transition-colors">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white shadow-2xs border border-[#efefef] group-hover:border-[#0068f9]/30 group-hover:text-[#0068f9] transition-colors">
                 <File className="h-5 w-5 text-[#777c86] group-hover:text-[#0068f9] transition-colors" />
               </span>
             )}
@@ -352,7 +352,7 @@ export function FileUpload({
       {files.length < maxFiles && (
         isDemo ? (
           <div
-            className="flex justify-center rounded-2xl border mt-2 border-dashed border-[#efefef] bg-[#faf9f7] px-6 py-5 text-center cursor-not-allowed select-none"
+            className="flex justify-center rounded-xl border mt-2 border-dashed border-[#efefef] bg-[#faf9f7] px-6 py-5 text-center cursor-not-allowed select-none"
             onClick={() => toast.info('Demo Mode: File attachment uploads are disabled in this portfolio preview.')}
           >
             <div>
@@ -370,7 +370,7 @@ export function FileUpload({
           </div>
         ) : (
           <div
-            className="flex justify-center rounded-2xl border mt-1 border-dashed border-[#d5d7da] hover:border-[#0068f9]/40 bg-[#faf9f7] hover:bg-white px-6 py-5 transition-colors cursor-pointer"
+            className="flex justify-center rounded-xl border mt-1 border-dashed border-[#d5d7da] hover:border-[#0068f9]/40 bg-[#faf9f7] hover:bg-white px-6 py-5 transition-colors cursor-pointer"
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
@@ -441,7 +441,7 @@ export function FileUpload({
                 <button
                   type="button"
                   onClick={() => handleDownload(previewFile)}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-[#121722] hover:text-[#0068f9] bg-white hover:bg-[#eef5ff] px-3 py-1.5 rounded-xl border border-[#efefef] transition-all cursor-pointer shadow-2xs"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-[#121722] hover:text-[#0068f9] bg-white hover:bg-[#eef5ff] px-3 py-1.5 rounded-lg border border-[#efefef] transition-all cursor-pointer shadow-2xs"
                 >
                   <Download className="h-3.5 w-3.5" />
                   Download
@@ -449,7 +449,7 @@ export function FileUpload({
                 <button
                   type="button"
                   onClick={() => setPreviewFile(null)}
-                  className="p-1.5 rounded-xl text-[#777c86] hover:text-[#121722] hover:bg-slate-100 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg text-[#777c86] hover:text-[#121722] hover:bg-slate-100 transition-colors cursor-pointer"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -464,12 +464,12 @@ export function FileUpload({
                 <img
                   src={previewFile.base64 || previewFile.url}
                   alt={previewFile.fileName}
-                  className="max-h-[55vh] max-w-full object-contain rounded-xl shadow-md"
+                  className="max-h-[55vh] max-w-full object-contain rounded-lg shadow-md"
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="flex flex-col items-center justify-center text-center p-8 bg-white rounded-2xl border border-slate-200/80 shadow-xs max-w-sm">
-                  <div className="h-16 w-16 rounded-2xl bg-blue-50 flex items-center justify-center text-[#0068f9] mb-3">
+                <div className="flex flex-col items-center justify-center text-center p-8 bg-white rounded-xl border border-slate-200/80 shadow-xs max-w-sm">
+                  <div className="h-16 w-16 rounded-lg bg-blue-50 flex items-center justify-center text-[#0068f9] mb-3">
                     <File className="h-8 w-8" />
                   </div>
                   <h4 className="font-semibold text-sm text-[#121722] mb-1 truncate max-w-[260px]">
@@ -481,7 +481,7 @@ export function FileUpload({
                   <button
                     type="button"
                     onClick={() => handleDownload(previewFile)}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-[#0068f9] hover:bg-[#024bb1] px-5 py-2 rounded-full transition-all shadow-xs cursor-pointer"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-[#0068f9] hover:bg-[#024bb1] px-5 py-2 rounded-lg transition-all shadow-xs cursor-pointer"
                   >
                     <Download className="h-4 w-4" />
                     Download File

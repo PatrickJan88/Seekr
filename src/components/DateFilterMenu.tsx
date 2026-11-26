@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Clock, Check } from "lucide-react";
-import { cn } from "../lib/utils";
+import { cn, computeDropdownAlign, DropdownAlign } from "../lib/utils";
 
 interface DateFilterMenuProps {
   dateFilter: string;
@@ -21,6 +21,9 @@ export function DateFilterMenu({
   onSelectDate,
   className,
 }: DateFilterMenuProps) {
+  const [menuAlign, setMenuAlign] = useState<DropdownAlign>("start");
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
   const getDisplayText = () => {
     if (!dateFilter) return "Date Posted";
     const found = DATE_OPTIONS.find(o => o.value === dateFilter);
@@ -28,9 +31,13 @@ export function DateFilterMenu({
   };
 
   return (
-    <DropdownMenu.Root>
+    <DropdownMenu.Root onOpenChange={(open) => {
+      if (open) {
+        setMenuAlign(computeDropdownAlign(triggerRef.current, 200));
+      }
+    }}>
       <DropdownMenu.Trigger asChild>
-        <button className={cn("flex items-center w-full sm:w-auto min-w-0 sm:min-w-[110px] sm:max-w-[150px] xl:max-w-[170px] h-[38px] bg-[#faf9f7] border border-[#efefef] rounded-full text-sm font-medium px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#f3f2ef] transition-all cursor-pointer", className)}>
+        <button ref={triggerRef} className={cn("flex items-center w-full sm:w-auto min-w-0 sm:min-w-[110px] sm:max-w-[150px] xl:max-w-[170px] h-[38px] bg-[#faf9f7] border border-[#efefef] rounded-lg text-[13px] font-medium px-4 focus:outline-none focus:ring-2 focus:ring-[#0068f9] shadow-2xs hover:bg-[#f3f2ef] transition-all cursor-pointer", className)}>
           <Clock className="text-[#a5a5a5] mr-2 shrink-0" size={15} />
           <span className="text-[#121722] truncate flex-1 text-left">{getDisplayText()}</span>
           <div className="text-[#a5a5a5] shrink-0 ml-1.5">
@@ -41,15 +48,17 @@ export function DateFilterMenu({
       
       <DropdownMenu.Portal>
         <DropdownMenu.Content 
-          className="z-[100] min-w-[200px] bg-white rounded-2xl border border-[#efefef] shadow-xl p-1 animate-in fade-in-80 zoom-in-95"
+          align={menuAlign}
+          collisionPadding={16}
+          className="z-[100] min-w-[200px] bg-white rounded-2xl border border-[#efefef] shadow-xl p-1.5 space-y-0.5 animate-in fade-in-80 zoom-in-95"
           sideOffset={8}
         >
           <DropdownMenu.Item 
-            className="flex items-center px-3 py-2 text-sm text-[#121722] rounded-lg cursor-pointer hover:bg-[#faf9f7] outline-none select-none"
+            className="flex items-center px-3 py-1.5 text-[13px] text-[#121722] rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none font-medium"
             onClick={() => onSelectDate("")}
           >
             Any time
-            {!dateFilter && <Check size={16} className="ml-auto text-[#0068f9]" />}
+            {!dateFilter && <Check size={14} className="ml-auto text-[#0068f9]" />}
           </DropdownMenu.Item>
           
           <DropdownMenu.Separator className="h-px bg-[#efefef] my-1 mx-2" />
@@ -57,11 +66,11 @@ export function DateFilterMenu({
           {DATE_OPTIONS.map(option => (
             <DropdownMenu.Item 
               key={option.value}
-              className="flex items-center px-3 py-2 text-sm text-[#121722] rounded-lg cursor-pointer hover:bg-[#faf9f7] outline-none select-none"
+              className="flex items-center px-3 py-1.5 text-[13px] text-[#121722] rounded-[10px] cursor-pointer hover:bg-[#faf9f7] outline-none select-none"
               onClick={() => onSelectDate(option.value)}
             >
               {option.label}
-              {dateFilter === option.value && <Check size={16} className="ml-auto text-[#0068f9]" />}
+              {dateFilter === option.value && <Check size={14} className="ml-auto text-[#0068f9]" />}
             </DropdownMenu.Item>
           ))}
         </DropdownMenu.Content>

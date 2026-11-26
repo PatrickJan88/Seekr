@@ -181,6 +181,8 @@ export function SankeyChart({
           color: '#121722',
           fontSize: 13,
           fontWeight: 'bold',
+          fontFamily: 'Roobert, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          textBorderWidth: 0,
           formatter: (params: any) => {
             if (params.dataType === 'node') {
               const statusKey = labelToStatusKey[params.name];
@@ -295,10 +297,10 @@ export function SankeyChart({
             <div style="font-family: var(--font-roobert), ui-sans-serif, system-ui, sans-serif;">
               <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
                 <span style="width:9px; height:9px; border-radius:50%; background-color:${node.color}; display:inline-block;"></span>
-                <span style="font-weight:700; color:#121722; font-size:13px;">${node.label}</span>
-                <span style="font-weight:700; color:#0068f9; font-size:13px; margin-left:4px;">${node.breakdown.total}</span>
+                <span style="font-weight:700; color:#121722; font-size:15px;">${node.label}</span>
+                <span style="font-weight:700; color:#0068f9; font-size:15px; margin-left:4px;">${node.breakdown.total}</span>
               </div>
-              <div style="font-size:11.5px; color:#777c86;">${details}</div>
+              <div style="font-size:13.5px; color:#777c86;">${details}</div>
             </div>
           `;
         }
@@ -311,10 +313,10 @@ export function SankeyChart({
             <div style="font-family: var(--font-roobert), ui-sans-serif, system-ui, sans-serif;">
               <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
                 <span style="width:9px; height:9px; border-radius:50%; background-color:${link.breakdown.offer > 0 ? '#fbbf24' : sourceColor}; display:inline-block;"></span>
-                <span style="font-weight:700; color:#121722; font-size:12.5px;">${link.sourceLabel} &rarr; ${link.targetLabel}</span>
-                <span style="font-weight:700; color:#0068f9; font-size:13px; margin-left:4px;">${link.value}</span>
+                <span style="font-weight:700; color:#121722; font-size:14.5px;">${link.sourceLabel} &rarr; ${link.targetLabel}</span>
+                <span style="font-weight:700; color:#0068f9; font-size:15px; margin-left:4px;">${link.value}</span>
               </div>
-              <div style="font-size:11.5px; color:#777c86;">${details}</div>
+              <div style="font-size:13.5px; color:#777c86;">${details}</div>
             </div>
           `;
         }
@@ -326,10 +328,10 @@ export function SankeyChart({
         type: 'sankey',
         top: '5%',
         bottom: '5%',
-        left: 220,
-        right: 220,
+        left: 235,
+        right: 215,
         nodeWidth: 14,
-        nodeGap: 16,
+        nodeGap: 18,
         layoutIterations: 0,
         draggable: false,
         data: industryRoleNodes,
@@ -339,12 +341,15 @@ export function SankeyChart({
         },
         label: {
           color: '#121722',
-          fontFamily: 'var(--font-roobert), ui-sans-serif, system-ui, sans-serif',
+          fontSize: 13,
+          fontWeight: 600,
+          fontFamily: 'Roobert, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          textBorderWidth: 0,
           formatter: (params: any) => {
             const node = nodeLookup.get(params.name);
             if (!node) return params.name;
             if (node.side === 'industry') {
-              return `{count|${node.breakdown.total}}  {name|${node.label}}`;
+              return `{count|${node.breakdown.total}}  {ind|${node.label}}`;
             }
             if (node.breakdown.offer > 0) {
               const offerText = node.breakdown.offer === 1 ? '1 Offer' : `${node.breakdown.offer} Offers`;
@@ -353,21 +358,33 @@ export function SankeyChart({
             return `{count|${node.breakdown.total}}  {name|${node.label}}`;
           },
           rich: {
+            ind: {
+              color: '#121722',
+              fontWeight: 600,
+              fontSize: 13,
+              fontFamily: 'Roobert, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              textBorderWidth: 0,
+            },
             count: {
               color: '#121722',
               fontWeight: 700,
-              fontSize: 14,
-              padding: [0, 2, 0, 0],
+              fontSize: 13,
+              fontFamily: 'Roobert, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              textBorderWidth: 0,
             },
             name: {
               color: '#121722',
               fontWeight: 600,
-              fontSize: 13.5,
+              fontSize: 13,
+              fontFamily: 'Roobert, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              textBorderWidth: 0,
             },
             offer: {
               color: '#b45309',
               fontWeight: 700,
-              fontSize: 12.5,
+              fontSize: 13,
+              fontFamily: 'Roobert, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              textBorderWidth: 0,
               padding: [0, 0, 0, 4],
             },
           },
@@ -402,18 +419,22 @@ export function SankeyChart({
   return (
     <div className="relative w-full flex-1 flex flex-col min-h-[500px]">
       <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col relative gap-4">
-        {/* Top Row: Seekr Design System Tabs + Quiet Unboxed Summary */}
+        {/* Top Row: Company 360 Pill Tabs + Aligned Summary */}
         <div className="flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div className="flex gap-2" role="tablist" aria-label="Overview Chart Views">
+          <div
+            className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0"
+            role="tablist"
+            aria-label="Overview Chart Views"
+          >
             <button
               type="button"
               role="tab"
               aria-selected={activeTab === 'process'}
               onClick={() => setActiveTab('process')}
-              className={`h-[38px] flex items-center justify-center px-4 rounded-full font-medium text-sm transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 activeTab === 'process'
-                  ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]'
-                  : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'
+                  ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]'
+                  : 'text-[#777c86] hover:text-[#121722] border border-transparent'
               }`}
             >
               Application Process
@@ -423,10 +444,10 @@ export function SankeyChart({
               role="tab"
               aria-selected={activeTab === 'industries-roles'}
               onClick={() => setActiveTab('industries-roles')}
-              className={`h-[38px] flex items-center justify-center px-4 rounded-full font-medium text-sm transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 activeTab === 'industries-roles'
-                  ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]'
-                  : 'text-[#777c86] hover:text-[#121722] border border-transparent hover:bg-[#faf9f7]'
+                  ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]'
+                  : 'text-[#777c86] hover:text-[#121722] border border-transparent'
               }`}
             >
               Industries & Roles
@@ -434,7 +455,7 @@ export function SankeyChart({
           </div>
 
           {activeTab === 'industries-roles' && industryRoleSummary.totalApplied > 0 && (
-            <div className="flex flex-wrap items-center gap-2 text-xs text-[#777c86] tabular-nums">
+            <div className="flex flex-wrap items-center gap-2 text-[13px] text-[#777c86] tabular-nums">
               <span>
                 <strong className="font-semibold text-[#121722]">{industryRoleSummary.totalApplied}</strong> Applied
               </span>
@@ -464,6 +485,7 @@ export function SankeyChart({
           <div className="flex-1 w-full min-h-0 relative">
             <ReactECharts
               option={processOption}
+              opts={{ renderer: 'svg' }}
               style={{ height: '100%', width: '100%' }}
               notMerge={true}
               onEvents={processEvents}
@@ -471,32 +493,28 @@ export function SankeyChart({
           </div>
         ) : industryRoleSummary.totalApplied === 0 ? (
           <div className="flex-1 w-full min-h-[380px] flex flex-col items-center justify-center text-center px-4">
-            <p className="text-sm font-semibold text-[#121722]">No submitted applications yet</p>
-            <p className="text-xs text-[#777c86] mt-1 max-w-md">
+            <p className="text-base font-semibold text-[#121722]">No submitted applications yet</p>
+            <p className="text-sm text-[#777c86] mt-1 max-w-md">
               Move saved roles from Wishlist to Applied to view your employer industry and job function breakdown.
             </p>
           </div>
         ) : (
           <div className="flex-1 w-full min-h-0 flex flex-col overflow-x-auto custom-scrollbar">
-            <div className="min-w-[780px] flex-1 flex flex-col min-h-[400px]">
-              {/* Column Headers pixel-aligned to 220px Sankey label gutters */}
-              <div className="grid grid-cols-[220px_1fr_220px] items-center pb-1 shrink-0 select-none">
-                <div />
-                <div className="text-left">
-                  <span className="text-xs font-bold tracking-wider uppercase text-[#777c86]">
-                    Employer Industry
-                  </span>
-                </div>
-                <div className="text-left -ml-3.5">
-                  <span className="text-xs font-bold tracking-wider uppercase text-[#777c86]">
-                    Job Function
-                  </span>
-                </div>
+            <div className="min-w-[820px] w-full flex-1 flex flex-col min-h-[400px]">
+              {/* Left small title aligned with tab text (22px = track p-1 + borders + px-4), right title flush with summary */}
+              <div className="flex items-center justify-between pl-[22px] pb-1 shrink-0 select-none">
+                <span className="text-[13px] font-semibold text-[#777c86]">
+                  Employer industry
+                </span>
+                <span className="text-[13px] font-semibold text-[#777c86]">
+                  Job function
+                </span>
               </div>
 
               <div className="flex-1 w-full min-h-0 relative">
                 <ReactECharts
                   option={industryRoleOption}
+                  opts={{ renderer: 'svg' }}
                   style={{ height: '100%', width: '100%' }}
                   notMerge={true}
                   onEvents={industryRoleEvents}

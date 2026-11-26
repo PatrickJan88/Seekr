@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { JobApplication, JobStatus, getWorkTypeBadgeStyle, ApplicationLink, getStatusLabel } from '../types';
 import { Calendar, Building, MoreVertical, Eye, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown, Link2, ExternalLink, Trash2, Edit2 } from 'lucide-react';
 import { NoDataState } from './NoDataState';
+import { computeDropdownAlign, DropdownAlign } from '../lib/utils';
 
 const STATUSES: JobStatus[] = ['Wishlist', 'Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
 
@@ -29,6 +30,7 @@ const STATUS_COLORS: Record<JobStatus, string> = {
 
 function StatusDropdown({ status, onChange, trackingSystem = 'industry' }: { status: JobStatus; onChange: (s: JobStatus) => void; trackingSystem?: 'industry' | 'academic' }) {
   const [open, setOpen] = useState(false);
+  const [menuAlign, setMenuAlign] = useState<DropdownAlign>('start');
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,8 +46,14 @@ function StatusDropdown({ status, onChange, trackingSystem = 'industry' }: { sta
   return (
     <div className="relative" ref={ref}>
       <button
-        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
-        className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all border cursor-pointer ${
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!open) {
+            setMenuAlign(computeDropdownAlign(ref.current, 176, { checkScrollParent: true }));
+          }
+          setOpen(!open);
+        }}
+        className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition-all border cursor-pointer ${
           open ? 'border-[#0068f9] ring-1 ring-[#0068f9]' : 'border-transparent hover:border-slate-300'
         } ${STATUS_COLORS[status]}`}
       >
@@ -54,14 +62,14 @@ function StatusDropdown({ status, onChange, trackingSystem = 'industry' }: { sta
       </button>
       
       {open && (
-        <div className="absolute top-full left-0 mt-1.5 w-44 bg-white border border-[#efefef] rounded-2xl shadow-xl z-20 py-1.5 animate-in fade-in-50 zoom-in-95 duration-150">
+        <div className={`absolute top-full ${menuAlign === 'end' ? 'right-0' : 'left-0'} mt-1.5 w-44 bg-white border border-[#efefef] rounded-2xl shadow-xl z-20 p-1.5 space-y-0.5 animate-in fade-in-50 zoom-in-95 duration-150`}>
           {STATUSES.map(s => (
             <button
               key={s}
               onClick={(e) => { e.stopPropagation(); onChange(s); setOpen(false); }}
-              className={`w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-[#faf9f7] flex items-center justify-between cursor-pointer ${s === status ? 'font-bold' : ''}`}
+              className={`w-full text-left px-3 py-1.5 rounded-[10px] text-[13px] transition-colors hover:bg-[#faf9f7] flex items-center justify-between cursor-pointer ${s === status ? 'font-bold' : ''}`}
             >
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${STATUS_COLORS[s]}`}>
+              <span className={`px-2 py-0.5 rounded-[4px] text-[11px] font-bold ${STATUS_COLORS[s]}`}>
                 {getStatusLabel(s, trackingSystem)}
               </span>
             </button>
@@ -91,10 +99,10 @@ function TruncatedNotes({ text }: { text: string }) {
 
       {showFull && (
         <div className="fixed top-0 bottom-0 right-0 left-0 md:left-[var(--sidebar-offset,0px)] bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300" onClick={(e) => { e.stopPropagation(); setShowFull(false); }}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[80vh]" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl border border-[#efefef] shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[80vh]" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-slate-200">
               <h3 className="font-bold text-lg">Application Notes</h3>
-              <button onClick={() => setShowFull(false)} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 hover:bg-slate-100 hover:text-slate-900 h-9 w-9 p-0 text-slate-500">✕</button>
+              <button onClick={() => setShowFull(false)} className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 hover:bg-slate-100 hover:text-slate-900 h-9 w-9 p-0 text-slate-500">✕</button>
             </div>
             <div className="p-6 overflow-y-auto whitespace-pre-wrap text-sm text-slate-700 leading-relaxed">
               {text}
@@ -117,6 +125,7 @@ function normalizeUrl(url?: string): string {
 
 function ApplicationLinksViewer({ app }: { app: JobApplication }) {
   const [open, setOpen] = useState(false);
+  const [menuAlign, setMenuAlign] = useState<DropdownAlign>('start');
   const ref = useRef<HTMLDivElement>(null);
 
   const links: ApplicationLink[] = useMemo(() => {
@@ -153,7 +162,7 @@ function ApplicationLinksViewer({ app }: { app: JobApplication }) {
         rel="noopener noreferrer"
         onClick={(e) => e.stopPropagation()}
         title={`${link.title || 'Reference Link'}: ${url}`}
-        className="inline-flex items-center gap-1 px-2 py-0.5 mt-1 text-[11px] font-medium text-[#0068f9] hover:text-[#024bb1] bg-[#eef5ff] hover:bg-[#dbeafe] border border-[#0068f9]/20 rounded-md transition-colors max-w-full truncate"
+        className="inline-flex items-center gap-1 px-2 py-0.5 mt-1 text-[11px] font-medium text-[#0068f9] hover:text-[#024bb1] bg-[#eef5ff] hover:bg-[#dbeafe] border border-[#0068f9]/20 rounded-[4px] transition-colors max-w-full truncate"
       >
         <Link2 size={11} className="shrink-0" />
         <span className="truncate">{link.title || 'Link'}</span>
@@ -166,8 +175,13 @@ function ApplicationLinksViewer({ app }: { app: JobApplication }) {
     <div className="relative inline-block mt-1" ref={ref} onClick={(e) => e.stopPropagation()}>
       <button
         type="button"
-        onClick={() => setOpen(!open)}
-        className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium text-[#0068f9] hover:text-[#024bb1] bg-[#eef5ff] hover:bg-[#dbeafe] border border-[#0068f9]/20 rounded-md transition-colors cursor-pointer"
+        onClick={() => {
+          if (!open) {
+            setMenuAlign(computeDropdownAlign(ref.current, 224, { checkScrollParent: true }));
+          }
+          setOpen(!open);
+        }}
+        className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium text-[#0068f9] hover:text-[#024bb1] bg-[#eef5ff] hover:bg-[#dbeafe] border border-[#0068f9]/20 rounded-[4px] transition-colors cursor-pointer"
         title="View all saved links"
       >
         <Link2 size={11} className="shrink-0" />
@@ -176,8 +190,8 @@ function ApplicationLinksViewer({ app }: { app: JobApplication }) {
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-slate-200 rounded-xl shadow-xl z-30 py-1.5 overflow-hidden">
-          <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100">
+        <div className={`absolute top-full ${menuAlign === 'end' ? 'right-0' : 'left-0'} mt-1 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl z-30 p-1.5 space-y-0.5 overflow-hidden`}>
+          <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 mb-1">
             Saved Hyperlinks
           </div>
           {links.map((link, idx) => {
@@ -189,7 +203,7 @@ function ApplicationLinksViewer({ app }: { app: JobApplication }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setOpen(false)}
-                className="flex items-center justify-between px-3 py-2 text-xs text-slate-700 hover:bg-[#eef5ff] hover:text-[#0068f9] transition-colors group/item"
+                className="flex items-center justify-between px-3 py-2 rounded-[10px] text-[13px] text-slate-700 hover:bg-[#eef5ff] hover:text-[#0068f9] transition-colors group/item"
               >
                 <span className="font-medium truncate pr-2">{link.title || `Link ${idx + 1}`}</span>
                 <ExternalLink size={12} className="shrink-0 text-slate-400 group-hover/item:text-[#0068f9]" />
@@ -204,6 +218,7 @@ function ApplicationLinksViewer({ app }: { app: JobApplication }) {
 
 function ActionDropdown({ onEdit, onDelete }: { onEdit: () => void, onDelete: () => void }) {
   const [open, setOpen] = useState(false);
+  const [menuAlign, setMenuAlign] = useState<DropdownAlign>('start');
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -219,24 +234,29 @@ function ActionDropdown({ onEdit, onDelete }: { onEdit: () => void, onDelete: ()
   return (
     <div className="relative" ref={ref} onClick={e => e.stopPropagation()}>
       <button
-        onClick={() => setOpen(!open)}
-        className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+        onClick={() => {
+          if (!open) {
+            setMenuAlign(computeDropdownAlign(ref.current, 128, { checkScrollParent: true }));
+          }
+          setOpen(!open);
+        }}
+        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
       >
         <MoreVertical size={16} />
       </button>
       
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-32 bg-white border border-[#efefef] rounded-2xl shadow-xl z-20 py-1.5 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150">
+        <div className={`absolute ${menuAlign === 'end' ? 'right-0' : 'left-0'} top-full mt-1.5 w-32 bg-white border border-[#efefef] rounded-2xl shadow-xl z-20 p-1.5 space-y-0.5 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150`}>
           <button
             onClick={(e) => { e.stopPropagation(); setOpen(false); onEdit(); }}
-            className="w-full flex items-center gap-2 px-3.5 py-1.5 text-xs font-medium text-[#121722] hover:bg-[#faf9f7] transition-colors cursor-pointer"
+            className="w-full flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-[13px] font-medium text-[#121722] hover:bg-[#faf9f7] transition-colors cursor-pointer"
           >
             <Edit2 size={13} className="text-[#777c86]" />
             Edit
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); setOpen(false); onDelete(); }}
-            className="w-full flex items-center gap-2 px-3.5 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+            className="w-full flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-[13px] font-medium text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
           >
             <Trash2 size={13} className="text-rose-500" />
             Delete
@@ -421,7 +441,7 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete, track
                       <div className="flex items-center gap-1.5 text-xs text-[#777c86] mt-0.5 max-w-full">
                         {app.location && <span className="truncate">{app.location}</span>}
                         {app.workType && (
-                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-shrink-0 ${getWorkTypeBadgeStyle(app.workType)}`}>
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px] border whitespace-nowrap flex-shrink-0 ${getWorkTypeBadgeStyle(app.workType)}`}>
                             {app.workType}
                           </span>
                         )}
@@ -439,7 +459,7 @@ export function ListView({ applications, onEdit, onStatusChange, onDelete, track
                   </td>
                   <td className="border-b border-[#efefef] px-6 py-4 max-w-0" style={{ width: colWidths.nextInterview }}>
                     {app.nextInterviewDate ? (
-                      <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0068f9] bg-[#faf9f7] border border-[#efefef] px-2.5 py-1 rounded-full whitespace-nowrap truncate max-w-full">
+                      <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0068f9] bg-[#faf9f7] border border-[#efefef] px-2.5 py-1 rounded-[4px] whitespace-nowrap truncate max-w-full">
                         <Calendar size={12} className="flex-shrink-0" />
                         <span className="truncate">{new Date(app.nextInterviewDate).toLocaleDateString()}</span>
                       </div>

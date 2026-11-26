@@ -667,17 +667,17 @@ export function ApplicationMap({ applications, isDemo = false, onLocationSelect 
 
   return (
     <div className="relative w-full">
-      <div className="flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-2xs border border-[#efefef] w-full">
+      <div className="flex flex-col gap-4 bg-white p-6 rounded-xl shadow-2xs border border-[#efefef] w-full">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-bold text-[#121722] m-0">Global Application Map</h3>
           </div>
           <div className="flex items-center gap-3 text-xs text-[#777c86]">
-            <span className="inline-flex items-center gap-1 font-semibold text-[#121722] bg-[#faf9f7] px-3 py-1.5 rounded-full border border-[#efefef]">
+            <span className="inline-flex items-center gap-1 font-semibold text-[#121722] bg-[#faf9f7] px-3 py-1.5 rounded-lg border border-[#efefef]">
               <Building2 size={13} className="text-[#0068f9]" />
               {locationGroups.length} Location Hubs
             </span>
-            <span className="inline-flex items-center gap-1 font-semibold text-[#121722] bg-[#faf9f7] px-3 py-1.5 rounded-full border border-[#efefef]">
+            <span className="inline-flex items-center gap-1 font-semibold text-[#121722] bg-[#faf9f7] px-3 py-1.5 rounded-lg border border-[#efefef]">
               <MapPin size={13} className="text-emerald-600" />
               {applications.length} Total Applications
             </span>
@@ -685,14 +685,14 @@ export function ApplicationMap({ applications, isDemo = false, onLocationSelect 
         </div>
 
         {!isMapLoaded && !mapError && (
-          <div className="h-[600px] w-full flex flex-col items-center justify-center bg-[#faf9f7] rounded-2xl border border-dashed border-[#efefef] text-[#777c86] gap-2">
+          <div className="h-[600px] w-full flex flex-col items-center justify-center bg-[#faf9f7] rounded-lg border border-dashed border-[#efefef] text-[#777c86] gap-2">
             <Loader2 size={24} className="animate-spin text-[#0068f9]" />
             <span className="text-xs font-medium">Loading World Map resources...</span>
           </div>
         )}
 
         {mapError && (
-          <div className="p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl text-xs flex items-center gap-2">
+          <div className="p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-xs flex items-center gap-2">
             <Info size={16} />
             {mapError}
           </div>
@@ -740,11 +740,11 @@ export function ApplicationMap({ applications, isDemo = false, onLocationSelect 
                 <button 
                   key={idx}
                   onClick={() => onLocationSelect?.(g.country)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#faf9f7] hover:bg-white border border-[#efefef] rounded-full text-xs font-medium text-[#121722] transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#faf9f7] hover:bg-white border border-[#efefef] rounded-lg text-xs font-medium text-[#121722] transition-colors cursor-pointer"
                 >
                   <span>{getCountryFlagEmoji(g.country)}</span>
                   <span>{g.city}, {g.country}</span>
-                  <span className="ml-1 px-1.5 py-0.2 bg-[#0068f9]/10 text-[#0068f9] rounded-full text-[10px] font-semibold">
+                  <span className="ml-1 px-1.5 py-0.2 bg-[#0068f9]/10 text-[#0068f9] rounded-[4px] text-[10px] font-semibold">
                     {g.count}
                   </span>
                 </button>
