@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TailoredResumeData, ResumeTemplateId, ResumeTemplateMeta, TailoredResumeExperience, TailoredResumeEducation, TailoredResumeProject } from '../types';
+import { SlidingTabs } from './ui/sliding-tabs';
 import { triggerDirectPdfExport } from '../lib/pdf-export';
 import { auth } from '../lib/firebase';
 import { getAccountScopeId } from '../lib/accountStorage';
@@ -1015,22 +1016,16 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
 
         <div className="flex items-center gap-2">
           {/* View Switcher Tabs */}
-          <div className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium mr-2">
-            <button
-              type="button"
-              onClick={() => setActiveTab('preview')}
-              className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${activeTab === 'preview' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
-            >
-              Live Preview
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('edit')}
-              className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${activeTab === 'edit' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
-            >
-              Edit Content
-            </button>
-          </div>
+          <SlidingTabs<'preview' | 'edit'>
+            value={activeTab}
+            onChange={setActiveTab}
+            className="mr-2"
+            tabClassName="px-3"
+            items={[
+              { id: 'preview', label: 'Live Preview' },
+              { id: 'edit', label: 'Edit Content' },
+            ]}
+          />
 
           <button
             type="button"

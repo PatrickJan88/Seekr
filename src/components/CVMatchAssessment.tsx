@@ -47,6 +47,7 @@ import { InterviewPrepStudio } from './InterviewPrepStudio';
 import { ResumeTemplateStudio } from './ResumeTemplateStudio';
 import { KeywordHighlightPanel } from './KeywordHighlightPanel';
 import { NestedApplicationMenu } from './NestedApplicationMenu';
+import { SlidingTabs } from './ui/sliding-tabs';
 import {
   Stepper,
   StepperContent,
@@ -1271,22 +1272,15 @@ ${app.notes || 'No extra description provided.'}`;
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => setCvInputMode('upload')}
-                          className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${cvInputMode === 'upload' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
-                        >
-                          PDF upload
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setCvInputMode('text')}
-                          className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${cvInputMode === 'text' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
-                        >
-                          Paste text
-                        </button>
-                      </div>
+                      <SlidingTabs<'upload' | 'text'>
+                        value={cvInputMode}
+                        onChange={setCvInputMode}
+                        tabClassName="px-3"
+                        items={[
+                          { id: 'upload', label: 'PDF upload' },
+                          { id: 'text', label: 'Paste text' },
+                        ]}
+                      />
                     </div>
                   </div>
 
@@ -1435,22 +1429,15 @@ ${app.notes || 'No extra description provided.'}`;
                         Paste a target job posting or pick from your tracked Seekr applications.
                       </p>
                     </div>
-                    <div className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setJdSource('custom')}
-                        className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${jdSource === 'custom' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
-                      >
-                        Custom paste
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setJdSource('application')}
-                        className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${jdSource === 'application' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
-                      >
-                        Tracked app
-                      </button>
-                    </div>
+                    <SlidingTabs<'custom' | 'application'>
+                      value={jdSource}
+                      onChange={setJdSource}
+                      tabClassName="px-3"
+                      items={[
+                        { id: 'custom', label: 'Custom paste' },
+                        { id: 'application', label: 'Tracked app' },
+                      ]}
+                    />
                   </div>
 
                   {jdSource === 'application' && (

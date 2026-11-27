@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import AgentAvatar from './AgentAvatar';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { SlidingTabs } from './ui/sliding-tabs';
 
 export interface TechRole {
   id: string;
@@ -217,25 +218,12 @@ export function PersonaOrbCarousel({
       
       {/* 1. CATEGORY TABS (STABLE, NO ICON, NO BOUNCE SHAKE) */}
       <div className="flex items-center justify-between border-b border-[#efefef] pb-2.5 gap-2 overflow-x-auto no-scrollbar">
-        <div className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0">
-          {CATEGORIES.map((cat) => {
-            const isActive = activeTab === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setActiveTab(cat.id)}
-                className={`h-full px-3.5 rounded-full flex items-center justify-center whitespace-nowrap transition-all cursor-pointer select-none ${
-                  isActive
-                    ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]'
-                    : 'text-[#777c86] hover:text-[#121722] border border-transparent'
-                }`}
-              >
-                <span>{cat.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        <SlidingTabs
+          value={activeTab}
+          onChange={setActiveTab}
+          tabClassName="px-3.5"
+          items={CATEGORIES.map((cat) => ({ id: cat.id, label: cat.label }))}
+        />
 
         <div className="hidden sm:block text-xs font-medium text-[#777c86]">
           {activeIndex + 1} of {filteredRoles.length} Evaluators

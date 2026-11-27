@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { CheckCircle2, AlertTriangle, Search, Sparkles, Tag, Layers, ArrowUpRight, HelpCircle, Check, Copy } from 'lucide-react';
 import { MatchedKeyword, MissingKeyword, KeywordCategory } from '../types';
 import { toast } from 'sonner';
+import { SlidingTabs } from './ui/sliding-tabs';
 
 interface KeywordHighlightPanelProps {
   matchedKeywords: MatchedKeyword[];
@@ -111,29 +112,24 @@ export function KeywordHighlightPanel({
             />
           </div>
 
-          <div className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0">
-            <button
-              type="button"
-              onClick={() => setActiveTab('all')}
-              className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${activeTab === 'all' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
-            >
-              All
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('matched')}
-              className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${activeTab === 'matched' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
-            >
-              Matched ({totalMatched})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('missing')}
-              className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${activeTab === 'missing' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
-            >
-              Missing ({totalMissing})
-            </button>
-          </div>
+          <SlidingTabs<'all' | 'matched' | 'missing'>
+            value={activeTab}
+            onChange={setActiveTab}
+            tabClassName="px-3"
+            items={[
+              { id: 'all', label: 'All' },
+              {
+                id: 'matched',
+                label: 'Matched',
+                badge: <span className="tabular-nums font-normal text-[#777c86]">({totalMatched})</span>,
+              },
+              {
+                id: 'missing',
+                label: 'Missing',
+                badge: <span className="tabular-nums font-normal text-[#777c86]">({totalMissing})</span>,
+              },
+            ]}
+          />
         </div>
       </div>
 

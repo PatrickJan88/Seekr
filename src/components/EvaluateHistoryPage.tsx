@@ -31,6 +31,7 @@ import { InterviewPrepStudio } from './InterviewPrepStudio';
 import { ResumeTemplateStudio } from './ResumeTemplateStudio';
 import { toast } from 'sonner';
 import { NoDataState } from './NoDataState';
+import { SlidingTabs } from './ui/sliding-tabs';
 
 interface EvaluateHistoryPageProps {
   onBack: () => void;
@@ -511,79 +512,48 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
             /* Evaluations List Header: Company 360 Tabs, Search Box, Counter */
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
               {/* Left: Company 360 Filter Tabs */}
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0 overflow-x-auto max-w-full">
-                  <button
-                    type="button"
-                    onClick={() => setMatchCategoryFilter('all')}
-                    className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                      matchCategoryFilter === 'all'
-                        ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]'
-                        : 'text-[#777c86] hover:text-[#121722] border border-transparent'
-                    }`}
-                  >
-                    All
-                    {evaluations.length > 0 && (
-                      <span className="ml-1.5 text-[11px] text-[#777c86] font-normal">
-                        ({evaluations.length})
-                      </span>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMatchCategoryFilter('high')}
-                    className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                      matchCategoryFilter === 'high'
-                        ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]'
-                        : 'text-[#777c86] hover:text-[#121722] border border-transparent'
-                    }`}
-                  >
-                    High Match
-                    {evaluations.filter(ev => (ev.result?.keyword_score ?? ev.result?.score ?? 0) >= 80).length > 0 && (
-                      <span className="ml-1.5 text-[11px] text-[#777c86] font-normal">
-                        ({evaluations.filter(ev => (ev.result?.keyword_score ?? ev.result?.score ?? 0) >= 80).length})
-                      </span>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMatchCategoryFilter('medium')}
-                    className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                      matchCategoryFilter === 'medium'
-                        ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]'
-                        : 'text-[#777c86] hover:text-[#121722] border border-transparent'
-                    }`}
-                  >
-                    Medium Match
-                    {evaluations.filter(ev => {
-                      const s = ev.result?.keyword_score ?? ev.result?.score ?? 0;
-                      return s >= 60 && s < 80;
-                    }).length > 0 && (
-                      <span className="ml-1.5 text-[11px] text-[#777c86] font-normal">
-                        ({evaluations.filter(ev => {
+              <div className="flex flex-wrap items-center gap-2 max-w-full overflow-x-auto no-scrollbar">
+                <SlidingTabs<'all' | 'high' | 'medium' | 'low'>
+                  value={matchCategoryFilter}
+                  onChange={setMatchCategoryFilter}
+                  tabClassName="px-4"
+                  items={[
+                    {
+                      id: 'all',
+                      label: 'All',
+                      badge: evaluations.length > 0 ? (
+                        <span className="text-[11px] text-[#777c86] font-normal tabular-nums">({evaluations.length})</span>
+                      ) : undefined,
+                    },
+                    {
+                      id: 'high',
+                      label: 'High Match',
+                      badge: (() => {
+                        const c = evaluations.filter(ev => (ev.result?.keyword_score ?? ev.result?.score ?? 0) >= 80).length;
+                        return c > 0 ? <span className="text-[11px] text-[#777c86] font-normal tabular-nums">({c})</span> : undefined;
+                      })(),
+                    },
+                    {
+                      id: 'medium',
+                      label: 'Medium Match',
+                      badge: (() => {
+                        const c = evaluations.filter(ev => {
                           const s = ev.result?.keyword_score ?? ev.result?.score ?? 0;
                           return s >= 60 && s < 80;
-                        }).length})
-                      </span>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMatchCategoryFilter('low')}
-                    className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                      matchCategoryFilter === 'low'
-                        ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]'
-                        : 'text-[#777c86] hover:text-[#121722] border border-transparent'
-                    }`}
-                  >
-                    Low Match
-                    {evaluations.filter(ev => (ev.result?.keyword_score ?? ev.result?.score ?? 0) < 60).length > 0 && (
-                      <span className="ml-1.5 text-[11px] text-[#777c86] font-normal">
-                        ({evaluations.filter(ev => (ev.result?.keyword_score ?? ev.result?.score ?? 0) < 60).length})
-                      </span>
-                    )}
-                  </button>
-                </div>
+                        }).length;
+                        return c > 0 ? <span className="text-[11px] text-[#777c86] font-normal tabular-nums">({c})</span> : undefined;
+                      })(),
+                    },
+                    {
+                      id: 'low',
+                      label: 'Low Match',
+                      badge: (() => {
+                        const c = evaluations.filter(ev => (ev.result?.keyword_score ?? ev.result?.score ?? 0) < 60).length;
+                        return c > 0 ? <span className="text-[11px] text-[#777c86] font-normal tabular-nums">({c})</span> : undefined;
+                      })(),
+                    },
+                  ]}
+                />
               </div>
 
               {/* Middle & Right: Search Box, Counter */}
@@ -631,7 +601,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
 
         {/* Body Content */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center h-64 text-[#777c86]">
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[380px] text-[#777c86]">
             <Loader2 size={24} className="animate-spin mb-4 text-[#0068f9]" />
             <p className="text-sm font-medium">Loading evaluation history...</p>
           </div>
@@ -870,7 +840,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
           </div>
         ) : (
           /* EVALUATIONS LIST VIEW */
-          <div className="divide-y divide-[#efefef] overflow-y-auto max-h-full">
+          <div className="flex-1 flex flex-col divide-y divide-[#efefef] overflow-y-auto custom-scrollbar">
             {(() => {
               const filteredList = evaluations.filter(ev => {
                 const role = (ev.role || '').toLowerCase();
@@ -890,19 +860,15 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
 
               if (filteredList.length === 0) {
                 return (
-                  <div className="p-12 text-center flex flex-col items-center justify-center space-y-3">
-                    <Search size={28} className="text-[#a5a5a5]" />
-                    <p className="text-sm font-semibold text-[#121722]">No evaluations match your filters</p>
-                    <p className="text-xs text-[#777c86]">
-                      {searchQuery ? `No results found for "${searchQuery}"` : 'No evaluations in this score category'}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => { setSearchQuery(''); setMatchCategoryFilter('all'); }}
-                      className="h-[38px] px-4 rounded-lg border border-[#efefef] bg-white text-[#121722] hover:bg-[#faf9f7] text-xs font-medium transition-all shadow-2xs cursor-pointer mt-2"
-                    >
-                      Clear Filters
-                    </button>
+                  <div className="flex-1 flex flex-col items-center justify-center w-full min-h-[380px]">
+                    <NoDataState
+                      icon="/icons/crunch.svg"
+                      alt="No evaluations match your filters"
+                      title="No evaluations match your filters"
+                      description={searchQuery.trim() ? `No results found for "${searchQuery.trim()}"` : undefined}
+                      actionText="Clear Filters"
+                      onAction={() => { setSearchQuery(''); setMatchCategoryFilter('all'); }}
+                    />
                   </div>
                 );
               }

@@ -3,6 +3,7 @@ import ReactECharts from 'echarts-for-react';
 import { JobApplication, JobStatus, getStatusLabel, toCanonicalStatus } from '../types';
 import { NoDataState } from './NoDataState';
 import { buildIndustryRoleSummary, IndustryRoleLink, IndustryRoleNode } from '../lib/sankeyClassification';
+import { SlidingTabs } from './ui/sliding-tabs';
 
 export type OverviewSankeyTab = 'process' | 'industries-roles';
 
@@ -421,38 +422,17 @@ export function SankeyChart({
       <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col relative gap-4">
         {/* Top Row: Company 360 Pill Tabs + Aligned Summary */}
         <div className="flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div
-            className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0"
-            role="tablist"
-            aria-label="Overview Chart Views"
-          >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'process'}
-              onClick={() => setActiveTab('process')}
-              className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                activeTab === 'process'
-                  ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]'
-                  : 'text-[#777c86] hover:text-[#121722] border border-transparent'
-              }`}
-            >
-              Application Process
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'industries-roles'}
-              onClick={() => setActiveTab('industries-roles')}
-              className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                activeTab === 'industries-roles'
-                  ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]'
-                  : 'text-[#777c86] hover:text-[#121722] border border-transparent'
-              }`}
-            >
-              Industries & Roles
-            </button>
-          </div>
+          <SlidingTabs<OverviewSankeyTab>
+            value={activeTab}
+            onChange={setActiveTab}
+            useTabRoles
+            ariaLabel="Overview Chart Views"
+            tabClassName="px-4"
+            items={[
+              { id: 'process', label: 'Application Process' },
+              { id: 'industries-roles', label: 'Industries & Roles' },
+            ]}
+          />
 
           {activeTab === 'industries-roles' && industryRoleSummary.totalApplied > 0 && (
             <div className="flex flex-wrap items-center gap-2 text-[13px] text-[#777c86] tabular-nums">
@@ -492,11 +472,13 @@ export function SankeyChart({
             />
           </div>
         ) : industryRoleSummary.totalApplied === 0 ? (
-          <div className="flex-1 w-full min-h-[380px] flex flex-col items-center justify-center text-center px-4">
-            <p className="text-base font-semibold text-[#121722]">No submitted applications yet</p>
-            <p className="text-sm text-[#777c86] mt-1 max-w-md">
-              Move saved roles from Wishlist to Applied to view your employer industry and job function breakdown.
-            </p>
+          <div className="flex-1 w-full min-h-[380px] flex flex-col items-center justify-center">
+            <NoDataState
+              icon="/icons/dashboard.svg"
+              alt="No submitted applications yet"
+              title="No submitted applications yet"
+              description="Move saved roles from Wishlist to Applied to view your employer industry and job function breakdown."
+            />
           </div>
         ) : (
           <div className="flex-1 w-full min-h-0 flex flex-col overflow-x-auto custom-scrollbar">

@@ -6,11 +6,17 @@ import { auth } from '../lib/firebase';
 import { getNotifications, markNotificationRead, markAllNotificationsRead } from '../lib/notifications';
 import { AppNotification } from '../types';
 import { computeDropdownAlign, DropdownAlign } from '../lib/utils';
+import { motion, useReducedMotion } from 'framer-motion';
+import { useSlidingIndicator } from './ui/sliding-tabs';
+import { NoDataState } from './NoDataState';
 
 export function NotificationCenter({ onViewAll, onNavigateToGhosted }: { onViewAll: () => void; onNavigateToGhosted?: (n: AppNotification) => void }) {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [tab, setTab] = useState("all");
+  const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const tabsListRef = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = useReducedMotion();
   const [menuAlign, setMenuAlign] = useState<DropdownAlign>('start');
   
   useEffect(() => {
@@ -23,6 +29,7 @@ export function NotificationCenter({ onViewAll, onNavigateToGhosted }: { onViewA
 
   const unreadCount = notifications.filter((n) => n.unread).length;
   const filtered = tab === "unread" ? notifications.filter((n) => n.unread) : notifications;
+  const { indicator, setItemRef } = useSlidingIndicator(tabsListRef, tab, [unreadCount, open]);
 
   const handleMarkAsRead = (id: string) => {
     markNotificationRead(id);
@@ -50,8 +57,10 @@ export function NotificationCenter({ onViewAll, onNavigateToGhosted }: { onViewA
 
   return (
     <Popover.Root
-      onOpenChange={(open) => {
-        if (open) {
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen);
+        if (nextOpen) {
           setMenuAlign(computeDropdownAlign(triggerRef.current, 380));
         }
       }}
@@ -75,23 +84,56 @@ export function NotificationCenter({ onViewAll, onNavigateToGhosted }: { onViewA
         <Popover.Content align={menuAlign} collisionPadding={16} className="w-[380px] max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-lg border border-[#efefef] overflow-hidden z-50" sideOffset={8}>
           <Tabs.Root value={tab} onValueChange={setTab}>
             <div className="flex items-center justify-between border-b border-[#efefef] px-4 py-3 bg-white">
-              <Tabs.List className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0">
+              <Tabs.List
+                ref={tabsListRef}
+                className="relative flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0"
+              >
+                {indicator.ready && (
+                  <motion.div
+                    aria-hidden="true"
+                    initial={false}
+                    animate={{ x: indicator.left, width: indicator.width }}
+                    transition={
+                      prefersReducedMotion
+                        ? { duration: 0 }
+                        : { type: 'spring', stiffness: 480, damping: 36, mass: 0.75 }
+                    }
+                    className="pointer-events-none absolute top-1 bottom-1 left-0 rounded-full bg-white border border-[#efefef] shadow-2xs z-0"
+                  />
+                )}
                 <Tabs.Trigger
+                  ref={setItemRef('all')}
                   value="all"
-                  className="h-full px-3.5 rounded-full flex items-center justify-center transition-all cursor-pointer border border-transparent text-[#777c86] hover:text-[#121722] data-[state=active]:bg-white data-[state=active]:text-[#121722] data-[state=active]:shadow-2xs data-[state=active]:font-bold data-[state=active]:border-[#efefef]"
+                  className="relative z-10 h-full px-3.5 rounded-full flex items-center justify-center transition-colors duration-200 cursor-pointer border border-transparent text-[#777c86] hover:text-[#121722] data-[state=active]:text-[#121722]"
                 >
-                  All
+                  <span className="grid place-items-center text-center">
+                    <span className="invisible font-bold col-start-1 row-start-1 select-none pointer-events-none" aria-hidden="true">All</span>
+                    <span className={`col-start-1 row-start-1 transition-colors duration-200 ${tab === 'all' ? 'font-bold text-[#121722]' : 'font-medium text-inherit'}`}>All</span>
+                  </span>
                 </Tabs.Trigger>
                 <Tabs.Trigger
+                  ref={setItemRef('unread')}
                   value="unread"
-                  className="h-full px-3.5 rounded-full transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-transparent text-[#777c86] hover:text-[#121722] data-[state=active]:bg-white data-[state=active]:text-[#121722] data-[state=active]:shadow-2xs data-[state=active]:font-bold data-[state=active]:border-[#efefef]"
+                  className="relative z-10 h-full px-3.5 rounded-full transition-colors duration-200 flex items-center justify-center gap-1.5 cursor-pointer border border-transparent text-[#777c86] hover:text-[#121722] data-[state=active]:text-[#121722]"
                 >
-                  <span>Unread</span>
-                  {unreadCount > 0 && (
-                    <span className="w-4 h-4 rounded-full bg-blue-100 text-[10px] flex items-center justify-center font-bold text-blue-700 border border-blue-200">
-                      {unreadCount}
+                  <span className="grid place-items-center text-center">
+                    <span className="invisible font-bold col-start-1 row-start-1 select-none pointer-events-none inline-flex items-center gap-1.5" aria-hidden="true">
+                      <span>Unread</span>
+                      {unreadCount > 0 && (
+                        <span className="w-4 h-4 rounded-full text-[10px] inline-flex items-center justify-center font-bold border tabular-nums">
+                          {unreadCount}
+                        </span>
+                      )}
                     </span>
-                  )}
+                    <span className={`col-start-1 row-start-1 inline-flex items-center gap-1.5 transition-colors duration-200 ${tab === 'unread' ? 'font-bold text-[#121722]' : 'font-medium text-inherit'}`}>
+                      <span>Unread</span>
+                      {unreadCount > 0 && (
+                        <span className="w-4 h-4 rounded-full bg-blue-100 text-[10px] flex items-center justify-center font-bold text-blue-700 border border-blue-200 tabular-nums">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </span>
+                  </span>
                 </Tabs.Trigger>
               </Tabs.List>
               
@@ -107,9 +149,13 @@ export function NotificationCenter({ onViewAll, onNavigateToGhosted }: { onViewA
 
             <div className="max-h-[320px] overflow-y-auto">
               {filtered.length === 0 ? (
-                <div className="px-4 py-8 text-center text-xs text-[#777c86] flex flex-col items-center gap-2">
-                  <Bell size={24} className="text-[#a5a5a5]" />
-                  <p>No notifications</p>
+                <div className="flex flex-col items-center justify-center min-h-[220px]">
+                  <NoDataState
+                    icon="/icons/person-ringing-bell.svg"
+                    alt="No notifications yet"
+                    title={tab === 'unread' ? 'No unread notifications' : 'No notifications yet'}
+                    className="py-6"
+                  />
                 </div>
               ) : (
                 <div className="divide-y divide-[#efefef]">

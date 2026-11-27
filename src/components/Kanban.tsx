@@ -4,6 +4,7 @@ import { Calendar, Building, MoreVertical, LayoutDashboard, List, MapPin, X, Inf
 import { ListView } from './ListView';
 import { matchLocation } from './ApplicationMap';
 import { Dropdown } from './ui/Dropdown';
+import { SlidingTabs } from './ui/sliding-tabs';
 
 const STATUSES: JobStatus[] = ['Wishlist', 'Applied', 'Screening', 'Technical', 'Final', 'Offer', 'Rejected', 'Ghosted'];
 
@@ -204,29 +205,16 @@ export function Kanban({
       <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col relative overflow-hidden gap-4">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0">
-            <button 
-              type="button"
-              onClick={() => handleTabChange('active')}
-              className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer whitespace-nowrap shrink-0 ${activeTab === 'active' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
-            >
-              Active Progress
-            </button>
-            <button 
-              type="button"
-              onClick={() => handleTabChange('inactive')}
-              className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer whitespace-nowrap shrink-0 ${activeTab === 'inactive' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
-            >
-              Closed
-            </button>
-            <button 
-              type="button"
-              onClick={() => handleTabChange('wishlist')}
-              className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer whitespace-nowrap shrink-0 ${activeTab === 'wishlist' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
-            >
-              Wishlist
-            </button>
-          </div>
+          <SlidingTabs<'active' | 'inactive' | 'wishlist'>
+            value={activeTab}
+            onChange={(tab) => handleTabChange(tab)}
+            tabClassName="px-4"
+            items={[
+              { id: 'active', label: 'Active Progress' },
+              { id: 'inactive', label: 'Closed' },
+              { id: 'wishlist', label: 'Wishlist' },
+            ]}
+          />
 
           {currentStatusFilter && !internalFocusedId && currentStatusFilter !== 'Ghosted' && (
             <div className="flex items-center gap-1.5 px-3 py-1 bg-[#e8f1ff] text-[#0068f9] rounded-lg text-xs font-semibold border border-[#0068f9]/20 shadow-2xs animate-in fade-in">
@@ -309,28 +297,21 @@ export function Kanban({
             </div>
           )}
 
-          <div className="flex items-center gap-1 bg-[#faf9f7] border border-[#efefef] rounded-full p-1 h-[38px]">
-            <button
-              type="button"
-              onClick={() => {
-                setLayoutMode('kanban');
+          <SlidingTabs<'kanban' | 'list'>
+            value={layoutMode}
+            onChange={(mode) => {
+              setLayoutMode(mode);
+              if (mode === 'kanban') {
                 setCurrentStatusFilter(null);
                 onStatusFilterChange?.(null);
-              }}
-              className={`px-2.5 rounded-full transition-all cursor-pointer flex items-center justify-center h-full ${layoutMode === 'kanban' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
-              title="Kanban View"
-            >
-              <LayoutDashboard size={14} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setLayoutMode('list')}
-              className={`px-2.5 rounded-full transition-all cursor-pointer flex items-center justify-center h-full ${layoutMode === 'list' ? 'bg-white text-[#121722] shadow-2xs border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
-              title="List View"
-            >
-              <List size={14} />
-            </button>
-          </div>
+              }
+            }}
+            tabClassName="px-2.5"
+            items={[
+              { id: 'kanban', label: <LayoutDashboard size={14} />, title: 'Kanban View', ariaLabel: 'Kanban View', iconOnly: true },
+              { id: 'list', label: <List size={14} />, title: 'List View', ariaLabel: 'List View', iconOnly: true },
+            ]}
+          />
         </div>
       </div>
       {layoutMode === 'kanban' ? (

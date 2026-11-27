@@ -26,6 +26,7 @@ import { PersonalStory } from '../types';
 import { triggerDirectPdfExport } from '../lib/pdf-export';
 import { auth } from '../lib/firebase';
 import { getAccountScopeId, isGuestSession } from '../lib/accountStorage';
+import { NoDataState } from './NoDataState';
 
 export interface InterviewPrepStudioProps {
   initialText?: string;
@@ -1359,9 +1360,15 @@ export function InterviewPrepStudio({
           {/* Documents List */}
           <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-1.5 custom-scrollbar">
             {filteredDocs.length === 0 ? (
-              <div className="p-6 text-center text-xs text-slate-400 flex flex-col items-center gap-2">
-                <BookOpen size={24} className="text-slate-300" />
-                <span>No matching documents found.</span>
+              <div className="flex-1 flex flex-col items-center justify-center">
+                <NoDataState
+                  icon="/icons/person-reviewing-policy.svg"
+                  alt="No matching documents found"
+                  title="No matching documents found"
+                  actionText={searchQuery ? 'Clear Search' : undefined}
+                  onAction={searchQuery ? () => setSearchQuery('') : undefined}
+                  className="py-8"
+                />
               </div>
             ) : (
               filteredDocs.map(doc => {

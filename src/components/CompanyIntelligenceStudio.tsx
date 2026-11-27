@@ -25,6 +25,7 @@ import {
   Info,
   Star
 } from 'lucide-react';
+import { SlidingTabs } from './ui/sliding-tabs';
 import { CompanyTeardownData, JobApplication } from '../types';
 import { HeadcountTrendChart } from './HeadcountTrendChart';
 import { NoDataState } from './NoDataState';
@@ -769,33 +770,23 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
       <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex flex-col relative">
         {/* Unified Global Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0">
-            <button
-              onClick={() => setActiveTab('explorer')}
-              className={`h-full px-4 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-                activeTab === 'explorer' 
-                  ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' 
-                  : 'text-[#777c86] hover:text-[#121722] border border-transparent'
-              }`}
-            >
-              {'Teardown'}
-            </button>
-            <button
-              onClick={() => setActiveTab('history')}
-              className={`h-full flex items-center justify-center gap-1.5 px-4 rounded-full transition-all cursor-pointer ${
-                activeTab === 'history' 
-                  ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' 
-                  : 'text-[#777c86] hover:text-[#121722] border border-transparent'
-              }`}
-            >
-              <span>{'Saved'}</span>
-              {savedRecords.length > 0 && (
-                <span className="w-4 h-4 rounded-full bg-blue-100 text-[10px] flex items-center justify-center font-bold text-blue-700 border border-blue-200">
-                  {savedRecords.length}
-                </span>
-              )}
-            </button>
-          </div>
+          <SlidingTabs<'explorer' | 'history'>
+            value={activeTab}
+            onChange={setActiveTab}
+            tabClassName="px-4"
+            items={[
+              { id: 'explorer', label: 'Teardown' },
+              {
+                id: 'history',
+                label: 'Saved',
+                badge: savedRecords.length > 0 ? (
+                  <span className="w-4 h-4 rounded-full bg-blue-100 text-[10px] flex items-center justify-center font-bold text-blue-700 border border-blue-200 tabular-nums">
+                    {savedRecords.length}
+                  </span>
+                ) : undefined,
+              },
+            ]}
+          />
 
           {activeTab === 'explorer' ? (
             <div className="flex-1 flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto md:max-w-2xl">
@@ -1625,11 +1616,26 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                 onAction={() => setActiveTab('explorer')}
               />
             </div>
-          ) : (
+          ) : (() => {
+            const filteredSavedRecords = savedRecords.filter(r =>
+              r.companyName.toLowerCase().includes(historySearch.toLowerCase())
+            );
+            if (filteredSavedRecords.length === 0) {
+              return (
+                <div className="flex-1 flex flex-col items-center justify-center min-h-[360px]">
+                  <NoDataState
+                    icon="/icons/person-holding-star-up.svg"
+                    alt="No saved companies match your search"
+                    title="No saved companies match your search"
+                    actionText="Clear Search"
+                    onAction={() => setHistorySearch('')}
+                  />
+                </div>
+              );
+            }
+            return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
-              {savedRecords
-                .filter(r => r.companyName.toLowerCase().includes(historySearch.toLowerCase()))
-                .map((record) => (
+              {filteredSavedRecords.map((record) => (
                   <div
                     key={record.id}
                     onClick={() => {
@@ -1688,7 +1694,8 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
                   </div>
                 ))}
             </div>
-          )}
+            );
+          })()}
         </div>
       )}
     </div>

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Printer, Copy, Check, FileText, Plus, Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toolbar } from './ui/toolbar';
+import { SlidingTabs } from './ui/sliding-tabs';
 import { markdownOrTextToHtml, executeRichTextCommand, queryEditorState, paginateHtml, normalizeUrl } from '../lib/editor-utils';
 import { triggerDirectPdfExport } from '../lib/pdf-export';
 import { isGuestSession, getAccountScopeId } from '../lib/accountStorage';
@@ -952,47 +953,23 @@ export function CoverLetterStudio({
 
         <div className="flex items-center gap-2 ml-auto shrink-0">
           {/* Typography preset pill selector */}
-          <div className="hidden sm:flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium mr-1">
-            <button
-              type="button"
-              onClick={() => {
-                if (isDemo) {
-                  toast.info('Demo Mode: Style preset is preview-only in this showcase.');
-                }
-                setStyle('modern');
-                triggerAutoSave();
-              }}
-              className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${style === 'modern' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
-            >
-              Modern
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (isDemo) {
-                  toast.info('Demo Mode: Style preset is preview-only in this showcase.');
-                }
-                setStyle('classic');
-                triggerAutoSave();
-              }}
-              className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${style === 'classic' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
-            >
-              Classic
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (isDemo) {
-                  toast.info('Demo Mode: Style preset is preview-only in this showcase.');
-                }
-                setStyle('executive');
-                triggerAutoSave();
-              }}
-              className={`h-full px-3 rounded-full flex items-center justify-center transition-all cursor-pointer ${style === 'executive' ? 'bg-white text-[#121722] shadow-2xs font-bold border border-[#efefef]' : 'text-[#777c86] hover:text-[#121722] border border-transparent'}`}
-            >
-              Executive
-            </button>
-          </div>
+          <SlidingTabs<'modern' | 'classic' | 'executive'>
+            value={(style === 'academic' ? 'classic' : style) as 'modern' | 'classic' | 'executive'}
+            onChange={(nextStyle) => {
+              if (isDemo) {
+                toast.info('Demo Mode: Style preset is preview-only in this showcase.');
+              }
+              setStyle(nextStyle);
+              triggerAutoSave();
+            }}
+            className="hidden sm:flex mr-1"
+            tabClassName="px-3"
+            items={[
+              { id: 'modern', label: 'Modern' },
+              { id: 'classic', label: 'Classic' },
+              { id: 'executive', label: 'Executive' },
+            ]}
+          />
 
           <button 
             type="button"

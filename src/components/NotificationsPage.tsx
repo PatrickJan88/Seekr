@@ -82,11 +82,11 @@ export function NotificationsPage({ onBack, onNavigateToGhosted }: Notifications
         </div>
 
         {/* Scrollable List Content */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-[#efefef]">
+        <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar divide-y divide-[#efefef]">
           {loading ? (
-            <div className="p-12 text-center text-[#777c86] text-xs">Loading notifications...</div>
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[380px] text-[#777c86] text-xs">Loading notifications...</div>
           ) : notifications.length === 0 ? (
-            <div className="p-16 text-center flex flex-col items-center justify-center h-full min-h-[350px]">
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[380px]">
               <NoDataState 
                 icon="/icons/person-ringing-bell.svg" 
                 title="No notifications yet" 
