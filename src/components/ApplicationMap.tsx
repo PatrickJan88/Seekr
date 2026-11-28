@@ -667,18 +667,18 @@ export function ApplicationMap({ applications, isDemo = false, onLocationSelect 
 
   return (
     <div className="relative w-full">
-      <div className="flex flex-col gap-4 bg-white p-6 rounded-xl shadow-2xs border border-[#efefef] w-full">
+      <div className="flex flex-col gap-4 bg-white p-4 sm:p-6 rounded-2xl shadow-2xs border border-[#efefef] w-full">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-bold text-[#121722] m-0">Global Application Map</h3>
+            <h3 className="text-[15px] font-bold text-[#121722] m-0">Global Application Map</h3>
           </div>
-          <div className="flex items-center gap-3 text-xs text-[#777c86]">
-            <span className="inline-flex items-center gap-1 font-semibold text-[#121722] bg-[#faf9f7] px-3 py-1.5 rounded-lg border border-[#efefef]">
-              <Building2 size={13} className="text-[#0068f9]" />
+          <div className="flex items-center gap-2.5 sm:gap-3 text-xs text-[#777c86] flex-wrap">
+            <span className="inline-flex items-center gap-1.5 font-semibold text-[#121722] bg-[#faf9f7] px-3 py-1.5 rounded-lg border border-[#efefef] tabular-nums">
+              <Building2 size={13} className="text-[#0068f9] shrink-0" />
               {locationGroups.length} Location Hubs
             </span>
-            <span className="inline-flex items-center gap-1 font-semibold text-[#121722] bg-[#faf9f7] px-3 py-1.5 rounded-lg border border-[#efefef]">
-              <MapPin size={13} className="text-emerald-600" />
+            <span className="inline-flex items-center gap-1.5 font-semibold text-[#121722] bg-[#faf9f7] px-3 py-1.5 rounded-lg border border-[#efefef] tabular-nums">
+              <MapPin size={13} className="text-emerald-600 shrink-0" />
               {applications.length} Total Applications
             </span>
           </div>
@@ -744,7 +744,7 @@ export function ApplicationMap({ applications, isDemo = false, onLocationSelect 
                 >
                   <span>{getCountryFlagEmoji(g.country)}</span>
                   <span>{g.city}, {g.country}</span>
-                  <span className="ml-1 px-1.5 py-0.2 bg-[#0068f9]/10 text-[#0068f9] rounded-[4px] text-[10px] font-semibold">
+                  <span className="ml-1 px-1.5 py-0.5 bg-[#0068f9]/10 text-[#0068f9] rounded-[4px] text-[10px] font-semibold tabular-nums">
                     {g.count}
                   </span>
                 </button>

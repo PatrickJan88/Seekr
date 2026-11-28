@@ -52,7 +52,7 @@ export function NestedApplicationMenu({
       }
     }}>
       <DropdownMenu.Trigger asChild>
-        <button ref={triggerRef} className="flex items-center w-full h-[38px] bg-[#faf9f7] border border-[#efefef] rounded-lg text-[13px] px-3.5 focus:outline-none focus:ring-1 focus:ring-[#0068f9] shadow-2xs hover:bg-[#f3f2ef] transition-all cursor-pointer font-medium">
+        <button ref={triggerRef} className="flex items-center w-full h-[38px] bg-[#faf9f7] border border-[#efefef] rounded-lg text-[13px] px-4 focus:outline-none focus:ring-1 focus:ring-[#0068f9] shadow-2xs hover:bg-[#f3f2ef] transition-all cursor-pointer font-medium">
           <Briefcase className="text-[#a5a5a5] mr-2 shrink-0" size={14} />
           <span className="text-[#121722] truncate flex-1 text-left">
             {selectedApp

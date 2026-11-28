@@ -162,26 +162,26 @@ export function Dropdown({
   }, [options, searchQuery, isSearchEnabled]);
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div className="relative max-w-full min-w-0" ref={containerRef}>
       <button 
         type="button" 
         onClick={toggle}
-        className={`flex items-center gap-2 rounded-lg px-4 shadow-2xs transition-colors h-[38px] cursor-pointer ${isActive && activeClassName ? activeClassName : 'bg-white border border-[#efefef] hover:bg-[#faf9f7]'}`}
+        className={`flex items-center gap-2 rounded-lg px-4 shadow-2xs transition-colors h-[38px] max-w-full min-w-0 cursor-pointer ${isActive && activeClassName ? activeClassName : 'bg-white border border-[#efefef] hover:bg-[#faf9f7]'}`}
       >
-        {icon && <span className={isActive ? "" : "text-[#777c86]"}>{icon}</span>}
-        <span className={`text-[13px] font-medium whitespace-nowrap ${isActive ? "" : "text-[#121722]"}`}>
+        {icon && <span className={`shrink-0 ${isActive ? "" : "text-[#777c86]"}`}>{icon}</span>}
+        <span className={`text-[13px] font-medium whitespace-nowrap truncate min-w-0 ${isActive ? "" : "text-[#121722]"}`}>
           {labelPrefix && <span className={isActive ? "" : "text-[#777c86] font-normal mr-1"}>{labelPrefix}</span>}
           {selectedOption?.label}
         </span>
         {isActive && onClear ? (
           <div 
             onClick={(e) => { e.stopPropagation(); onClear(e); }}
-            className="hover:bg-black/10 rounded-[4px] p-0.5 -mr-1 transition-colors"
+            className="hover:bg-black/10 rounded-[4px] p-0.5 -mr-1 transition-colors shrink-0"
           >
             <X size={14} />
           </div>
         ) : (
-          <ChevronDown size={14} className={isActive ? "" : "text-[#777c86]"} />
+          <ChevronDown size={14} className={`shrink-0 ${isActive ? "" : "text-[#777c86]"}`} />
         )}
       </button>
 

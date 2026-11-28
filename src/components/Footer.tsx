@@ -21,6 +21,7 @@ interface FooterProps {
     text: string;
     license?: string;
   };
+  flush?: boolean;
 }
 
 export function Footer({
@@ -29,10 +30,11 @@ export function Footer({
   socialLinks,
   mainLinks,
   copyright,
+  flush = false,
 }: FooterProps) {
   return (
     <footer className="py-6 bg-transparent border-t border-[#efefef] flex flex-col font-sans text-[#121722] mt-auto">
-      <div className="px-6 md:px-8 w-full flex-1 flex flex-col justify-between gap-2.5">
+      <div className={`${flush ? 'px-0' : 'px-6 md:px-8'} w-full flex-1 flex flex-col justify-between gap-2.5`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-4">
             <a

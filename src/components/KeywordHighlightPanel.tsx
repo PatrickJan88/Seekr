@@ -83,12 +83,12 @@ export function KeywordHighlightPanel({
       {/* Filter and Tab Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         {/* Category Filter Buttons */}
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-2 max-w-full">
           {CATEGORIES.map(cat => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1 text-xs rounded-lg font-medium transition-all cursor-pointer ${
+              className={`h-[38px] px-3.5 text-[13px] rounded-lg font-medium transition-all cursor-pointer whitespace-nowrap ${
                 selectedCategory === cat
                   ? 'bg-[#121722] text-white shadow-2xs font-semibold'
                   : 'bg-[#faf9f7] text-[#777c86] hover:bg-[#efefef] border border-[#efefef]'
@@ -100,8 +100,8 @@ export function KeywordHighlightPanel({
         </div>
 
         {/* Search input & Company 360 Style Tab Toggles */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative w-44 sm:w-52">
+        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto max-w-full">
+          <div className="relative flex-1 min-w-[160px] sm:flex-initial sm:w-52">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#777c86]" />
             <input
               type="text"
@@ -115,7 +115,7 @@ export function KeywordHighlightPanel({
           <SlidingTabs<'all' | 'matched' | 'missing'>
             value={activeTab}
             onChange={setActiveTab}
-            tabClassName="px-3"
+            tabClassName="px-3.5"
             items={[
               { id: 'all', label: 'All' },
               {

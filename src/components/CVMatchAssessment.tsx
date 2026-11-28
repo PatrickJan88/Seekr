@@ -780,10 +780,8 @@ ${app.notes || 'No extra description provided.'}`;
         setIsLoading(false);
         setResult(DEMO_RESULT);
         toast.success('Demo Mode: Simulated AI match evaluation generated!');
-        // Check auto interview prep setting (pre-fetch in background without opening modal)
-        if (localStorage.getItem('auto_generate_interview_prep') !== 'false') {
-          handleGenerateInterviewGuide(false);
-        }
+        // Pre-fetch resume-grounded interview prep in background without opening modal
+        handleGenerateInterviewGuide(false);
       }, 1200);
       return;
     }
@@ -828,10 +826,8 @@ ${app.notes || 'No extra description provided.'}`;
       setResult(data);
       toast.success('CV Match analysis completed!');
       
-      // Auto interview prep if enabled (pre-fetch in background without opening modal)
-      if (localStorage.getItem('auto_generate_interview_prep') !== 'false') {
-        handleGenerateInterviewGuide(false);
-      }
+      // Auto-generate resume-grounded interview prep in background without opening modal
+      handleGenerateInterviewGuide(false);
 
       try {
         const created = await addEvaluation({
@@ -1262,7 +1258,7 @@ ${app.notes || 'No extra description provided.'}`;
             {/* STEP 2: UPLOAD CV */}
             <StepperContent value={2} className="h-full flex flex-col flex-1 min-h-[500px]">
               <div className="bg-white border border-[#efefef] rounded-2xl p-4 sm:p-6 shadow-2xs h-full flex-1 min-h-[500px] flex flex-col justify-between animate-in fade-in duration-200">
-                <div className="flex items-center justify-between border-b border-[#efefef] pb-3 shrink-0">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#efefef] pb-3 shrink-0">
                     <div>
                       <h3 className="text-base font-bold text-[#121722]">
                         Upload your CV
@@ -1271,11 +1267,11 @@ ${app.notes || 'No extra description provided.'}`;
                         Upload a PDF CV or paste raw text.
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 max-w-full">
                       <SlidingTabs<'upload' | 'text'>
                         value={cvInputMode}
                         onChange={setCvInputMode}
-                        tabClassName="px-3"
+                        tabClassName="px-3.5"
                         items={[
                           { id: 'upload', label: 'PDF upload' },
                           { id: 'text', label: 'Paste text' },
@@ -1396,11 +1392,11 @@ ${app.notes || 'No extra description provided.'}`;
                     </div>
                   )}
 
-                <div className="pt-3 border-t border-[#efefef] flex items-center justify-between shrink-0 mt-auto">
+                <div className="pt-3 border-t border-[#efefef] flex items-center justify-between gap-3 shrink-0 mt-auto">
                   <button
                     type="button"
                     onClick={() => setCurrentStep(1)}
-                    className="h-[38px] w-[100px] rounded-lg border border-[#efefef] bg-white hover:bg-[#faf9f7] text-[#121722] font-medium text-[13px] transition-all flex items-center justify-center cursor-pointer"
+                    className="h-[38px] min-w-[96px] px-4 rounded-lg border border-[#efefef] bg-white hover:bg-[#faf9f7] text-[#121722] font-medium text-[13px] transition-all flex items-center justify-center cursor-pointer shrink-0"
                   >
                     Back
                   </button>
@@ -1409,9 +1405,9 @@ ${app.notes || 'No extra description provided.'}`;
                     type="button"
                     onClick={() => setCurrentStep(3)}
                     disabled={!validateStep(2)}
-                    className="h-[38px] w-[260px] px-6 rounded-lg bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium text-[13px] shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    className="h-[38px] flex-1 sm:flex-initial sm:w-[260px] px-5 rounded-lg bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium text-[13px] shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
-                    <span>Continue to Job Description</span>
+                    <span className="truncate">Continue to Job Description</span>
                   </button>
                 </div>
               </div>
@@ -1420,7 +1416,7 @@ ${app.notes || 'No extra description provided.'}`;
             {/* STEP 3: JOB DESCRIPTION */}
             <StepperContent value={3} className="h-full flex flex-col flex-1 min-h-[500px]">
               <div className="bg-white border border-[#efefef] rounded-2xl p-4 sm:p-6 shadow-2xs h-full flex-1 min-h-[500px] flex flex-col justify-between animate-in fade-in duration-200">
-                <div className="flex items-center justify-between border-b border-[#efefef] pb-3 shrink-0">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#efefef] pb-3 shrink-0">
                     <div>
                       <h3 className="text-base font-bold text-[#121722]">
                         Job Description
@@ -1432,7 +1428,7 @@ ${app.notes || 'No extra description provided.'}`;
                     <SlidingTabs<'custom' | 'application'>
                       value={jdSource}
                       onChange={setJdSource}
-                      tabClassName="px-3"
+                      tabClassName="px-3.5"
                       items={[
                         { id: 'custom', label: 'Custom paste' },
                         { id: 'application', label: 'Tracked app' },
@@ -1460,11 +1456,11 @@ ${app.notes || 'No extra description provided.'}`;
                     />
                   </div>
 
-                <div className="pt-3 border-t border-[#efefef] flex items-center justify-between shrink-0 mt-auto">
+                <div className="pt-3 border-t border-[#efefef] flex items-center justify-between gap-3 shrink-0 mt-auto">
                   <button
                     type="button"
                     onClick={() => setCurrentStep(2)}
-                    className="h-[38px] w-[100px] rounded-lg border border-[#efefef] bg-white hover:bg-[#faf9f7] text-[#121722] font-medium text-[13px] transition-all flex items-center justify-center cursor-pointer"
+                    className="h-[38px] min-w-[96px] px-4 rounded-lg border border-[#efefef] bg-white hover:bg-[#faf9f7] text-[#121722] font-medium text-[13px] transition-all flex items-center justify-center cursor-pointer shrink-0"
                   >
                     Back
                   </button>
@@ -1473,17 +1469,17 @@ ${app.notes || 'No extra description provided.'}`;
                     type="button"
                     onClick={handleAnalyzeMatch}
                     disabled={isLoading || isExtractingPdf || !validateStep(3)}
-                    className="h-[38px] w-[260px] px-6 rounded-lg bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium text-[13px] shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    className="h-[38px] flex-1 sm:flex-initial sm:w-[260px] px-5 rounded-lg bg-[#0068f9] hover:bg-[#024bb1] text-white font-medium text-[13px] shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
                     {isLoading ? (
                       <>
                         <InlineLoader variant="spark" size={24} />
-                        <span>{loadingText}</span>
+                        <span className="truncate">{loadingText}</span>
                       </>
                     ) : (
                       <>
-                        <Sparkles size={16} />
-                        <span>Generate match assessment</span>
+                        <Sparkles size={16} className="shrink-0" />
+                        <span className="truncate">Generate match assessment</span>
                       </>
                     )}
                   </button>

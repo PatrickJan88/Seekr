@@ -35,55 +35,66 @@ export function SupportForm() {
   };
 
   return (
-    <div>
-      <h3 className="text-sm font-semibold text-[#121722] mb-1">Customer Support</h3>
-      <p className="text-xs text-[#777c86] mb-4">
-        Send us your suggestions or report any bugs you encounter.
-      </p>
-      <form id="support-form" onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="name" className="block text-xs font-medium text-[#777c86] mb-1">Your Name</label>
-            <input 
-              type="text" 
-              name="name" 
-              id="name" 
-              required
-              className="w-full h-[38px] px-3.5 rounded-lg border border-[#efefef] bg-[#faf9f7] text-[13px] text-[#121722] placeholder:text-[#a5a5a5] focus:outline-none focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] transition-all"
-              placeholder="Your Name"
-            />
+    <form
+      id="support-form"
+      onSubmit={handleSubmit}
+      className="bg-white border border-[#efefef] rounded-2xl shadow-2xs overflow-hidden"
+    >
+      <div className="p-4 sm:p-5">
+        <h3 className="text-[15px] font-bold text-[#121722] mb-1">Customer Support</h3>
+        <p className="text-[13px] text-[#777c86] leading-relaxed mb-3">
+          Send us your suggestions or report any bugs you encounter.
+        </p>
+
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="name" className="block text-xs font-medium text-[#777c86] mb-1">Your Name</label>
+              <input
+                type="text"
+                name="name"
+                id="name"
+                required
+                className="w-full h-[38px] px-3.5 rounded-lg border border-[#efefef] bg-[#faf9f7] text-[13px] text-[#121722] placeholder:text-[#a5a5a5] focus:outline-none focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] transition-all"
+                placeholder="Your Name"
+              />
+            </div>
+            <div>
+              <label htmlFor="email" className="block text-xs font-medium text-[#777c86] mb-1">Your Email</label>
+              <input
+                type="email"
+                name="email"
+                id="email"
+                required
+                className="w-full h-[38px] px-3.5 rounded-lg border border-[#efefef] bg-[#faf9f7] text-[13px] text-[#121722] placeholder:text-[#a5a5a5] focus:outline-none focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] transition-all"
+                placeholder="you@example.com"
+              />
+            </div>
           </div>
-          <div>
-            <label htmlFor="email" className="block text-xs font-medium text-[#777c86] mb-1">Your Email</label>
-            <input 
-              type="email" 
-              name="email" 
-              id="email" 
-              required
-              className="w-full h-[38px] px-3.5 rounded-lg border border-[#efefef] bg-[#faf9f7] text-[13px] text-[#121722] placeholder:text-[#a5a5a5] focus:outline-none focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] transition-all"
-              placeholder="you@example.com"
-            />
-          </div>
+
           <div>
             <label htmlFor="message" className="block text-xs font-medium text-[#777c86] mb-1">Message</label>
-            <textarea 
-              name="message" 
-              id="message" 
+            <textarea
+              name="message"
+              id="message"
               required
-              rows={4}
-              className="w-full px-3.5 py-2.5 rounded-lg border border-[#efefef] bg-[#faf9f7] text-[13px] text-[#121722] placeholder:text-[#a5a5a5] focus:outline-none focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] transition-all resize-y"
+              rows={3}
+              className="w-full px-3.5 py-2 rounded-lg border border-[#efefef] bg-[#faf9f7] text-[13px] text-[#121722] placeholder:text-[#a5a5a5] focus:outline-none focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] transition-all resize-y"
               placeholder="How can we help?"
             ></textarea>
           </div>
-          <div className="flex justify-end pt-2">
-            <button 
-              type="submit" 
-              disabled={isSubmitting}
-              className="inline-flex items-center justify-center rounded-lg text-[13px] font-semibold transition-all bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-[38px] px-6 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? "Sending..." : "Send Message"}
-            </button>
-          </div>
-        </form>
-    </div>
+        </div>
+      </div>
+
+      <div className="px-4 sm:px-5 py-2.5 sm:py-3 bg-[#faf9f7] border-t border-[#efefef] flex items-center justify-end gap-3">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="inline-flex items-center justify-center rounded-lg text-[13px] font-semibold transition-all bg-[#0068f9] hover:bg-[#024bb1] text-white shadow-2xs h-[38px] px-5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+        >
+          {isSubmitting ? "Sending..." : "Send Message"}
+        </button>
+      </div>
+    </form>
   );
 }

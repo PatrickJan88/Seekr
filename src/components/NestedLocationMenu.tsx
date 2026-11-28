@@ -107,8 +107,7 @@ export function NestedLocationMenu({
         <DropdownMenu.Content 
           align={menuAlign}
           collisionPadding={16}
-          className="z-[100] min-w-[230px] max-w-[290px] overflow-hidden bg-white rounded-2xl border border-[#efefef] shadow-xl p-1.5 animate-in fade-in-80 zoom-in-95 flex flex-col"
-          style={{ maxHeight: '33.33vh' }}
+          className="z-[100] min-w-[230px] max-w-[290px] max-h-[60vh] overflow-hidden bg-white rounded-2xl border border-[#efefef] shadow-xl p-1.5 animate-in fade-in-80 zoom-in-95 flex flex-col"
           sideOffset={8}
         >
           {/* Quick Search Header */}
@@ -177,7 +176,7 @@ export function NestedLocationMenu({
                     onSelectCity("");
                   }}
                 >
-                  Location
+                  All Locations
                   {!continentFilter && <Check size={14} className="ml-auto text-[#0068f9]" />}
                 </DropdownMenu.Item>
 
@@ -228,8 +227,7 @@ export function NestedLocationMenu({
                       
                       <DropdownMenu.Portal>
                         <DropdownMenu.SubContent 
-                          className="z-[100] min-w-[200px] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-xl p-1.5 animate-in fade-in-80 zoom-in-95 custom-scrollbar space-y-0.5"
-                          style={{ maxHeight: '33.33vh' }}
+                          className="z-[100] min-w-[200px] max-h-[50vh] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-xl p-1.5 animate-in fade-in-80 zoom-in-95 custom-scrollbar space-y-0.5"
                           sideOffset={4}
                         >
                           <DropdownMenu.Item 
@@ -277,8 +275,7 @@ export function NestedLocationMenu({
                                 </DropdownMenu.SubTrigger>
                                 <DropdownMenu.Portal>
                                   <DropdownMenu.SubContent 
-                                    className="z-[100] min-w-[200px] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-xl p-1.5 animate-in fade-in-80 zoom-in-95 custom-scrollbar space-y-0.5"
-                                    style={{ maxHeight: '33.33vh' }}
+                                    className="z-[100] min-w-[200px] max-h-[50vh] overflow-y-auto bg-white rounded-2xl border border-[#efefef] shadow-xl p-1.5 animate-in fade-in-80 zoom-in-95 custom-scrollbar space-y-0.5"
                                     sideOffset={4}
                                   >
                                     <DropdownMenu.Item 

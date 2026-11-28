@@ -4,7 +4,7 @@ import { getApplications, addApplication, updateApplication, deleteApplication, 
 import { Kanban } from './Kanban';
 import { Analytics } from './Analytics';
 import { GlobalMarket } from './GlobalMarket';
-import { SankeyChart, OverviewIndustryRoleFilter } from './SankeyChart';
+import { SankeyChart, OverviewIndustryRoleFilter, OverviewSankeyTab } from './SankeyChart';
 import { JobForm } from './JobForm';
 import { FileUpload } from './FileUpload';
 
@@ -36,6 +36,8 @@ import { isRoleInTrackingSystem } from '../data/roles';
 import { getStoredLocalResume, getUserResume, RESUME_UPDATED_EVENT } from '../db/resumes';
 import { OnboardingModal } from './OnboardingModal';
 import { getAccountScopeId, purgeAllGuestAndLegacyData } from '../lib/accountStorage';
+import { AnimatePresence, motion } from 'framer-motion';
+import { CollapsedBottomDock, DockActiveTabsState, DockSubTabTarget } from './CollapsedBottomDock';
 
 interface DashboardProps {
   isDemo?: boolean;
@@ -280,6 +282,58 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   const [kanbanOverviewFilter, setKanbanOverviewFilter] = useState<OverviewIndustryRoleFilter | null>(null);
   const [focusedAppId, setFocusedAppId] = useState<string | null>(null);
 
+  const tabRequestSeqRef = useRef(0);
+  const [activeTabs, setActiveTabs] = useState<DockActiveTabsState>({
+    sankey: 'process',
+    kanban: 'active',
+    companyIntel: 'explorer',
+    coverLetterStyle: 'modern',
+    resume: 'preview',
+  });
+  const [sankeyTabReq, setSankeyTabReq] = useState<{ tab: OverviewSankeyTab; seq: number } | null>(null);
+  const [kanbanTabReq, setKanbanTabReq] = useState<{ tab: 'active' | 'inactive' | 'wishlist'; seq: number } | null>(null);
+  const [companyIntelTabReq, setCompanyIntelTabReq] = useState<{ tab: 'explorer' | 'history'; seq: number } | null>(null);
+  const [coverLetterStyleReq, setCoverLetterStyleReq] = useState<{ style: 'modern' | 'classic' | 'executive'; seq: number } | null>(null);
+  const [resumeTabReq, setResumeTabReq] = useState<{ tab: 'preview' | 'edit'; seq: number } | null>(null);
+
+  const handleDockSubTab = (target: DockSubTabTarget) => {
+    const seq = ++tabRequestSeqRef.current;
+    switch (target.view) {
+      case 'sankey':
+        setSankeyTabReq({ tab: target.tab, seq });
+        setActiveTabs(prev => ({ ...prev, sankey: target.tab }));
+        setView('sankey');
+        break;
+      case 'kanban':
+        setKanbanStatusFilter(null);
+        setKanbanOverviewFilter(null);
+        setKanbanLayoutMode('kanban');
+        setKanbanTabReq({ tab: target.tab, seq });
+        setActiveTabs(prev => ({ ...prev, kanban: target.tab }));
+        setView('kanban');
+        break;
+      case 'cv-match':
+      case 'eval-history':
+        setView(target.view);
+        break;
+      case 'company-intel':
+        setCompanyIntelTabReq({ tab: target.tab, seq });
+        setActiveTabs(prev => ({ ...prev, companyIntel: target.tab }));
+        setView('company-intel');
+        break;
+      case 'studio-cover-letter':
+        setCoverLetterStyleReq({ style: target.style, seq });
+        setActiveTabs(prev => ({ ...prev, coverLetterStyle: target.style }));
+        setView('studio-cover-letter');
+        break;
+      case 'studio-resume':
+        setResumeTabReq({ tab: target.tab, seq });
+        setActiveTabs(prev => ({ ...prev, resume: target.tab }));
+        setView('studio-resume');
+        break;
+    }
+  };
+
   const handleNavigateToGhosted = (notification?: AppNotification) => {
     let targetId = notification?.applicationId || (notification?.applicationIds && notification.applicationIds[0]);
 
@@ -298,6 +352,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     if (targetId) {
       setFocusedAppId(targetId);
     }
+    setKanbanTabReq(null);
     setKanbanStatusFilter(null);
     setKanbanOverviewFilter(null);
     setKanbanLayoutMode('kanban');
@@ -305,6 +360,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   };
 
   const handleSankeyCategoryClick = (status: JobStatus | 'Total') => {
+    setKanbanTabReq(null);
     setKanbanOverviewFilter(null);
     if (status === 'Total' || !status) {
       setKanbanStatusFilter(null);
@@ -316,6 +372,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
   };
 
   const handleSankeyIndustryRoleClick = (filter: OverviewIndustryRoleFilter) => {
+    setKanbanTabReq(null);
     setKanbanStatusFilter(null);
     setKanbanOverviewFilter(filter);
     setKanbanLayoutMode('list');
@@ -965,6 +1022,41 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
     'studio-resume': 'Resume Studio'
   };
   const displayTitle = viewTitles[view] || view.replace('-', ' ');
+  const handleSidebarSelect = (id: string) => {
+    if (id === 'kanban') {
+      setKanbanTabReq(null);
+      setKanbanStatusFilter(null);
+      setKanbanOverviewFilter(null);
+      setKanbanLayoutMode('kanban');
+    }
+    setView(id as any);
+  };
+
+  const handleOpenImport = () => {
+    if (isDemo) {
+      toast.info('Demo Mode: Importing data is disabled in this view-only portfolio preview.');
+      return;
+    }
+    setShowImportModal(true);
+  };
+
+  const handleExportApps = () => {
+    if (isDemo) {
+      toast.info('Demo Mode: Exporting data is restricted in this view-only portfolio preview.');
+      return;
+    }
+    exportCsv(applications);
+  };
+
+  const handleOpenNewApp = () => {
+    if (isDemo) {
+      toast.info('Demo Mode: Creating new applications is restricted in this view-only portfolio preview.');
+      return;
+    }
+    setEditingApp(null);
+    setIsFormOpen(true);
+  };
+
   return (
     <div className="flex w-full h-screen bg-[#faf9f7] overflow-hidden text-[#121722] font-sans">
       {/* Sidebar */}
@@ -974,31 +1066,11 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
             setTrackingSystem={handleSetTrackingSystem}
            className="w-[260px] border-none bg-transparent"
            activeId={view}
-           onSelect={(id) => {
-             if (id === 'kanban') {
-               setKanbanStatusFilter(null);
-               setKanbanOverviewFilter(null);
-               setKanbanLayoutMode('kanban');
-             }
-             setView(id as any);
-           }}
+           onSelect={handleSidebarSelect}
            isDemo={isDemo}
-           onImport={() => isDemo ? toast.info('Demo Mode: Importing data is disabled in this view-only portfolio preview.') : setShowImportModal(true)}
-           onExport={() => {
-             if (isDemo) {
-               toast.info('Demo Mode: Exporting data is restricted in this view-only portfolio preview.');
-               return;
-             }
-             exportCsv(applications);
-           }}
-           onNew={() => {
-             if (isDemo) {
-               toast.info('Demo Mode: Creating new applications is restricted in this view-only portfolio preview.');
-               return;
-             }
-             setEditingApp(null);
-             setIsFormOpen(true);
-           }}
+           onImport={handleOpenImport}
+           onExport={handleExportApps}
+           onNew={handleOpenNewApp}
            onOpenStudio={(studio) => setView(`studio-${studio}` as any)}
         />
       </div>
@@ -1010,6 +1082,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
            <div className="flex items-center gap-3">
              <button 
                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+               title={isSidebarOpen ? 'Collapse left menu' : 'Expand left menu'}
                className="p-1.5 rounded-lg text-[#a5a5a5] hover:bg-[#faf9f7] hover:text-[#121722] transition-colors cursor-pointer -ml-1.5"
              >
                {isSidebarOpen ? <PanelLeftClose className="w-[18px] h-[18px]" strokeWidth={1.5} /> : <PanelLeftOpen className="w-[18px] h-[18px]" strokeWidth={1.5} />}
@@ -1039,7 +1112,7 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
          </header>
 
          {/* Content Scrollable Area */}
-         <main className="flex-1 overflow-y-auto bg-[#faf9f7] p-4 sm:p-6 md:p-8 w-full flex flex-col custom-scrollbar relative">
+         <main className={`flex-1 overflow-y-auto bg-[#faf9f7] p-4 sm:p-6 md:p-8 w-full flex flex-col custom-scrollbar relative ${!isSidebarOpen ? 'pb-24 sm:pb-24 md:pb-24' : ''}`}>
             {view === 'sankey' && (
               <SankeyChart 
                 applications={filteredApplications} 
@@ -1055,6 +1128,8 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                 trackingSystem={trackingSystem} 
                 onCategoryClick={handleSankeyCategoryClick}
                 onIndustryRoleClick={handleSankeyIndustryRoleClick}
+                requestedTab={sankeyTabReq}
+                onTabChange={(tab) => setActiveTabs(prev => ({ ...prev, sankey: tab }))}
               />
             )}
             {view === 'global-market' && <GlobalMarket isDemo={isDemo} onAddToWishlist={handleSave} trackingSystem={trackingSystem} selectedRole={selectedRole} />}
@@ -1074,6 +1149,8 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                 onClearOverviewFilter={() => setKanbanOverviewFilter(null)}
                 focusedApplicationId={focusedAppId}
                 onClearFocusedApplication={() => setFocusedAppId(null)}
+                requestedTab={kanbanTabReq}
+                onTabChange={(tab) => setActiveTabs(prev => ({ ...prev, kanban: tab }))}
               />
             )}
             {view === 'analytics' && <Analytics applications={filteredApplications} onLocationSelect={handleLocationSelect} trackingSystem={trackingSystem} />}
@@ -1093,6 +1170,8 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                 initialCompanyName={companyIntelTarget.companyName} 
                 initialWebsiteUrl={companyIntelTarget.websiteUrl} 
                 isDemo={isDemo} 
+                requestedTab={companyIntelTabReq}
+                onTabChange={(tab) => setActiveTabs(prev => ({ ...prev, companyIntel: tab }))}
               />
             )}
             {view === 'notifications' && <NotificationsPage onBack={() => setView('sankey')} onNavigateToGhosted={handleNavigateToGhosted} />}
@@ -1110,6 +1189,8 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                   storageKey={`studio_cover_letter_dashboard_${accountScope}`}
                   onClose={() => setView('sankey')}
                   isDemo={isDemo}
+                  requestedStyle={coverLetterStyleReq}
+                  onStyleChange={(style) => setActiveTabs(prev => ({ ...prev, coverLetterStyle: style }))}
                 />
               </div>
             )}
@@ -1139,6 +1220,8 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
                   storageKey={`studio_resume_dashboard_${accountScope}`}
                   onClose={() => setView('sankey')}
                   isDemo={isDemo}
+                  requestedTab={resumeTabReq}
+                  onTabChange={(tab) => setActiveTabs(prev => ({ ...prev, resume: tab }))}
                 />
               </div>
             )}
@@ -1268,6 +1351,45 @@ export function Dashboard({ isDemo = false }: DashboardProps) {
         setStoredResume={setStoredResume}
         isDemo={isDemo}
       />
+
+      {/* Bottom Expandable Dock when left sidebar is collapsed */}
+      <AnimatePresence>
+        {!isSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 18, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 18, scale: 0.96 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 pointer-events-none flex justify-center"
+          >
+            <div className="pointer-events-auto">
+              <CollapsedBottomDock
+                activeId={view}
+                activeTabs={activeTabs}
+                onSelect={handleSidebarSelect}
+                onSelectSubTab={handleDockSubTab}
+                onNew={handleOpenNewApp}
+                onImport={handleOpenImport}
+                onExport={handleExportApps}
+                onExpandSidebar={() => setIsSidebarOpen(true)}
+                trackingSystem={trackingSystem}
+                setTrackingSystem={handleSetTrackingSystem}
+                applicationCount={applications.length}
+                applicationCategoryCounts={applications.reduce(
+                  (acc, app) => {
+                    const canon = toCanonicalStatus(app.status);
+                    if (canon === 'Wishlist') acc.wishlist += 1;
+                    else if (canon === 'Rejected' || canon === 'Ghosted') acc.inactive += 1;
+                    else acc.active += 1;
+                    return acc;
+                  },
+                  { active: 0, inactive: 0, wishlist: 0 }
+                )}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

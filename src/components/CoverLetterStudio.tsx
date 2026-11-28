@@ -17,6 +17,8 @@ interface CoverLetterStudioProps {
   onSave?: (savedText: string) => void;
   storageKey?: string;
   isDemo?: boolean;
+  requestedStyle?: { style: 'modern' | 'classic' | 'executive'; seq: number } | null;
+  onStyleChange?: (style: 'modern' | 'classic' | 'executive') => void;
 }
 
 type CoverLetterStyle = 'classic' | 'modern' | 'executive' | 'academic';
@@ -29,9 +31,24 @@ export function CoverLetterStudio({
   embedded = false,
   onSave,
   storageKey,
-  isDemo = false
+  isDemo = false,
+  requestedStyle = null,
+  onStyleChange,
 }: CoverLetterStudioProps) {
-  const [style, setStyle] = useState<CoverLetterStyle>('modern');
+  const [style, setStyle] = useState<CoverLetterStyle>(() => requestedStyle?.style || 'modern');
+
+  useEffect(() => {
+    if (requestedStyle) {
+      setStyle(requestedStyle.style);
+      if (!isDemo) {
+        try {
+          const scope = getAccountScopeId(auth.currentUser, isDemo);
+          const key = storageKey || `studio_cover_letter_${scope}_${(companyName || 'general').replace(/\s+/g, '_')}_${(_targetRole || 'general').replace(/\s+/g, '_')}`;
+          localStorage.setItem(`${key}_style`, requestedStyle.style);
+        } catch {}
+      }
+    }
+  }, [requestedStyle?.seq]);
   const [copied, setCopied] = useState(false);
   const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right'>('left');
   const [activeButtons, setActiveButtons] = useState<string[]>([]);
@@ -292,7 +309,7 @@ export function CoverLetterStudio({
         }
       }
       const savedStyle = localStorage.getItem(`${effectiveStorageKey}_style`);
-      if (savedStyle && ['classic', 'modern', 'executive', 'academic'].includes(savedStyle)) {
+      if (!requestedStyle && savedStyle && ['classic', 'modern', 'executive', 'academic'].includes(savedStyle)) {
         setStyle(savedStyle as CoverLetterStyle);
       }
     } catch (e) {}
@@ -951,7 +968,7 @@ export function CoverLetterStudio({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 ml-auto shrink-0">
+        <div className="flex flex-wrap items-center gap-2 sm:ml-auto max-w-full">
           {/* Typography preset pill selector */}
           <SlidingTabs<'modern' | 'classic' | 'executive'>
             value={(style === 'academic' ? 'classic' : style) as 'modern' | 'classic' | 'executive'}
@@ -960,10 +977,10 @@ export function CoverLetterStudio({
                 toast.info('Demo Mode: Style preset is preview-only in this showcase.');
               }
               setStyle(nextStyle);
+              onStyleChange?.(nextStyle);
               triggerAutoSave();
             }}
-            className="hidden sm:flex mr-1"
-            tabClassName="px-3"
+            tabClassName="px-3.5"
             items={[
               { id: 'modern', label: 'Modern' },
               { id: 'classic', label: 'Classic' },
@@ -974,7 +991,7 @@ export function CoverLetterStudio({
           <button 
             type="button"
             onClick={handleCopy}
-            className="inline-flex items-center justify-center gap-1.5 h-[38px] px-3 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-[13px] font-semibold rounded-lg transition-all shadow-2xs cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 h-[38px] px-4 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-[13px] font-semibold rounded-lg transition-all shadow-2xs cursor-pointer"
           >
             {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
             <span>{copied ? 'Copied' : 'Copy'}</span>
@@ -983,7 +1000,7 @@ export function CoverLetterStudio({
           <button 
             type="button"
             onClick={handlePrint}
-            className={`inline-flex items-center justify-center gap-2 h-[38px] px-5 text-[13px] font-semibold rounded-lg transition-all shadow-2xs ${
+            className={`inline-flex items-center justify-center gap-2 h-[38px] px-4 text-[13px] font-semibold rounded-lg transition-all shadow-2xs ${
               isDemo
                 ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 hover:bg-zinc-100 cursor-not-allowed'
                 : 'bg-[#0068f9] text-white hover:bg-[#024bb1] cursor-pointer'
@@ -997,7 +1014,7 @@ export function CoverLetterStudio({
           {!embedded && onClose && (
             <button 
               onClick={onClose}
-              className="p-2 text-[#a5a5a5] hover:text-[#121722] hover:bg-[#efefef] rounded-lg transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center h-[38px] w-[38px] text-[#a5a5a5] hover:text-[#121722] hover:bg-[#efefef] rounded-lg transition-colors cursor-pointer shrink-0"
             >
               <X size={20} />
             </button>

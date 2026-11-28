@@ -23,6 +23,8 @@ interface KanbanProps {
   onClearOverviewFilter?: () => void;
   focusedApplicationId?: string | null;
   onClearFocusedApplication?: () => void;
+  requestedTab?: { tab: 'active' | 'inactive' | 'wishlist'; seq: number } | null;
+  onTabChange?: (tab: 'active' | 'inactive' | 'wishlist') => void;
 }
 
 export function Kanban({ 
@@ -39,13 +41,16 @@ export function Kanban({
   overviewFilter = null,
   onClearOverviewFilter,
   focusedApplicationId = null,
-  onClearFocusedApplication
+  onClearFocusedApplication,
+  requestedTab = null,
+  onTabChange,
 }: KanbanProps) {
   const WISHLIST_STATUSES: JobStatus[] = ['Wishlist'];
   const ACTIVE_STATUSES: JobStatus[] = ['Applied', 'Screening', 'Technical', 'Final', 'Offer'];
   const INACTIVE_STATUSES: JobStatus[] = ['Rejected', 'Ghosted'];
 
   const getInitialTab = (): 'wishlist' | 'active' | 'inactive' => {
+    if (requestedTab) return requestedTab.tab;
     if (focusedApplicationId) return 'inactive';
     if (statusFilter) {
       if (WISHLIST_STATUSES.includes(statusFilter)) return 'wishlist';
@@ -59,6 +64,15 @@ export function Kanban({
   const [layoutMode, setLayoutMode] = useState<'kanban' | 'list'>(initialLayoutMode || (statusFilter ? 'list' : 'kanban'));
   const [currentStatusFilter, setCurrentStatusFilter] = useState<JobStatus | null>(statusFilter);
   const [internalFocusedId, setInternalFocusedId] = useState<string | null>(focusedApplicationId);
+
+  React.useEffect(() => {
+    if (requestedTab) {
+      setActiveTab(requestedTab.tab);
+      setCurrentStatusFilter(null);
+      onStatusFilterChange?.(null);
+      onTabChange?.(requestedTab.tab);
+    }
+  }, [requestedTab?.seq]);
 
   React.useEffect(() => {
     if (initialLayoutMode) {
@@ -105,6 +119,7 @@ export function Kanban({
 
   const handleTabChange = (tab: 'wishlist' | 'active' | 'inactive') => {
     setActiveTab(tab);
+    onTabChange?.(tab);
     if (currentStatusFilter) {
       const allowedInTab = tab === 'wishlist' ? WISHLIST_STATUSES : tab === 'active' ? ACTIVE_STATUSES : INACTIVE_STATUSES;
       if (!allowedInTab.includes(currentStatusFilter)) {
@@ -203,50 +218,50 @@ export function Kanban({
   return (
     <div className="relative w-full flex-1 flex flex-col min-h-[500px]">
       <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col relative overflow-hidden gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2 max-w-full">
           <SlidingTabs<'active' | 'inactive' | 'wishlist'>
             value={activeTab}
             onChange={(tab) => handleTabChange(tab)}
             tabClassName="px-4"
             items={[
-              { id: 'active', label: 'Active Progress' },
+              { id: 'active', label: 'In Progress' },
               { id: 'inactive', label: 'Closed' },
               { id: 'wishlist', label: 'Wishlist' },
             ]}
           />
 
           {currentStatusFilter && !internalFocusedId && currentStatusFilter !== 'Ghosted' && (
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-[#e8f1ff] text-[#0068f9] rounded-lg text-xs font-semibold border border-[#0068f9]/20 shadow-2xs animate-in fade-in">
-              <span>Status: {getStatusLabel(currentStatusFilter, trackingSystem)}</span>
+            <div className="flex items-center gap-1.5 h-[38px] px-3.5 bg-[#e8f1ff] text-[#0068f9] rounded-lg text-[13px] font-semibold border border-[#0068f9]/20 shadow-2xs animate-in fade-in">
+              <span className="whitespace-nowrap">Status: {getStatusLabel(currentStatusFilter, trackingSystem)}</span>
               <button 
                 onClick={() => {
                   setCurrentStatusFilter(null);
                   onStatusFilterChange?.(null);
                 }}
-                className="hover:text-blue-900 cursor-pointer p-0.5 rounded-[4px] hover:bg-blue-200/50 transition-colors"
+                className="hover:text-blue-900 cursor-pointer p-0.5 rounded-[4px] hover:bg-blue-200/50 transition-colors shrink-0"
                 title="Clear status filter"
               >
-                <X size={12} />
+                <X size={13} />
               </button>
             </div>
           )}
 
           {overviewFilter && (
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-[#e8f1ff] text-[#0068f9] rounded-lg text-xs font-semibold border border-[#0068f9]/20 shadow-2xs animate-in fade-in">
-              <span>{overviewFilter.label}</span>
+            <div className="flex items-center gap-1.5 h-[38px] px-3.5 bg-[#e8f1ff] text-[#0068f9] rounded-lg text-[13px] font-semibold border border-[#0068f9]/20 shadow-2xs animate-in fade-in">
+              <span className="whitespace-nowrap">{overviewFilter.label}</span>
               <button
                 onClick={() => onClearOverviewFilter?.()}
-                className="hover:text-blue-900 cursor-pointer p-0.5 rounded-[4px] hover:bg-blue-200/50 transition-colors"
+                className="hover:text-blue-900 cursor-pointer p-0.5 rounded-[4px] hover:bg-blue-200/50 transition-colors shrink-0"
                 title="Clear industry/role filter"
               >
-                <X size={12} />
+                <X size={13} />
               </button>
             </div>
           )}
         </div>
         
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex flex-wrap items-center gap-2 sm:ml-auto max-w-full">
           {uniqueCountries.length > 0 && (
             <Dropdown
               icon={<MapPin size={14} />}
@@ -280,7 +295,7 @@ export function Kanban({
           />
           
           {timeFilter === 'custom' && (
-            <div className="flex items-center gap-2 bg-white border border-[#efefef] rounded-lg px-3 shadow-2xs h-[38px]">
+            <div className="flex items-center gap-2 bg-white border border-[#efefef] rounded-lg px-3 shadow-2xs h-[38px] max-w-full overflow-x-auto">
               <input
                 type="date"
                 value={customStartDate}
@@ -342,7 +357,7 @@ export function Kanban({
               {(grouped[status] || []).length}
             </span>
           </div>
-          <div className="flex-1 overflow-y-auto flex flex-col gap-3 pr-1 scrollbar-thin">
+          <div className="flex-1 overflow-y-auto flex flex-col gap-3 pr-1 scrollbar-thin min-w-0">
             {(grouped[status] || []).map(app => {
               const isFocused = internalFocusedId === app.id;
               return (
@@ -361,36 +376,36 @@ export function Kanban({
                   e.dataTransfer.setData('text/plain', app.id);
                   e.dataTransfer.effectAllowed = 'move';
                 }}
-                className={`p-4 rounded-lg transition-all cursor-pointer group shadow-2xs cursor-grab active:cursor-grabbing ${
+                className={`p-4 rounded-lg transition-all cursor-pointer group shadow-2xs cursor-grab active:cursor-grabbing w-full min-w-0 shrink-0 overflow-hidden ${
                   isFocused
                     ? 'border-2 border-[#0068f9] bg-white'
                     : 'border border-[#efefef] bg-[#faf9f7] hover:bg-white hover:border-[#0068f9]/40'
                 }`}
               >
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-bold text-sm text-[#121722] truncate pr-2">{app.position}</h4>
-                  <button className="text-[#777c86] opacity-0 group-hover:opacity-100 transition-opacity hover:text-[#121722]">
+                <div className="flex justify-between items-start gap-2 mb-2 min-w-0">
+                  <h4 className="font-bold text-sm text-[#121722] truncate min-w-0 flex-1">{app.position}</h4>
+                  <button type="button" className="text-[#777c86] opacity-0 group-hover:opacity-100 transition-opacity hover:text-[#121722] shrink-0">
                     <MoreVertical size={16} />
                   </button>
                 </div>
-                <div className="flex items-center gap-1.5 text-xs text-[#777c86] mb-3 flex-wrap">
-                  <span className="truncate" title={app.company}>{app.company}</span>
+                <div className="flex items-center gap-1.5 text-xs text-[#777c86] mb-3 flex-wrap min-w-0 max-w-full">
+                  <span className="truncate max-w-full" title={app.company}>{app.company}</span>
                   {app.location && (
-                    <span className="text-[11px] text-[#777c86] font-medium truncate">
+                    <span className="text-[11px] text-[#777c86] font-medium truncate max-w-full">
                       • {app.location}
                     </span>
                   )}
                   {app.workType && (
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px] border whitespace-nowrap ${getWorkTypeBadgeStyle(app.workType)}`}>
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px] border whitespace-nowrap max-w-full truncate ${getWorkTypeBadgeStyle(app.workType)}`}>
                       {app.workType}
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-2 flex-wrap mt-2">
+                <div className="flex items-center gap-2 flex-wrap mt-2 min-w-0 w-full">
                   {app.nextInterviewDate && (
-                    <div className="flex items-center gap-2 text-[10px] font-medium text-[#0068f9] bg-[#faf9f7] border border-[#efefef] w-fit px-2 py-0.5 rounded-[4px]">
-                      <Calendar size={12} />
-                      <span>{new Date(app.nextInterviewDate).toLocaleDateString()}</span>
+                    <div className="inline-flex items-center gap-1.5 text-[10px] font-medium text-[#0068f9] bg-[#faf9f7] border border-[#efefef] max-w-full min-w-0 px-2 py-0.5 rounded-[4px]">
+                      <Calendar size={12} className="shrink-0" />
+                      <span className="truncate">{new Date(app.nextInterviewDate).toLocaleDateString()}</span>
                     </div>
                   )}
 
@@ -402,7 +417,7 @@ export function Kanban({
                     if (allLinks.length === 0) return null;
 
                     return (
-                      <div className="flex items-center gap-1.5 flex-wrap" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center gap-1.5 flex-wrap w-full min-w-0" onClick={e => e.stopPropagation()}>
                         {allLinks.slice(0, 2).map((lnk, i) => {
                           const normalized = lnk.url?.startsWith('http://') || lnk.url?.startsWith('https://')
                             ? lnk.url
@@ -414,16 +429,16 @@ export function Kanban({
                               target="_blank"
                               rel="noopener noreferrer"
                               title={`${lnk.title || 'Link'}: ${lnk.url}`}
-                              className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold text-[#0068f9] hover:text-[#024bb1] bg-white hover:bg-[#eef5ff] border border-[#0068f9]/20 rounded-[4px] transition-colors shadow-2xs truncate max-w-[130px]"
+                              className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold text-[#0068f9] hover:text-[#024bb1] bg-white hover:bg-[#eef5ff] border border-[#0068f9]/20 rounded-[4px] transition-colors shadow-2xs max-w-full min-w-0 overflow-hidden"
                             >
                               <Link2 size={10} className="shrink-0" />
-                              <span className="truncate">{lnk.title || 'Link'}</span>
+                              <span className="truncate min-w-0">{lnk.title || 'Link'}</span>
                               <ExternalLink size={9} className="shrink-0 opacity-70" />
                             </a>
                           );
                         })}
                         {allLinks.length > 2 && (
-                          <span className="text-[10px] font-medium text-[#777c86] bg-white px-1.5 py-0.5 rounded-[4px] border border-[#efefef]">
+                          <span className="text-[10px] font-medium text-[#777c86] bg-white px-1.5 py-0.5 rounded-[4px] border border-[#efefef] shrink-0">
                             +{allLinks.length - 2}
                           </span>
                         )}

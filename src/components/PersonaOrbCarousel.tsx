@@ -217,7 +217,7 @@ export function PersonaOrbCarousel({
     <div className="space-y-3.5 flex-1 flex flex-col justify-between">
       
       {/* 1. CATEGORY TABS (STABLE, NO ICON, NO BOUNCE SHAKE) */}
-      <div className="flex items-center justify-between border-b border-[#efefef] pb-2.5 gap-2 overflow-x-auto no-scrollbar">
+      <div className="flex flex-wrap items-center justify-between border-b border-[#efefef] pb-3 gap-3">
         <SlidingTabs
           value={activeTab}
           onChange={setActiveTab}
@@ -225,7 +225,7 @@ export function PersonaOrbCarousel({
           items={CATEGORIES.map((cat) => ({ id: cat.id, label: cat.label }))}
         />
 
-        <div className="hidden sm:block text-xs font-medium text-[#777c86]">
+        <div className="hidden sm:block text-xs font-medium text-[#777c86] shrink-0">
           {activeIndex + 1} of {filteredRoles.length} Evaluators
         </div>
       </div>

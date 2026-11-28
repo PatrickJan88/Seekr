@@ -465,10 +465,10 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
       <div className="bg-white rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col relative divide-y divide-[#efefef] overflow-y-auto custom-scrollbar">
         
         {/* Top Header / Header Controls with unified h-[38px] heights */}
-        <div className="p-4 sm:p-5 flex flex-col gap-3 shrink-0 bg-white">
+        <div className="p-4 sm:p-6 flex flex-col gap-3 shrink-0 bg-white">
           {selectedEval ? (
             /* Selected Evaluation Header: Left Back button with same size as Add to Wishlist, Middle AI disclaimer, Right Add to Wishlist button */
-            <div className="w-full flex items-center justify-between gap-4">
+            <div className="w-full flex flex-wrap items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={() => setSelectedEval(null)}
@@ -557,8 +557,8 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
               </div>
 
               {/* Middle & Right: Search Box, Counter */}
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="relative flex-1 min-w-[140px] sm:min-w-[180px] max-w-sm flex items-center">
+              <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                <div className="relative flex-1 min-w-[160px] max-w-full sm:max-w-sm flex items-center">
                   <div className="relative w-full">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a5a5a5]" size={15} />
                     <input
@@ -593,7 +593,7 @@ export function EvaluateHistoryPage({ onBack, applications = [], onAddToWishlist
 
         {/* AI Disclaimer subheader */}
         {!selectedEval && (
-          <div className="px-5 py-2 bg-[#faf9f7]/60 flex items-center gap-1.5 text-xs text-[#777c86]">
+          <div className="px-4 sm:px-6 py-2.5 bg-[#faf9f7]/60 flex items-center gap-1.5 text-xs text-[#777c86]">
             <Info size={13} className="shrink-0 text-[#a5a5a5]" />
             <span>AI evaluations may contain inaccuracies; always review the results.</span>
           </div>

@@ -170,6 +170,8 @@ interface CompanyIntelligenceStudioProps {
   initialCompanyName?: string;
   initialWebsiteUrl?: string;
   isDemo?: boolean;
+  requestedTab?: { tab: 'explorer' | 'history'; seq: number } | null;
+  onTabChange?: (tab: 'explorer' | 'history') => void;
 }
 
 
@@ -189,7 +191,9 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
   onViewWishlist,
   initialCompanyName = '',
   initialWebsiteUrl = '',
-  isDemo = false
+  isDemo = false,
+  requestedTab = null,
+  onTabChange,
 }) => {
   const recentScrollRef = useRef<HTMLDivElement>(null);
   const handleScrollRecent = (direction: 'left' | 'right') => {
@@ -199,7 +203,18 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
     }
   };
 
-  const [activeTab, setActiveTab] = useState<'explorer' | 'history'>('explorer');
+  const [activeTab, setActiveTab] = useState<'explorer' | 'history'>(() => requestedTab?.tab || 'explorer');
+
+  useEffect(() => {
+    if (requestedTab) {
+      setActiveTab(requestedTab.tab);
+    }
+  }, [requestedTab?.seq]);
+
+  const handleTabSelect = (tab: 'explorer' | 'history') => {
+    setActiveTab(tab);
+    onTabChange?.(tab);
+  };
   const [companyName, setCompanyName] = useState(initialCompanyName);
   const [websiteUrl, setWebsiteUrl] = useState(initialWebsiteUrl);
   
@@ -769,10 +784,11 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
       {/* Top Controls Card */}
       <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex flex-col relative">
         {/* Unified Global Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
           <SlidingTabs<'explorer' | 'history'>
             value={activeTab}
-            onChange={setActiveTab}
+            onChange={handleTabSelect}
+            className="self-start md:self-auto"
             tabClassName="px-4"
             items={[
               { id: 'explorer', label: 'Teardown' },
@@ -789,7 +805,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
           />
 
           {activeTab === 'explorer' ? (
-            <div className="flex-1 flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto md:max-w-2xl">
+            <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto md:max-w-2xl">
               <div className="relative w-full">
                 <Building2 className="w-4 h-4 text-[#a5a5a5] absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
@@ -840,7 +856,7 @@ export const CompanyIntelligenceStudio: React.FC<CompanyIntelligenceStudioProps>
               </button>
             </div>
           ) : (
-            <div className="relative w-full sm:w-72">
+            <div className="relative w-full md:w-72">
               <Search className="w-3.5 h-3.5 text-[#a5a5a5] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"

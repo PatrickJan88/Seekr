@@ -517,7 +517,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
       <div className="bg-white p-4 sm:p-6 rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col relative">
       <div className="pb-4 sm:pb-6 border-b border-[#efefef] shrink-0">
         
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 xl:gap-3 w-full min-w-0">
+        <div className="flex flex-wrap xl:flex-nowrap items-center gap-2 xl:gap-3 w-full min-w-0">
           {/* Matched Up Button - arranged before all locations */}
           <div ref={matchedUpRef} className="relative shrink-0 w-full sm:w-auto z-50">
             <button
@@ -615,7 +615,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
           </div>
 
           {/* All Locations - auto-reduces width to fit */}
-          <div className="min-w-0 flex-1 sm:flex-initial sm:w-auto z-50">
+          <div className="min-w-[140px] flex-1 sm:flex-initial sm:w-auto z-50">
             <NestedLocationMenu
               locationTree={locationTree}
               continentFilter={continentFilter}
@@ -628,7 +628,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
           </div>
 
           {/* All Roles - auto-reduces width to fit */}
-          <div className="min-w-0 flex-1 sm:flex-initial sm:w-auto z-50">
+          <div className="min-w-[140px] flex-1 sm:flex-initial sm:w-auto z-50">
             <NestedRoleMenu
               roleCategories={getRoleCategories(trackingSystem)}
               typeFilter={typeFilter}
@@ -637,7 +637,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
           </div>
 
           {/* Date Posted - auto-reduces width to fit */}
-          <div className="min-w-0 flex-1 sm:flex-initial sm:w-auto z-50">
+          <div className="min-w-[140px] flex-1 sm:flex-initial sm:w-auto z-50">
             <DateFilterMenu
               dateFilter={dateFilter}
               onSelectDate={setDateFilter}
@@ -646,13 +646,13 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
 
           {/* New Grad Switch Toggle (Industry Seekr) */}
           {trackingSystem === 'industry' && (
-            <div className="min-w-0 flex-1 sm:flex-initial sm:w-auto z-50">
+            <div className="min-w-[140px] flex-1 sm:flex-initial sm:w-auto z-50">
               <button
                 type="button"
                 role="switch"
                 aria-checked={newGradFilter}
                 onClick={() => setNewGradFilter(prev => !prev)}
-                className="flex items-center justify-between gap-2.5 h-[38px] px-3.5 bg-white border border-[#efefef] hover:border-[#121722]/30 rounded-lg text-[13px] font-medium transition-all shadow-2xs hover:bg-[#faf9f7] cursor-pointer select-none shrink-0 group"
+                className="flex items-center justify-between gap-2.5 h-[38px] px-4 w-full sm:w-auto bg-white border border-[#efefef] hover:border-[#121722]/30 rounded-lg text-[13px] font-medium transition-all shadow-2xs hover:bg-[#faf9f7] cursor-pointer select-none shrink-0 group"
                 title={newGradFilter ? 'New Grad filter is ON. Click to show all experience levels' : 'New Grad filter is OFF. Click to show New Grad & Early Career roles only'}
               >
                 <div className="flex items-center gap-1.5">
@@ -677,7 +677,7 @@ export function GlobalMarket({ isDemo, onAddToWishlist, trackingSystem = 'indust
           )}
 
           {/* Expanded Width Search Box & Results Counter with Integrated QS University Search */}
-          <div className="relative flex-1 min-w-[120px] sm:min-w-[160px] max-w-full flex items-center" ref={searchContainerRef}>
+          <div className="relative flex-1 min-w-[180px] max-w-full flex items-center" ref={searchContainerRef}>
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a5a5a5]" size={15} />
               <input

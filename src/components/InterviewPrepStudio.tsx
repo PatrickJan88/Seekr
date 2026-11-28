@@ -1293,11 +1293,11 @@ export function InterviewPrepStudio({
         </div>
 
         {/* Global Studio Actions */}
-        <div className="flex items-center gap-2 flex-wrap shrink-0">
+        <div className="flex items-center gap-2 flex-wrap sm:ml-auto max-w-full">
           <button
             type="button"
             onClick={handleCreateNewDoc}
-            className="inline-flex items-center justify-center gap-1.5 h-[38px] px-3 bg-[#f4f4f5] hover:bg-[#e4e4e7] text-[#121722] text-[13px] font-semibold rounded-lg transition-all shadow-2xs cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 h-[38px] px-4 bg-[#f4f4f5] hover:bg-[#e4e4e7] text-[#121722] text-[13px] font-semibold rounded-lg transition-all shadow-2xs cursor-pointer"
           >
             <Plus size={14} />
             <span>New</span>
@@ -1306,7 +1306,7 @@ export function InterviewPrepStudio({
           <button
             type="button"
             onClick={handleCopy}
-            className="inline-flex items-center justify-center gap-1.5 h-[38px] px-3 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-[13px] font-semibold rounded-lg transition-all shadow-2xs cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 h-[38px] px-4 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-[13px] font-semibold rounded-lg transition-all shadow-2xs cursor-pointer"
           >
             {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
             <span>{copied ? 'Copied' : 'Copy'}</span>
@@ -1315,7 +1315,7 @@ export function InterviewPrepStudio({
           <button
             type="button"
             onClick={handleExportPDF}
-            className={`inline-flex items-center justify-center gap-2 h-[38px] px-5 text-[13px] font-semibold rounded-lg transition-all shadow-2xs ${
+            className={`inline-flex items-center justify-center gap-2 h-[38px] px-4 text-[13px] font-semibold rounded-lg transition-all shadow-2xs ${
               isDemo
                 ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 hover:bg-zinc-100 cursor-not-allowed'
                 : 'bg-[#0068f9] text-white hover:bg-[#024bb1] cursor-pointer'
@@ -1330,7 +1330,7 @@ export function InterviewPrepStudio({
             <button
               type="button"
               onClick={onClose}
-              className="p-2 text-[#a5a5a5] hover:text-[#121722] hover:bg-[#efefef] rounded-lg transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center h-[38px] w-[38px] text-[#a5a5a5] hover:text-[#121722] hover:bg-[#efefef] rounded-lg transition-colors cursor-pointer shrink-0"
               title="Close Studio"
             >
               <X size={20} />

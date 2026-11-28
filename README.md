@@ -7,7 +7,7 @@
 **Track, evaluate, and land your next tech or academic role.**  
 *An all-in-one career intelligence platform and AI agent pipeline.*
 
-[![Version](https://img.shields.io/badge/version-4.2.0-blue.svg?style=flat-square)](https://github.com/PatrickJan88/Seekr)
+[![Version](https://img.shields.io/badge/version-4.5.0-blue.svg?style=flat-square)](https://github.com/PatrickJan88/Seekr)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&style=flat-square)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&style=flat-square)](https://www.typescriptlang.org/)
@@ -25,6 +25,28 @@
 ## Overview
 
 **Seekr** bridges the gap between passive job application tracking and active, AI-assisted career strategy. Engineered for software engineers, data scientists, researchers, and tech professionals, Seekr combines high-performance client-side visual pipelines with server-side AI engines to analyze job postings, evaluate CV compatibility, generate tailored application materials, and track interview milestones.
+
+---
+
+## What's New in Version 4.5.0
+
+Version `4.5.0` introduces a redesigned **Collapsed Floating Bottom Dock** with 1-click direct workspace navigation and hover-revealed sub-tab shortcuts, a modular **Card-Based Settings & Analytics Architecture**, always-on **Interview Preparation Automation**, and expanded **CWUR & All-Continent Job Market Discovery**.
+
+### Major Highlights
+
+*   **Collapsed Floating Bottom Dock & Direct Entry Navigation**:
+    *   **1-Click Primary Destinations**: Restructured the floating dock with direct single-click entry icons for **Overview**, **AI Evaluator**, and **Company 360**, paired with upward expandable drawers for **Tracker**, **Studios**, **Actions**, and **More**.
+    *   **Hover Sub-Tab Deep-Linking (`1, 2, 3`)**: Hovering over multi-tab dock items or drawer rows surfaces numbered quick-jump choices (e.g., `Overview -> Application Process / Industries & Roles`, `My Applications -> Active Progress / Closed / Wishlist`, `AI Evaluator -> Assessment / Evaluation History`, `Company 360 -> Teardown / Saved`, `Cover Letter Studio -> Modern / Classic / Executive`, and `Resume Studio -> Live Preview / Edit Content`).
+    *   **Left-Aligned Active Route Indicator**: Placed the cobalt active dot indicator directly to the left of each active option label across both dock bar menus and expandable drawers for instant scannability.
+
+*   **Modular Card-Based Settings & Analytics Architecture**:
+    *   **Standalone Settings Cards**: Redesigned the Settings view into centered, compact standalone cards (`max-w-3xl`) featuring flush left/right footer alignment, a radio-card selector for **Tracking System** (**Industry Seekr** vs. **Academic Seekr**), a streamlined **Role** selector, **My Resume** management, inline **Customer Support**, and clear destructive action cards.
+    *   **Standalone Analytics Cards**: Separated **Global Application Map**, **Active Progress Summary**, and **Current Status** into independent sibling cards directly on the workspace canvas with tabular counters (`tabular-nums`) and unified surface borders.
+    *   **Always-On Interview Prep Automation**: Enabled automatic generation of structured, resume-grounded interview preparation guides whenever tailored resumes are saved, removing redundant manual toggle overhead from Settings.
+
+*   **Global Job Market & Academic Rankings Upgrades**:
+    *   **Full-Visibility Location Menu**: Renamed the default location selector option to **All Locations** and expanded menu height so every region—including Oceania—appears immediately by default without clipping.
+    *   **CWUR World University Rankings Integration**: Added CWUR global university rank lookup and search autocomplete alongside QS World University Rankings inside **Academic Seekr** feeds and `/api/cwur-universities`.
 
 ---
 
@@ -239,7 +261,15 @@ Version `4.0.0` introduces dedicated standalone left-panel access for Company 36
 
 ## Version History & Changelog
 
-### **v4.2.0** — *Current Release*
+### **v4.5.0** — *Current Release*
+*   Redesigned **Collapsed Floating Bottom Dock** with 1-click direct entry icons (**Overview**, **AI Evaluator**, **Company 360**), renamed **Tracker** drawer group, hover-revealed numbered sub-tab deep-links (`1, 2, 3`), and left-aligned cobalt active dot indicators.
+*   Rebuilt **Settings Page** into compact, centered standalone cards (`max-w-3xl`) with radio-card **Tracking System** selection, clean icon-free selectors, flush left/right footer alignment, and streamlined account/resume/support sections.
+*   Enabled **Interview Preparation Automation** by default for all saved tailored resumes without manual settings toggles.
+*   Separated **Analytics** into standalone sibling cards for **Global Application Map**, **Active Progress Summary**, and **Current Status** matching Seekr's card system.
+*   Upgraded **Job Market Location Dropdown** with the **All Locations** default option and expanded viewport height displaying all continents including Oceania immediately.
+*   Integrated **CWUR World University Rankings** dataset and `/api/cwur-universities` endpoint alongside QS World Rankings for **Academic Seekr** search autocomplete and rank badges.
+
+### **v4.2.0**
 *   Integrated **Arbetsförmedlingen Platsbanken (JobTech Dev) Open API Ingestion** ($0 cost, CC0 license) into Job Market feeds with automated schema normalization across Swedish tech enterprises and top university research postings (Uppsala, Lund, KTH, Karolinska).
 *   Added dedicated **`/api/arbetsformedlingen-jobs` Proxy Endpoint** for live on-demand query execution with municipality and remote filters.
 *   Implemented **Dynamic 30-Day Auto-Ghosting Pipeline** with adaptive manual update recalculation (`lastManualUpdate`), active upcoming interview shielding, and automated background task isolation.

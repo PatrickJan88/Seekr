@@ -86,7 +86,7 @@ export function NotificationCenter({ onViewAll, onNavigateToGhosted }: { onViewA
             <div className="flex items-center justify-between border-b border-[#efefef] px-4 py-3 bg-white">
               <Tabs.List
                 ref={tabsListRef}
-                className="relative flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0"
+                className="relative flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-xl text-[13px] font-medium shrink-0"
               >
                 {indicator.ready && (
                   <motion.div
@@ -98,13 +98,13 @@ export function NotificationCenter({ onViewAll, onNavigateToGhosted }: { onViewA
                         ? { duration: 0 }
                         : { type: 'spring', stiffness: 480, damping: 36, mass: 0.75 }
                     }
-                    className="pointer-events-none absolute top-1 bottom-1 left-0 rounded-full bg-white border border-[#efefef] shadow-2xs z-0"
+                    className="pointer-events-none absolute top-1 bottom-1 left-0 rounded-lg bg-white border border-[#efefef] shadow-2xs z-0"
                   />
                 )}
                 <Tabs.Trigger
                   ref={setItemRef('all')}
                   value="all"
-                  className="relative z-10 h-full px-3.5 rounded-full flex items-center justify-center transition-colors duration-200 cursor-pointer border border-transparent text-[#777c86] hover:text-[#121722] data-[state=active]:text-[#121722]"
+                  className="relative z-10 h-full px-3.5 rounded-lg flex items-center justify-center transition-colors duration-200 cursor-pointer border border-transparent text-[#777c86] hover:text-[#121722] data-[state=active]:text-[#121722]"
                 >
                   <span className="grid place-items-center text-center">
                     <span className="invisible font-bold col-start-1 row-start-1 select-none pointer-events-none" aria-hidden="true">All</span>
@@ -114,7 +114,7 @@ export function NotificationCenter({ onViewAll, onNavigateToGhosted }: { onViewA
                 <Tabs.Trigger
                   ref={setItemRef('unread')}
                   value="unread"
-                  className="relative z-10 h-full px-3.5 rounded-full transition-colors duration-200 flex items-center justify-center gap-1.5 cursor-pointer border border-transparent text-[#777c86] hover:text-[#121722] data-[state=active]:text-[#121722]"
+                  className="relative z-10 h-full px-3.5 rounded-lg transition-colors duration-200 flex items-center justify-center gap-1.5 cursor-pointer border border-transparent text-[#777c86] hover:text-[#121722] data-[state=active]:text-[#121722]"
                 >
                   <span className="grid place-items-center text-center">
                     <span className="invisible font-bold col-start-1 row-start-1 select-none pointer-events-none inline-flex items-center gap-1.5" aria-hidden="true">

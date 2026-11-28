@@ -64,6 +64,8 @@ interface ResumeTemplateStudioProps {
   onSave?: (savedData: TailoredResumeData) => void;
   storageKey?: string;
   isDemo?: boolean;
+  requestedTab?: { tab: 'preview' | 'edit'; seq: number } | null;
+  onTabChange?: (tab: 'preview' | 'edit') => void;
 }
 
 function normalizeResumeData(data: Partial<TailoredResumeData> | null | undefined, fallbackRole?: string, fallbackCompany?: string): TailoredResumeData {
@@ -127,11 +129,24 @@ export function ResumeTemplateStudio({
   embedded = false,
   onSave,
   storageKey,
-  isDemo = false
+  isDemo = false,
+  requestedTab = null,
+  onTabChange,
 }: ResumeTemplateStudioProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<ResumeTemplateId>('modern-single');
   const [resumeData, setResumeData] = useState<TailoredResumeData>(() => normalizeResumeData(initialData, targetRole, companyName));
-  const [activeTab, setActiveTab] = useState<'preview' | 'edit'>('preview');
+  const [activeTab, setActiveTab] = useState<'preview' | 'edit'>(() => requestedTab?.tab || 'preview');
+
+  useEffect(() => {
+    if (requestedTab) {
+      setActiveTab(requestedTab.tab);
+    }
+  }, [requestedTab?.seq]);
+
+  const handleTabSelect = (tab: 'preview' | 'edit') => {
+    setActiveTab(tab);
+    onTabChange?.(tab);
+  };
   const [copied, setCopied] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving'>('saved');
 
@@ -962,7 +977,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
 
   const studioBody = (
     <div className={`bg-[#faf9f7] rounded-2xl w-full flex flex-col overflow-hidden border border-[#efefef] ${
-      embedded ? 'h-full min-h-[calc(100vh-140px)] shadow-2xs' : 'max-w-6xl h-[92vh] shadow-2xl'
+      embedded ? 'flex-1 w-full h-full min-h-0 shadow-2xs' : 'max-w-6xl h-[92vh] shadow-2xl'
     }`}>
       
       {/* Top Header */}
@@ -1014,13 +1029,12 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:ml-auto max-w-full">
           {/* View Switcher Tabs */}
           <SlidingTabs<'preview' | 'edit'>
             value={activeTab}
-            onChange={setActiveTab}
-            className="mr-2"
-            tabClassName="px-3"
+            onChange={handleTabSelect}
+            tabClassName="px-3.5"
             items={[
               { id: 'preview', label: 'Live Preview' },
               { id: 'edit', label: 'Edit Content' },
@@ -1030,7 +1044,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
           <button
             type="button"
             onClick={handleCopyText}
-            className="inline-flex items-center justify-center gap-1.5 h-[38px] px-3 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-[13px] font-semibold rounded-lg transition-all shadow-2xs cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 h-[38px] px-4 bg-white border border-[#efefef] hover:bg-[#faf9f7] text-[#121722] text-[13px] font-semibold rounded-lg transition-all shadow-2xs cursor-pointer"
           >
             {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
             <span>{copied ? 'Copied' : 'Copy Text'}</span>
@@ -1039,7 +1053,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
           <button
             type="button"
             onClick={() => handlePrint()}
-            className={`inline-flex items-center justify-center gap-2 h-[38px] px-5 text-[13px] font-semibold rounded-lg transition-all shadow-2xs ${
+            className={`inline-flex items-center justify-center gap-2 h-[38px] px-4 text-[13px] font-semibold rounded-lg transition-all shadow-2xs ${
               isDemo
                 ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 hover:bg-zinc-100 cursor-not-allowed'
                 : 'bg-[#0068f9] text-white hover:bg-[#024bb1] cursor-pointer'
@@ -1053,7 +1067,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
           {!embedded && onClose && (
             <button
               onClick={onClose}
-              className="p-2 text-[#a5a5a5] hover:text-[#121722] hover:bg-[#efefef] rounded-lg transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center h-[38px] w-[38px] text-[#a5a5a5] hover:text-[#121722] hover:bg-[#efefef] rounded-lg transition-colors cursor-pointer shrink-0"
             >
               <X size={20} />
             </button>
@@ -1371,7 +1385,7 @@ ${education.map(ed => `${ed.degree} — ${ed.institution} (${ed.year})`).join('\
             </div>
           ) : (
             /* Live Preview Mode */
-            <div className="flex-1 flex flex-col md:flex-row h-full overflow-hidden">
+            <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
               
               {/* Left Selector Sidebar */}
               <div className="w-full md:w-72 bg-white border-r border-[#efefef] p-4 flex flex-col justify-between shrink-0 overflow-y-auto">

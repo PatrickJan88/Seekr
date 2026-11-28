@@ -21,7 +21,8 @@
   --radius-inner-md: 10px;
   --radius-control: 8px;
   --radius-chip: 4px;
-  --radius-tabs: 9999px;
+  --radius-tabs: 12px;
+  --radius-tab-active: 8px;
 }
 
 body {

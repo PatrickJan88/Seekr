@@ -774,7 +774,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
           </div>
         )}
         <form id="job-form" onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-[#121722] mb-1.5">{trackingSystem === 'academic' ? 'Institution / University' : 'Company'} *</label>
               <input type="text" name="company" value={formData.company || ''} onChange={handleChange} className="w-full h-[38px] px-3.5 border border-[#efefef] rounded-lg bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-[13px] text-[#121722]" />
@@ -784,7 +784,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
               <input type="text" name="position" value={formData.position || ''} onChange={handleChange} className="w-full h-[38px] px-3.5 border border-[#efefef] rounded-lg bg-[#faf9f7] focus:border-[#0068f9] focus:ring-1 focus:ring-[#0068f9] outline-none transition-all text-[13px] text-[#121722]" />
             </div>
             {/* 2-Level Location Selection */}
-            <div className="col-span-2 space-y-1">
+            <div className="sm:col-span-2 space-y-1">
               <label className="block text-xs font-semibold text-[#121722] mb-1.5">Location</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Level 1: Country Dropdown */}
@@ -947,7 +947,7 @@ export function JobForm({ initialData, onSave, onCancel, onDelete, isDemo = fals
                     <div className="w-full sm:w-1/3">
                       <input
                         type="text"
-                        placeholder="Link name (e.g. Next Step Portal)"
+                        placeholder="Link name"
                         value={link.title}
                         onChange={(e) => handleLinkChange(index, 'title', e.target.value)}
                         className="w-full h-[38px] px-3 text-[13px] font-medium border border-[#efefef] rounded-lg bg-[#faf9f7] focus:bg-white focus:border-[#0068f9] outline-none text-[#121722]"

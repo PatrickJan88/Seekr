@@ -66,7 +66,7 @@ export function NotificationsPage({ onBack, onNavigateToGhosted }: Notifications
       <div className="bg-white rounded-2xl border border-[#efefef] shadow-2xs w-full flex-1 min-h-[500px] flex flex-col relative overflow-hidden">
         
         {/* Top Header */}
-        <div className="px-6 py-4 border-b border-[#efefef] flex items-center justify-between gap-4 bg-white shrink-0">
+        <div className="px-4 sm:px-6 py-4 border-b border-[#efefef] flex items-center justify-between gap-4 bg-white shrink-0">
           <p className="text-sm font-semibold text-[#121722]">
             You have {unreadCount} unread {unreadCount === 1 ? 'notification' : 'notifications'}
           </p>
@@ -96,7 +96,7 @@ export function NotificationsPage({ onBack, onNavigateToGhosted }: Notifications
             notifications.map((n) => (
               <div 
                 key={n.id} 
-                className={`p-5 sm:p-6 flex gap-4 transition-colors ${n.unread ? 'bg-[#faf9f7]' : 'hover:bg-[#faf9f7]/50'}`}
+                className={`p-4 sm:p-6 flex gap-4 transition-colors ${n.unread ? 'bg-[#faf9f7]' : 'hover:bg-[#faf9f7]/50'}`}
               >
                 <div className="shrink-0 mt-0.5">
                   <div className={`w-9 h-9 rounded-full flex items-center justify-center ${n.unread ? 'bg-[#0068f9]/10 text-[#0068f9]' : 'bg-[#faf9f7] text-[#777c86] border border-[#efefef]'}`}>

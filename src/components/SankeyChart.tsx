@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { JobApplication, JobStatus, getStatusLabel, toCanonicalStatus } from '../types';
 import { NoDataState } from './NoDataState';
@@ -19,6 +19,8 @@ interface SankeyChartProps {
   trackingSystem?: 'industry' | 'academic';
   onCategoryClick?: (status: JobStatus | 'Total') => void;
   onIndustryRoleClick?: (filter: OverviewIndustryRoleFilter) => void;
+  requestedTab?: { tab: OverviewSankeyTab; seq: number } | null;
+  onTabChange?: (tab: OverviewSankeyTab) => void;
 }
 
 export function SankeyChart({
@@ -28,8 +30,21 @@ export function SankeyChart({
   trackingSystem = 'industry',
   onCategoryClick,
   onIndustryRoleClick,
+  requestedTab = null,
+  onTabChange,
 }: SankeyChartProps) {
-  const [activeTab, setActiveTab] = useState<OverviewSankeyTab>('process');
+  const [activeTab, setActiveTab] = useState<OverviewSankeyTab>(() => requestedTab?.tab || 'process');
+
+  useEffect(() => {
+    if (requestedTab) {
+      setActiveTab(requestedTab.tab);
+    }
+  }, [requestedTab?.seq]);
+
+  const handleTabChange = (tab: OverviewSankeyTab) => {
+    setActiveTab(tab);
+    onTabChange?.(tab);
+  };
   const total = applications.length;
 
   const industryRoleSummary = useMemo(
@@ -424,7 +439,7 @@ export function SankeyChart({
         <div className="flex flex-wrap items-center justify-between gap-3 shrink-0">
           <SlidingTabs<OverviewSankeyTab>
             value={activeTab}
-            onChange={setActiveTab}
+            onChange={handleTabChange}
             useTabRoles
             ariaLabel="Overview Chart Views"
             tabClassName="px-4"

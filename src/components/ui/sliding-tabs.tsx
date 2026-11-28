@@ -92,6 +92,7 @@ interface SlidingTabsProps<T extends string> {
   onChange: (value: T) => void;
   className?: string;
   tabClassName?: string;
+  activePillClassName?: string;
   ariaLabel?: string;
   useTabRoles?: boolean;
 }
@@ -102,6 +103,7 @@ export function SlidingTabs<T extends string>({
   onChange,
   className,
   tabClassName,
+  activePillClassName,
   ariaLabel,
   useTabRoles = false,
 }: SlidingTabsProps<T>) {
@@ -119,7 +121,7 @@ export function SlidingTabs<T extends string>({
       role={useTabRoles ? 'tablist' : undefined}
       aria-label={ariaLabel}
       className={cn(
-        'relative flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-full text-[13px] font-medium shrink-0',
+        'relative flex items-center gap-1 bg-[#faf9f7] h-[38px] p-1 border border-[#efefef] rounded-xl text-[13px] font-medium shrink-0 max-w-full overflow-x-auto no-scrollbar',
         className
       )}
     >
@@ -133,7 +135,10 @@ export function SlidingTabs<T extends string>({
               ? { duration: 0 }
               : { type: 'spring', stiffness: 480, damping: 36, mass: 0.75 }
           }
-          className="pointer-events-none absolute top-1 bottom-1 left-0 rounded-full bg-white border border-[#efefef] shadow-2xs z-0"
+          className={cn(
+            'pointer-events-none absolute top-1 bottom-1 left-0 rounded-lg bg-white border border-[#efefef] shadow-2xs z-0',
+            activePillClassName
+          )}
         />
       )}
 
@@ -157,7 +162,7 @@ export function SlidingTabs<T extends string>({
             title={item.title}
             onClick={() => onChange(item.id)}
             className={cn(
-              'relative z-10 h-full px-3.5 rounded-full flex items-center justify-center transition-colors duration-200 cursor-pointer whitespace-nowrap shrink-0 select-none border border-transparent',
+              'relative z-10 h-full px-3.5 rounded-lg flex items-center justify-center transition-colors duration-200 cursor-pointer whitespace-nowrap shrink-0 select-none border border-transparent outline-none focus-visible:ring-2 focus-visible:ring-[#0068f9]/30',
               isActive ? 'text-[#121722]' : 'text-[#777c86] hover:text-[#121722]',
               tabClassName
             )}
